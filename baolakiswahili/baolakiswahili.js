@@ -57,8 +57,15 @@ function (dojo, declare) {
             }
             
             // TODO: Set up your game interface here, according to "gamedatas"
-            
- 
+            for (y = 1; y <= 4; y++)
+            {
+                for (x = 1; x <= 8; x++)
+                {
+                    this.addStoneOnBoard( x, y );
+                    //this.addStoneOnBoard( x, y );
+                }
+            }
+
             // Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
 
@@ -253,5 +260,20 @@ function (dojo, declare) {
         },    
         
         */
+
+        /*
+        Places a stone at (X/Y), where X is the column (1..8) and Y is the row (1..4)
+        */
+       addStoneOnBoard: function( x, y )
+       {
+           dojo.place( this.format_block( 'jstpl_stone', {
+               x_y: x+'_'+y,
+               number: Math.floor(Math.random() * 4),
+           } ) , 'stones' );
+           
+           this.placeOnObject( 'stones_'+x+'_'+y, 'board' );
+           this.slideToObject( 'stones_'+x+'_'+y, 'circle_'+x+'_'+y ).play();
+       },
+
    });             
 });

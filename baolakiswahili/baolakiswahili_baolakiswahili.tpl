@@ -26,19 +26,19 @@
 -->
 
 
-Willkommen bei Bao La Kiswahili!
-
-
 <script type="text/javascript">
 
-// Javascript HTML templates
-
-/*
-// Example:
-var jstpl_some_game_item='<div class="my_game_item" id="my_game_item_${MY_ITEM_ID}"></div>';
-
-*/
+var jstpl_stone='<div class="stones stone${number}" id="stones_${x_y}"></div>';
 
 </script>  
+
+<div id="board">
+    <!-- BEGIN circle -->
+        <div id="circle_{X}_{Y}" class="circle" style="left: {LEFT}px; top: {TOP}px;"></div>
+    <!-- END circle -->
+
+    <div id="stones">
+    </div>
+</div>
 
 {OVERALL_GAME_FOOTER}

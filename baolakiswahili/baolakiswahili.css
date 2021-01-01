@@ -67,6 +67,27 @@
     }
 */
 
+#board {
+    width: 960px;
+    height: 493px;
+    background-image: url('img/board.png');
+    position: relative;
+ }
 
+.circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    position: absolute;
+}
 
+.stones { 
+    position: absolute;
+    background-image: url('img/stones.png'); 
+}
+ 
+.stone0 { background-position: -0px -0px; width: 59px; height: 55px; }
+.stone1 { background-position: -0px -55px; width: 45px; height: 32px; }
+.stone2 { background-position: -0px -87px; width: 42px; height: 49px; }
+.stone3 { background-position: -0px -136px; width: 41px; height: 28px; }
 
