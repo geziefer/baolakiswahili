@@ -28,10 +28,12 @@
   
   class view_baolakiswahili_baolakiswahili extends game_view
   {
-    function getGameName() {
+    function getGameName() 
+    {
         return "baolakiswahili";
-    }    
-  	function build_page( $viewArgs )
+    }
+
+    function build_page( $viewArgs )
   	{		
   	    // Get players & players number
         $players = $this->game->loadPlayersBasicInfos();
@@ -43,110 +45,10 @@
         $this->page->begin_block( "baolakiswahili_baolakiswahili", "stone" );
 
         // create 4 rows with 8 fields, scaling and shifting them according to the board perspective
-        $hor_scale = 99.0;
-        $ver_scale = 100.0;
-        $hor_shift = 105.0;
-        $ver_shift = 40.0;
-        $y = 1;
-        for( $x=1; $x<=8; $x++ )
-        {
-            $this->page->insert_block( "circle", array(
-                'X' => $x,
-                'Y' => $y,
-                'LEFT' => round( ($x-1)*$hor_scale+$hor_shift ),
-                'TOP' => round( ($y-1)*$ver_scale+$ver_shift )
-            ) );
-            $this->page->insert_block( "stone", array(
-              'NO' => ($y-1)*8+($x-1),
-              'COLOR' => rand(0, 3),
-              'LEFT' => round( ($x-1)*$hor_scale+$hor_shift + rand(-10,10)),
-              'TOP' => round( ($y-1)*$ver_scale+$ver_shift+10  + rand(-10,10))
-            ) );
-            $this->page->insert_block( "stone", array(
-              'NO' => ($y-1)*8+($x-1),
-              'COLOR' => rand(0, 3),
-              'LEFT' => round( ($x-1)*$hor_scale+$hor_shift + rand(-10,10)),
-              'TOP' => round( ($y-1)*$ver_scale+$ver_shift+10  + rand(-10,10))
-            ) );
-      }      
-
-        $y++; 
-        $hor_scale = 103.0;
-        $hor_shift = 90.0;
-        for( $x=1; $x<=8; $x++ )
-        {
-            $this->page->insert_block( "circle", array(
-                'X' => $x,
-                'Y' => $y,
-                'LEFT' => round( ($x-1)*$hor_scale+$hor_shift ),
-                'TOP' => round( ($y-1)*$ver_scale+$ver_shift )
-            ) );
-            $this->page->insert_block( "stone", array(
-              'NO' => ($y-1)*8+($x-1),
-              'COLOR' => rand(0, 3),
-              'LEFT' => round( ($x-1)*$hor_scale+$hor_shift + rand(-10,10)),
-              'TOP' => round( ($y-1)*$ver_scale+$ver_shift+10  + rand(-10,10))
-            ) );
-            $this->page->insert_block( "stone", array(
-              'NO' => ($y-1)*8+($x-1),
-              'COLOR' => rand(0, 3),
-              'LEFT' => round( ($x-1)*$hor_scale+$hor_shift + rand(-10,10)),
-              'TOP' => round( ($y-1)*$ver_scale+$ver_shift+10  + rand(-10,10))
-            ) );
-        }       
-
-        $y++; 
-        $hor_scale = 107.0;
-        $hor_shift = 76.0;
-        $ver_shift = 60.0;
-        for( $x=1; $x<=8; $x++ )
-        {
-            $this->page->insert_block( "circle", array(
-                'X' => $x,
-                'Y' => $y,
-                'LEFT' => round( ($x-1)*$hor_scale+$hor_shift ),
-                'TOP' => round( ($y-1)*$ver_scale+$ver_shift )
-            ) );
-            $this->page->insert_block( "stone", array(
-              'NO' => ($y-1)*8+($x-1),
-              'COLOR' => rand(0, 3),
-              'LEFT' => round( ($x-1)*$hor_scale+$hor_shift + rand(-10,10)),
-              'TOP' => round( ($y-1)*$ver_scale+$ver_shift+10  + rand(-10,10))
-            ) );
-            $this->page->insert_block( "stone", array(
-              'NO' => ($y-1)*8+($x-1),
-              'COLOR' => rand(0, 3),
-              'LEFT' => round( ($x-1)*$hor_scale+$hor_shift + rand(-10,10)),
-              'TOP' => round( ($y-1)*$ver_scale+$ver_shift+10  + rand(-10,10))
-            ) );
-        }       
-
-        $y++; 
-        $hor_scale = 112.0;
-        $hor_shift = 58.0;
-        $ver_shift = 78.0;
-        for( $x=1; $x<=8; $x++ )
-        {
-            $this->page->insert_block( "circle", array(
-                'X' => $x,
-                'Y' => $y,
-                'LEFT' => round( ($x-1)*$hor_scale+$hor_shift ),
-                'TOP' => round( ($y-1)*$ver_scale+$ver_shift )
-            ) );
-            $this->page->insert_block( "stone", array(
-              'NO' => ($y-1)*8+($x-1),
-              'COLOR' => rand(0, 3),
-              'LEFT' => round( ($x-1)*$hor_scale+$hor_shift + rand(-10,10)),
-              'TOP' => round( ($y-1)*$ver_scale+$ver_shift+10  + rand(-10,10))
-            ) );
-            $this->page->insert_block( "stone", array(
-              'NO' => ($y-1)*8+($x-1),
-              'COLOR' => rand(0, 3),
-              'LEFT' => round( ($x-1)*$hor_scale+$hor_shift + rand(-10,10)),
-              'TOP' => round( ($y-1)*$ver_scale+$ver_shift+10  + rand(-10,10))
-            ) );
-        }       
-
+        self::createLine(1, 99, 100, 105, 40);
+        self::createLine(2, 103, 100, 90, 40);
+        self::createLine(3, 107, 100, 76, 60);
+        self::createLine(4, 112, 100, 58, 78);
 
         /*
         
@@ -187,7 +89,34 @@
 
 
         /*********** Do not change anything below this line  ************/
-  	}
-  }
-  
+    }
+    
+    /*
+    Put circle and 2 stones in each field of a line and applies shifts and scale.
+    */
+    function createLine($y, $hor_scale, $ver_scale, $hor_shift, $ver_shift) 
+    {
+      for( $x=1; $x<=8; $x++ )
+      {
+          $this->page->insert_block( "circle", array(
+              'X' => $x,
+              'Y' => $y,
+              'LEFT' => round( ($x-1)*$hor_scale+$hor_shift ),
+              'TOP' => round( ($y-1)*$ver_scale+$ver_shift )
+          ) );
+          $this->page->insert_block( "stone", array(
+            'NO' => ($y-1)*8+($x-1),
+            'COLOR' => rand(0, 3),
+            'LEFT' => round( ($x-1)*$hor_scale+$hor_shift + rand(-8,8)),
+            'TOP' => round( ($y-1)*$ver_scale+$ver_shift+10  + rand(-8,8))
+          ) );
+          $this->page->insert_block( "stone", array(
+            'NO' => ($y-1)*8+($x-1),
+            'COLOR' => rand(0, 3),
+            'LEFT' => round( ($x-1)*$hor_scale+$hor_shift + rand(-8,8)),
+            'TOP' => round( ($y-1)*$ver_scale+$ver_shift+10  + rand(-8,8))
+          ) );
+      }
+    }      
 
+  }
