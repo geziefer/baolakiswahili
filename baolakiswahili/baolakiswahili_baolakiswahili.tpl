@@ -28,8 +28,6 @@
 
 <script type="text/javascript">
 
-var jstpl_stone='<div class="stones stone${number}" id="stones_${x_y}"></div>';
-
 </script>  
 
 <div id="board">
@@ -37,8 +35,9 @@ var jstpl_stone='<div class="stones stone${number}" id="stones_${x_y}"></div>';
         <div id="circle_{X}_{Y}" class="circle" style="left: {LEFT}px; top: {TOP}px;"></div>
     <!-- END circle -->
 
-    <div id="stones">
-    </div>
+    <!-- BEGIN stone -->
+    <div id="stone_{NO}" class="stones stone{COLOR}" style="left: {LEFT}px; top: {TOP}px;"></div>
+    <!-- END stone -->
 </div>
 
 {OVERALL_GAME_FOOTER}

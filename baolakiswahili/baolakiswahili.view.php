@@ -40,6 +40,7 @@
         /*********** Place your code below:  ************/
 
         $this->page->begin_block( "baolakiswahili_baolakiswahili", "circle" );
+        $this->page->begin_block( "baolakiswahili_baolakiswahili", "stone" );
 
         // create 4 rows with 8 fields, scaling and shifting them according to the board perspective
         $hor_scale = 99.0;
@@ -55,7 +56,19 @@
                 'LEFT' => round( ($x-1)*$hor_scale+$hor_shift ),
                 'TOP' => round( ($y-1)*$ver_scale+$ver_shift )
             ) );
-        }      
+            $this->page->insert_block( "stone", array(
+              'NO' => ($y-1)*8+($x-1),
+              'COLOR' => rand(0, 3),
+              'LEFT' => round( ($x-1)*$hor_scale+$hor_shift + rand(-10,10)),
+              'TOP' => round( ($y-1)*$ver_scale+$ver_shift+10  + rand(-10,10))
+            ) );
+            $this->page->insert_block( "stone", array(
+              'NO' => ($y-1)*8+($x-1),
+              'COLOR' => rand(0, 3),
+              'LEFT' => round( ($x-1)*$hor_scale+$hor_shift + rand(-10,10)),
+              'TOP' => round( ($y-1)*$ver_scale+$ver_shift+10  + rand(-10,10))
+            ) );
+      }      
 
         $y++; 
         $hor_scale = 103.0;
@@ -67,6 +80,18 @@
                 'Y' => $y,
                 'LEFT' => round( ($x-1)*$hor_scale+$hor_shift ),
                 'TOP' => round( ($y-1)*$ver_scale+$ver_shift )
+            ) );
+            $this->page->insert_block( "stone", array(
+              'NO' => ($y-1)*8+($x-1),
+              'COLOR' => rand(0, 3),
+              'LEFT' => round( ($x-1)*$hor_scale+$hor_shift + rand(-10,10)),
+              'TOP' => round( ($y-1)*$ver_scale+$ver_shift+10  + rand(-10,10))
+            ) );
+            $this->page->insert_block( "stone", array(
+              'NO' => ($y-1)*8+($x-1),
+              'COLOR' => rand(0, 3),
+              'LEFT' => round( ($x-1)*$hor_scale+$hor_shift + rand(-10,10)),
+              'TOP' => round( ($y-1)*$ver_scale+$ver_shift+10  + rand(-10,10))
             ) );
         }       
 
@@ -82,6 +107,18 @@
                 'LEFT' => round( ($x-1)*$hor_scale+$hor_shift ),
                 'TOP' => round( ($y-1)*$ver_scale+$ver_shift )
             ) );
+            $this->page->insert_block( "stone", array(
+              'NO' => ($y-1)*8+($x-1),
+              'COLOR' => rand(0, 3),
+              'LEFT' => round( ($x-1)*$hor_scale+$hor_shift + rand(-10,10)),
+              'TOP' => round( ($y-1)*$ver_scale+$ver_shift+10  + rand(-10,10))
+            ) );
+            $this->page->insert_block( "stone", array(
+              'NO' => ($y-1)*8+($x-1),
+              'COLOR' => rand(0, 3),
+              'LEFT' => round( ($x-1)*$hor_scale+$hor_shift + rand(-10,10)),
+              'TOP' => round( ($y-1)*$ver_scale+$ver_shift+10  + rand(-10,10))
+            ) );
         }       
 
         $y++; 
@@ -95,6 +132,18 @@
                 'Y' => $y,
                 'LEFT' => round( ($x-1)*$hor_scale+$hor_shift ),
                 'TOP' => round( ($y-1)*$ver_scale+$ver_shift )
+            ) );
+            $this->page->insert_block( "stone", array(
+              'NO' => ($y-1)*8+($x-1),
+              'COLOR' => rand(0, 3),
+              'LEFT' => round( ($x-1)*$hor_scale+$hor_shift + rand(-10,10)),
+              'TOP' => round( ($y-1)*$ver_scale+$ver_shift+10  + rand(-10,10))
+            ) );
+            $this->page->insert_block( "stone", array(
+              'NO' => ($y-1)*8+($x-1),
+              'COLOR' => rand(0, 3),
+              'LEFT' => round( ($x-1)*$hor_scale+$hor_shift + rand(-10,10)),
+              'TOP' => round( ($y-1)*$ver_scale+$ver_shift+10  + rand(-10,10))
             ) );
         }       
 
