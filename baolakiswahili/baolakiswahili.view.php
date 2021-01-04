@@ -42,13 +42,14 @@
         /*********** Place your code below:  ************/
 
         $this->page->begin_block( "baolakiswahili_baolakiswahili", "circle" );
-        $this->page->begin_block( "baolakiswahili_baolakiswahili", "stone" );
+
+        list( $player1, $player2 ) = array_keys( $players );
 
         // create 4 rows with 8 fields, scaling and shifting them according to the board perspective
-        self::createLine(1, 99, 100, 105, 40);
-        self::createLine(2, 103, 100, 90, 40);
-        self::createLine(3, 107, 100, 76, 60);
-        self::createLine(4, 112, 100, 58, 78);
+        self::createLine(1, 99, 100, 105, 40, $player1, False);
+        self::createLine(2, 103, 100, 90, 40, $player1, True);
+        self::createLine(3, 107, 100, 76, 60, $player2, True);
+        self::createLine(4, 112, 100, 58, 78, $player2, False);
 
         /*
         
@@ -92,30 +93,21 @@
     }
     
     /*
-    Put circle and 2 stones in each field of a line and applies shifts and scale.
+    Put circle in each field of a line and applies shifts and scale.
     */
-    function createLine($y, $hor_scale, $ver_scale, $hor_shift, $ver_shift) 
+    function createLine($y, $hor_scale, $ver_scale, $hor_shift, $ver_shift, $player, $up) 
     {
+      $field = ($up) ? 1 : 16;
       for( $x=1; $x<=8; $x++ )
       {
+          // insert an invisible circle for later clicking with ID according to board in DB
           $this->page->insert_block( "circle", array(
-              'X' => $x,
-              'Y' => $y,
+              'PLAYER' => $player,
+              'FIELD' => $field,
               'LEFT' => round( ($x-1)*$hor_scale+$hor_shift ),
               'TOP' => round( ($y-1)*$ver_scale+$ver_shift )
           ) );
-          $this->page->insert_block( "stone", array(
-            'NO' => ($y-1)*8+($x-1),
-            'COLOR' => rand(0, 3),
-            'LEFT' => round( ($x-1)*$hor_scale+$hor_shift + rand(-8,8)),
-            'TOP' => round( ($y-1)*$ver_scale+$ver_shift+10  + rand(-8,8))
-          ) );
-          $this->page->insert_block( "stone", array(
-            'NO' => ($y-1)*8+($x-1),
-            'COLOR' => rand(0, 3),
-            'LEFT' => round( ($x-1)*$hor_scale+$hor_shift + rand(-8,8)),
-            'TOP' => round( ($y-1)*$ver_scale+$ver_shift+10  + rand(-8,8))
-          ) );
+       $field += ($up) ? +1 : -1;
       }
     }      
 

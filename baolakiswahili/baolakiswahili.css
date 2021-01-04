@@ -81,13 +81,10 @@
     position: absolute;
 }
 
-.stones { 
+.stone { 
+    width: 45px;
+    height: 32px;
     position: absolute;
-    background-image: url('img/stones.png'); 
+    background-image: url('img/stone.png'); 
 }
- 
-.stone0 { background-position: -0px -0px; width: 59px; height: 55px; }
-.stone1 { background-position: -0px -55px; width: 45px; height: 32px; }
-.stone2 { background-position: -0px -87px; width: 42px; height: 49px; }
-.stone3 { background-position: -0px -136px; width: 41px; height: 28px; }
 

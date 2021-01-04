@@ -27,17 +27,16 @@
 
 
 <script type="text/javascript">
-
+    var jstpl_stone='<div class="stone" id="stone_${no}" style="left: ${left}px; top: ${top}px; transform: rotate(${degree}deg);""></div>';
 </script>  
 
 <div id="board">
     <!-- BEGIN circle -->
-        <div id="circle_{X}_{Y}" class="circle" style="left: {LEFT}px; top: {TOP}px;"></div>
+        <div id="circle_{PLAYER}_{FIELD}" class="circle" style="left: {LEFT}px; top: {TOP}px;"></div>
     <!-- END circle -->
 
-    <!-- BEGIN stone -->
-    <div id="stone_{NO}" class="stones stone{COLOR}" style="left: {LEFT}px; top: {TOP}px;"></div>
-    <!-- END stone -->
+    <div id="stones">
+    </div>
 </div>
 
 {OVERALL_GAME_FOOTER}

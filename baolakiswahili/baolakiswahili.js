@@ -48,12 +48,19 @@ function (dojo, declare) {
         {
             console.log( "Starting game setup" );
             
-            // Setting up player boards
-            for( var player_id in gamedatas.players )
+            // TODO: Setting up players boards if needed
+
+            var number = 1;
+            for( var i in gamedatas.board )
             {
-                var player = gamedatas.players[player_id];
-                         
-                // TODO: Setting up players boards if needed
+                var bowl = gamedatas.board[i];
+
+                for (var j=1; j<=bowl.count; j++)
+                {
+                    this.addStoneOnBoard( bowl.player, bowl.no, number );
+                    number++;
+                }
+                
             }
             
             // Setup game notifications to handle (see "setupNotifications" method below)
@@ -154,6 +161,17 @@ function (dojo, declare) {
             script.
         
         */
+        addStoneOnBoard: function( player, field, number )
+        {
+            dojo.place( this.format_block( 'jstpl_stone', {
+                no: number,
+                top: Math.floor((Math.random() * 20) + 1 - 10),
+                left: Math.floor((Math.random() * 20) + 1 - 10),
+                degree: Math.floor((Math.random() * 360) + 1)
+            } ) , 'stones' );
+            
+            this.placeOnObject( 'stone_'+number, 'circle_'+player+'_'+field );
+        },
 
 
         ///////////////////////////////////////////////////

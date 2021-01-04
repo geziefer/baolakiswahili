@@ -88,7 +88,17 @@ class BaoLaKiswahili extends Table
         //self::initStat( 'player', 'player_teststat1', 0 );  // Init a player statistics (for all players)
 
         // TODO: setup the initial game situation here
-       
+
+        $sql = "INSERT INTO board (player, field, stones) VALUES ";
+        $values = array();
+        list( $player1, $player2 ) = array_keys( $players );
+        for ( $i=1; $i<=16; $i++ )
+        {
+            $values[] = "('$player1', '$i', '2')";
+            $values[] = "('$player2', '$i', '2')";
+        }
+        $sql .= implode( ',', $values );
+        self::DbQuery( $sql );
 
         // Activate first player (which is in general a good idea :) )
         $this->activeNextPlayer();
@@ -117,7 +127,9 @@ class BaoLaKiswahili extends Table
         $result['players'] = self::getCollectionFromDb( $sql );
   
         // TODO: Gather all information about current game situation (visible by player $current_player_id).
-  
+        $sql = "SELECT player player, field no, stones count FROM board ";
+        $result['board'] = self::getObjectListFromDB( $sql );            
+
         return $result;
     }
 
