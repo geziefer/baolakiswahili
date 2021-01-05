@@ -165,12 +165,10 @@ function (dojo, declare) {
         {
             dojo.place( this.format_block( 'jstpl_stone', {
                 no: number,
-                top: Math.floor((Math.random() * 20) + 1 - 10),
-                left: Math.floor((Math.random() * 20) + 1 - 10),
-                degree: Math.floor((Math.random() * 360) + 1)
-            } ) , 'stones' );
-            
-            this.placeOnObject( 'stone_'+number, 'circle_'+player+'_'+field );
+                left: Math.floor(((Math.random() * 7) - 2) * 5),
+                top: Math.floor(((Math.random() * 7) - 1) * 5),
+                degree: Math.floor((Math.random() * 73) * 5)
+            } ) , 'circle_'+player+'_'+field );
         },
 
 
