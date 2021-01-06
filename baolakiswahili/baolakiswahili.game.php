@@ -175,7 +175,8 @@ class BaoLaKiswahili extends Table
         
         for( $i=1; $i<=16; $i++ )
         {
-            if( $board[$player_id][i] >= 2 )
+            if( $board[$player_id][$i] >= 2 )
+            {
                 $result[$player_id][$i] = true;
             }
         }
@@ -240,6 +241,13 @@ class BaoLaKiswahili extends Table
         These methods function is to return some additional information that is specific to the current
         game state.
     */
+
+    function argBowlSelect()
+    {
+        return array(
+            'possibleBowles' => self::getPossibleBowles( self::getActivePlayerId() )
+        );
+    }
 
     /*
     

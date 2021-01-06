@@ -48,8 +48,6 @@ function (dojo, declare) {
         {
             console.log( "Starting game setup" );
             
-            // TODO: Setting up players boards if needed
-
             var number = 1;
             for( var i in gamedatas.board )
             {
@@ -94,7 +92,8 @@ function (dojo, declare) {
            */
            
            
-            case 'dummmy':
+            case 'bowlSelection':
+                this.updateBowlSelection( args.args.possibleBowles );
                 break;
             }
         },
@@ -165,12 +164,30 @@ function (dojo, declare) {
         {
             dojo.place( this.format_block( 'jstpl_stone', {
                 no: number,
-                left: Math.floor(((Math.random() * 7) - 2) * 5),
-                top: Math.floor(((Math.random() * 7) - 1) * 5),
+                left: Math.floor(((Math.random() * 5) - 2) * 5) + 20,
+                top: Math.floor(((Math.random() * 5) - 1) * 5) + 25,
                 degree: Math.floor((Math.random() * 73) * 5)
             } ) , 'circle_'+player+'_'+field );
         },
 
+        updateBowlSelection: function( possibleBowles )
+        {
+            console.log( "possible bowls: ", possibleBowles);
+
+            // Remove current possible bowles
+            dojo.query( '.possibleBowl' ).removeClass( 'possibleBowl' );
+
+            for( var player in possibleBowles )
+            {
+                for( var field in possibleBowles[ player ] )
+                {
+                    // every entry in this array is a possible bowl
+                    dojo.addClass( 'circle_'+player+'_'+field, 'possibleBowl' );
+                }            
+            }
+                        
+            this.addTooltipToClass( 'possibleMove', '', _('Select this bowl for move') );
+        },
 
         ///////////////////////////////////////////////////
         //// Player's action
