@@ -58,20 +58,45 @@ $machinestates = array(
         "description" => "",
         "type" => "manager",
         "action" => "stGameSetup",
-        "transitions" => array( "" => 2 )
+        "transitions" => array( "" => 10 )
     ),
     
-    // Note: ID=2 => your first state
+    // player selects a bowl or gives up to not having to play a hopeless game til the end
+    10 => array(
+    		"name" => "bowlSelection",
+    		"description" => clienttranslate('${actplayer} must select a bowl'),
+    		"descriptionmyturn" => clienttranslate('${you} must select a bowl'),
+            "type" => "activeplayer",
+            "args" => "argBowlSelect",
+    		"possibleactions" => array( "selectBowl", "giveUp" ),
+    		"transitions" => array( "selectBowl" => 11, "giveUp" => 99 )
+    ),
 
-    2 => array(
-    		"name" => "playerTurn",
-    		"description" => clienttranslate('${actplayer} must play a card or pass'),
-    		"descriptionmyturn" => clienttranslate('${you} must play a card or pass'),
-    		"type" => "activeplayer",
-    		"possibleactions" => array( "playCard", "pass" ),
-    		"transitions" => array( "playCard" => 2, "pass" => 2 )
+    // player selects direction where stones should be moved to
+    11 => array(
+        "name" => "moveDirection",
+        "description" => clienttranslate('${actplayer} must select a direction'),
+        "descriptionmyturn" => clienttranslate('${you} must select a direction'),
+        "type" => "activeplayer",
+        "args" => "argDirectionSelect",
+        "possibleactions" => array( "selectDirection" ),
+        "transitions" => array( "selectDirection" => 20 )
     ),
-    
+
+    // game moves stones from selected bowl in the selected direction
+    // which is making one move; depending on the destination field,
+    // either another game move follows or it's the next player's move
+    // or game end is reached
+    20=> array(
+        "name" => "stoneMove",
+        "description" => clienttranslate('Stones are moved until empty field is reached'),
+        "type" => "game",
+        "action" => "stNextMove",
+        "updateGameProgression" => true,   
+        "transitions" => array( "nextMove" => 11, "nextPlayer" => 10, "endGame" => 99 )
+    ),
+
+
 /*
     Examples:
     

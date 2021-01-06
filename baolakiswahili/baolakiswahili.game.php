@@ -159,6 +159,40 @@ class BaoLaKiswahili extends Table
         In this space, you can put any utility methods useful for your game logic
     */
 
+    // Get the complete board with a double associative array player/no -> count
+    function getBoard()
+    {
+        $sql = "SELECT player player, field no, stones count FROM board ";
+        return self::getDoubleKeyCollectionFromDB( $sql );            
+    }
+
+    // Possible bowles to select are all of players bowls with at least 2 stones
+    function getPossibleBowles( $player_id )
+    {
+        $result = array();
+        
+        $board = self::getBoard();
+        
+        for( $i=1; $i<=16; $i++ )
+        {
+            if( $board[$player_id][i] >= 2 )
+                $result[$player_id][$i] = true;
+            }
+        }
+                
+        return $result;
+    }
+
+    // Possible directions to select are always the previous and next bowl to the selected one
+    function getPossibleDirections( $player_id, $selected )
+    {
+        $result = array();
+
+        $result[$player_id][$selected-1] = true;
+        $result[$player_id][$selected+1] = true;
+
+        return $result;
+    }
 
 
 //////////////////////////////////////////////////////////////////////////////
