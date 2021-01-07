@@ -177,7 +177,7 @@ class BaoLaKiswahili extends Table
         {
             if( $board[$player_id][$i] >= 2 )
             {
-                $result[$player_id][$i] = true;
+                $result[$player_id][$i] = $board[$player_id][$i];
             }
         }
                 

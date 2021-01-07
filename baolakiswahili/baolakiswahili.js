@@ -186,7 +186,8 @@ function (dojo, declare) {
                 }            
             }
                         
-            this.addTooltipToClass( 'possibleMove', '', _('Select this bowl for move') );
+            var count = 
+            this.addTooltipToClass( 'possibleBowl', '', _('Move ${count) stones') );
         },
 
         ///////////////////////////////////////////////////

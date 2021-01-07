@@ -46,10 +46,10 @@
         list( $player1, $player2 ) = array_keys( $players );
 
         // create 4 rows with 8 fields, scaling and shifting them according to the board perspective
-        self::createLine(1, 100, 100, 87, 24, $player2, False);
-        self::createLine(2, 103, 100, 75, 24, $player2, True);
-        self::createLine(3, 108, 100, 58, 44, $player1, True);
-        self::createLine(4, 112, 100, 41, 60, $player1, False);
+        self::createLine(1, 100, 100, 92, 28, $player2, False);
+        self::createLine(2, 104, 100, 76, 30, $player2, True);
+        self::createLine(3, 108, 100, 62, 49, $player1, True);
+        self::createLine(4, 112, 100, 46, 68, $player1, False);
 
         /*
         
