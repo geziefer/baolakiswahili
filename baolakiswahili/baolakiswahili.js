@@ -48,6 +48,7 @@ function (dojo, declare) {
         {
             console.log( "Starting game setup" );
             
+            // place all stones on board
             var number = 1;
             for( var i in gamedatas.board )
             {
@@ -61,6 +62,9 @@ function (dojo, declare) {
                 
             }
             
+            // click handler
+            dojo.query( '.circle' ).connect( 'onclick', this, 'onBowlClick');
+
             // Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
 
@@ -93,9 +97,14 @@ function (dojo, declare) {
            
            
             case 'bowlSelection':
-                this.updateBowlSelection( args.args.possibleBowles );
+                this.updateBowlSelection( args.args.possibleBowls );
+                break;
+
+            case 'moveDirection':
+                this.updateMoveDirection( args.args.possibleDirections );
                 break;
             }
+
         },
 
         // onLeavingState: this method is called each time we are leaving a game state.
@@ -170,24 +179,49 @@ function (dojo, declare) {
             } ) , 'circle_'+player+'_'+field );
         },
 
-        updateBowlSelection: function( possibleBowles )
+        updateBowlSelection: function( possibleBowls )
         {
-            console.log( "possible bowls: ", possibleBowles);
-
-            // Remove current possible bowles
-            dojo.query( '.possibleBowl' ).removeClass( 'possibleBowl' );
-
-            for( var player in possibleBowles )
+            // only 1 player in array
+            for( var player in possibleBowls )
             {
-                for( var field in possibleBowles[ player ] )
+                for( var field in possibleBowls[player] )
                 {
                     // every entry in this array is a possible bowl
                     dojo.addClass( 'circle_'+player+'_'+field, 'possibleBowl' );
+                    var count = possibleBowls[player][field].count;
+                    var message = dojo.string.substitute(_("Move ${count} stones"), { count : count});
+                    this.addTooltip( 'circle_'+player+'_'+field, '', message );
                 }            
             }
-                        
-            var count = 
-            this.addTooltipToClass( 'possibleBowl', '', _('Move ${count) stones') );
+        },
+
+        updateMoveDirection: function( possibleDirections )
+        {
+            // Remove previously set css markers for possible bowls
+            dojo.query( '.possibleBowl' ).removeClass( 'possibleBowl' );
+
+            // only 1 player in array
+            for( var player in possibleDirections )
+            {
+                for( i=1; i<=16; i++ )
+                {
+                    // remove all previously set tooltips
+                    this.removeTooltip( 'circle_'+player+'_'+i )
+                }
+
+                for( var field in possibleDirections[player] )
+                {
+                    // true entries are directions, the false entry is the selected
+                    if (possibleDirections[player][field]) {
+                        dojo.addClass( 'circle_'+player+'_'+field, 'possibleDirection' );
+                        this.addTooltip( 'circle_'+player+'_'+field, '', "Start in this direction" );
+                    } 
+                    else
+                    {
+                        dojo.addClass( 'circle_'+player+'_'+field, 'selectedBowl' );
+                    }
+                }            
+            }
         },
 
         ///////////////////////////////////////////////////
@@ -204,6 +238,39 @@ function (dojo, declare) {
         
         */
         
+        onBowlClick: function( evt )
+        {
+            // Stop event propagation
+            dojo.stopEvent( evt );
+
+            var params = evt.currentTarget.id.split('_');
+            var player = params[1];
+            var field = params[2];
+
+            if( ! dojo.hasClass( 'circle_'+player+'_'+field, 'possibleBowl') &&
+            ! dojo.hasClass( 'circle_'+player+'_'+field, 'possibleDirection'))
+            {
+                // This is not a possible move => the click does nothing
+                return ;
+            }
+
+            // Check that this action is possible at this moment
+            // and distinguish 1st or 2nd step in move selection
+            if( this.checkAction( 'selectBowl' ) )    
+            {            
+                this.ajaxcall( "/baolakiswahili/baolakiswahili/selectBowl.html", {
+                    player:player,
+                    field:field
+                }, this, function( result ) {} );
+            }  else if( this.checkAction( 'selectDirection' ) )
+            {
+                this.ajaxcall( "/baolakiswahili/baolakiswahili/selectDirection.html", {
+                    player:player,
+                    field:field
+                }, this, function( result ) {} );
+            }
+        },
+
         /* Example:
         
         onMyMethodToCall1: function( evt )

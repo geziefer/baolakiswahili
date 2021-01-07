@@ -94,3 +94,16 @@
     opacity: 0.5;
     cursor: pointer;  
 }
+
+.selectedBowl {
+    border: 2px solid #3a1903;
+    background-color: #b94b51;
+    opacity: 0.5;
+}
+
+.possibleDirection {
+    border: 2px solid #4e4748;
+    background-color: #c4bdbe;
+    opacity: 0.5;
+    cursor: pointer;  
+}

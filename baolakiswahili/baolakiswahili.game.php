@@ -166,8 +166,15 @@ class BaoLaKiswahili extends Table
         return self::getDoubleKeyCollectionFromDB( $sql );            
     }
 
-    // Possible bowles to select are all of players bowls with at least 2 stones
-    function getPossibleBowles( $player_id )
+    // Get selected field of player
+    function getSelectedField( $player_id)
+    {
+        $sql = "SELECT selected_field FROM player WHERE player_id = '$player_id'";
+        return self::getUniqueValueFromDB( $sql );
+    }
+
+    // Possible bowls to select are all of players bowls with at least 2 stones
+    function getPossibleBowls( $player_id )
     {
         $result = array();
         
@@ -188,9 +195,12 @@ class BaoLaKiswahili extends Table
     function getPossibleDirections( $player_id, $selected )
     {
         $result = array();
+        $left = $selected == 1 ? 16 : $selected-1;
+        $right = $selected == 16 ? 1 : $selected+1;
 
-        $result[$player_id][$selected-1] = true;
-        $result[$player_id][$selected+1] = true;
+        $result[$player_id][$left] = true;
+        $result[$player_id][$selected] = false;
+        $result[$player_id][$right] = true;
 
         return $result;
     }
@@ -204,6 +214,49 @@ class BaoLaKiswahili extends Table
         Each time a player is doing some game action, one of the methods below is called.
         (note: each method below must match an input method in baolakiswahili.action.php)
     */
+
+    // player has selected a bowl for his move
+    function selectBowl( $player, $field )
+    {
+        // Check that this player is active and that this action is possible at this moment
+        self::checkAction( 'selectBowl' ); 
+
+        // Check that selection is possible
+        $possibleBowls = self::getPossibleBowls( $player );
+        if( $possibleBowls[$player][$field] >= 2)
+        {
+            // Save selected bowl
+            $sql = "UPDATE player SET selected_field = $field where player_id = $player";
+            self::DbQuery( $sql );
+
+            // Then, go to the next state
+            $this->gamestate->nextState( 'selectBowl' );
+        } 
+        else
+        {
+            throw new feException( "Impossible move" );
+        }
+    }
+
+    // player has selected a direction for his move
+    function selectDirection( $player, $field ) 
+    {
+        // Check that this player is active and that this action is possible at this moment
+        self::checkAction( 'selectDirection' ); 
+
+        // Check that selection is possible
+        $selected = self::getSelectedField( $player );
+        $possibleDirection = self::getPossibleDirections( $player, $selected );
+        if( $possibleDirection[$player][$field] )
+        {
+            // Go to the next state
+            $this->gamestate->nextState( 'selectDirection' );
+        } 
+        else
+        {
+            throw new feException( "Impossible move" );
+        }
+    }
 
     /*
     
@@ -245,7 +298,16 @@ class BaoLaKiswahili extends Table
     function argBowlSelect()
     {
         return array(
-            'possibleBowles' => self::getPossibleBowles( self::getActivePlayerId() )
+            'possibleBowls' => self::getPossibleBowls( self::getActivePlayerId() )
+        );
+    }
+
+    function argDirectionSelect()
+    {
+        $field = self::getSelectedField(self::getActivePlayerId() );
+
+        return array(
+            'possibleDirections' => self::getPossibleDirections( self::getActivePlayerId(), $field )
         );
     }
 
@@ -275,6 +337,11 @@ class BaoLaKiswahili extends Table
         The action method of state X is called everytime the current game state is set to X.
     */
     
+    function stNextMove()
+    {
+        echo "I will move now!!!";
+    }
+
     /*
     
     Example for game state "MyGameState":

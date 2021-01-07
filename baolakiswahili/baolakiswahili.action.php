@@ -41,6 +41,23 @@
   	
   	// TODO: defines your action entry points there
 
+    public function selectBowl()
+    {
+        self::setAjaxMode();     
+        $player = self::getArg( "player", AT_posint, true );
+        $field = self::getArg( "field", AT_posint, true );
+        $result = $this->game->selectBowl( $player, $field );
+        self::ajaxResponse( );
+    }
+
+    public function selectDirection()
+    {
+        self::setAjaxMode();     
+        $player = self::getArg( "player", AT_posint, true );
+        $field = self::getArg( "field", AT_posint, true );
+        $result = $this->game->selectDirection( $player, $field );
+        self::ajaxResponse( );
+  }
 
     /*
     

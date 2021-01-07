@@ -61,15 +61,16 @@ $machinestates = array(
         "transitions" => array( "" => 10 )
     ),
     
-    // player selects a bowl or gives up to not having to play a hopeless game til the end
+    // player selects a bowl, cancels his selection or 
+    // gives up to not having to play a hopeless game til the end
     10 => array(
     		"name" => "bowlSelection",
     		"description" => clienttranslate('${actplayer} must select a bowl'),
     		"descriptionmyturn" => clienttranslate('${you} must select a bowl'),
             "type" => "activeplayer",
             "args" => "argBowlSelect",
-    		"possibleactions" => array( "selectBowl", "giveUp" ),
-    		"transitions" => array( "selectBowl" => 11, "giveUp" => 99 )
+    		"possibleactions" => array( "selectBowl", "cancel", "giveUp" ),
+    		"transitions" => array( "selectBowl" => 11, "cancel" => 10, "giveUp" => 99 )
     ),
 
     // player selects direction where stones should be moved to
