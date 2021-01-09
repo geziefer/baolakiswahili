@@ -181,6 +181,10 @@ function (dojo, declare) {
 
         updateBowlSelection: function( possibleBowls )
         {
+            // Remove previously set css markers for possible directions and selected bowl
+            dojo.query( '.possibleDirection' ).removeClass( 'possibleDirection' );
+            dojo.query( '.selectedBowl' ).removeClass( 'selectedBowl' );
+
             // only 1 player in array
             for( var player in possibleBowls )
             {

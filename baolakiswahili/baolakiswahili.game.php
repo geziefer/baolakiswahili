@@ -166,10 +166,17 @@ class BaoLaKiswahili extends Table
         return self::getDoubleKeyCollectionFromDB( $sql );            
     }
 
-    // Get selected field of player
+    // Get selected field of player from db
     function getSelectedField( $player_id)
     {
         $sql = "SELECT selected_field FROM player WHERE player_id = '$player_id'";
+        return self::getUniqueValueFromDB( $sql );
+    }
+
+    // Get move direction of player from db (smaller bowl no = -1, higher bowl no = +1)
+    function getMoveDirection( $player_id)
+    {
+        $sql = "SELECT move_direction FROM player WHERE player_id = '$player_id'";
         return self::getUniqueValueFromDB( $sql );
     }
 
@@ -249,7 +256,13 @@ class BaoLaKiswahili extends Table
         $possibleDirection = self::getPossibleDirections( $player, $selected );
         if( $possibleDirection[$player][$field] )
         {
-            // Go to the next state
+            // we only want to have -1 or +1, thus correct if overflown
+            $moveDirection = ($field - $selected);
+            $moveDirection = (abs($moveDirection) > 1) ? $moveDirection / -15 : $moveDirection;
+            $sql = "UPDATE player SET move_direction = $moveDirection where player_id = $player";
+            self::DbQuery( $sql );
+
+            // Then go to the next state
             $this->gamestate->nextState( 'selectDirection' );
         } 
         else
@@ -339,8 +352,15 @@ class BaoLaKiswahili extends Table
     
     function stNextMove()
     {
-        echo "I will move now!!!";
-    }
+
+
+
+
+        // Active next player
+        $player_id = self::activeNextPlayer();
+
+        // Go to the next state
+        $this->gamestate->nextState( 'nextPlayer' );    }
 
     /*
     
