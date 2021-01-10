@@ -188,6 +188,12 @@ function (dojo, declare) {
             // only display for current player
             if( this.isCurrentPlayerActive() )
             {
+                // Remove previously set css markers for possible bowls, stones and directions
+                dojo.query( '.possibleDirection' ).removeClass( 'possibleDirection' );
+                dojo.query( '.selectedBowl' ).removeClass( 'selectedBowl' );
+                dojo.query( '.possibleStone' ).removeClass( 'possibleStone' );
+                dojo.query( '.selectedStone' ).removeClass( 'selectedStone' );
+
                 // only 1 player in array
                 for( var player in possibleBowls )
                 {
@@ -197,6 +203,9 @@ function (dojo, declare) {
                         dojo.addClass( 'circle_'+player+'_'+field, 'possibleBowl' );
                     }            
                 }
+
+                // highlight all stones in possible bowls
+                dojo.query(".possibleBowl").query(".stone").addClass("possibleStone");
             }
         },
 
@@ -205,8 +214,9 @@ function (dojo, declare) {
             // only display for current player
             if( this.isCurrentPlayerActive() )
             {
-                // Remove previously set css markers for possible bowls
+                // Remove previously set css markers for possible bowls, stones and directions
                 dojo.query( '.possibleBowl' ).removeClass( 'possibleBowl' );
+                dojo.query( '.possibleStone' ).removeClass( 'possibleStone' );
 
                 // only 1 player in array
                 for( var player in possibleDirections )
@@ -223,6 +233,10 @@ function (dojo, declare) {
                         }
                     }            
                 }
+
+                // highlight all stones in possible directions and selected bowl
+                dojo.query(".possibleDirection").query(".stone").addClass("possibleStone");
+                dojo.query(".selectedBowl").query(".stone").addClass("selectedStone");
             }
         },
 
@@ -276,6 +290,18 @@ function (dojo, declare) {
 
            if( ! dojo.hasClass( 'circle_'+player+'_'+field, 'possibleDirection'))
            {
+               if (dojo.hasClass( 'circle_'+player+'_'+field, 'selectedBowl'))
+               {
+                    // Check that this action is possible at this moment
+                    if( this.checkAction( 'selectDirection' ) )
+                    {
+                        this.ajaxcall( "/baolakiswahili/baolakiswahili/cancelDirection.html", {
+                            player:player,
+                            field:field
+                        }, this, function( result ) {} );
+                    }
+               }
+
                // This is not a possible move => the click does nothing
                return ;
            }

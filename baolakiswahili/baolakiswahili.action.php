@@ -57,7 +57,16 @@
         $field = self::getArg( "field", AT_posint, true );
         $result = $this->game->selectDirection( $player, $field );
         self::ajaxResponse( );
-  }
+    }
+
+    public function cancelDirection()
+    {
+        self::setAjaxMode();     
+        $player = self::getArg( "player", AT_posint, true );
+        $field = self::getArg( "field", AT_posint, true );
+        $result = $this->game->cancelDirection( $player, $field );
+        self::ajaxResponse( );
+    }
 
     /*
     

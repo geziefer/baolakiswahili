@@ -282,6 +282,29 @@ class BaoLaKiswahili extends Table
         }
     }
 
+    // player has canceled the direction selection
+    function cancelDirection( $player, $field ) 
+    {
+        // Check that this player is active and that this action is possible at this moment
+        self::checkAction( 'selectDirection' ); 
+
+        // Check that selection is possible
+        $selected = self::getSelectedField( $player );
+        if( $selected == $field )
+        {
+            // delete selection
+            $sql = "UPDATE player SET selected_field = NULL where player_id = $player";
+            self::DbQuery( $sql );
+
+            // Then go to the next state
+            $this->gamestate->nextState( 'cancelDirection' );
+        } 
+        else
+        {
+            throw new feException( "Impossible move" );
+        }
+    }
+
     /*
     
     Example:

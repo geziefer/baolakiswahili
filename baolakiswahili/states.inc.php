@@ -70,7 +70,7 @@ $machinestates = array(
             "type" => "activeplayer",
             "args" => "argBowlSelect",
     		"possibleactions" => array( "selectBowl", "cancel", "giveUp" ),
-    		"transitions" => array( "selectBowl" => 11, "cancel" => 10, "giveUp" => 99 )
+    		"transitions" => array( "selectBowl" => 11, "giveUp" => 99 )
     ),
 
     // player selects direction where stones should be moved to
@@ -80,8 +80,8 @@ $machinestates = array(
         "descriptionmyturn" => clienttranslate('${you} must select a direction'),
         "type" => "activeplayer",
         "args" => "argDirectionSelect",
-        "possibleactions" => array( "selectDirection" ),
-        "transitions" => array( "selectDirection" => 20 )
+        "possibleactions" => array( "selectDirection", "cancelDirection" ),
+        "transitions" => array( "selectDirection" => 20, "cancelDirection" => 10,  )
     ),
 
     // game moves stones from selected bowl in the selected direction
