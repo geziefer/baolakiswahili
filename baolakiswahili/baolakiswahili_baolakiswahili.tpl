@@ -32,9 +32,14 @@
 
 <div id="board">
     <!-- BEGIN circle -->
-        <div id="circle_{PLAYER}_{FIELD}" class="circle" style="left: {LEFT}px; top: {TOP}px;">
+    <div id="circle_{PLAYER}_{FIELD}" class="circle" style="left: {LEFT}px; top: {TOP}px;">
+        <div id="label_{PLAYER}_{FIELD}" class="label" >
+            <p>2</p>
         </div>
+     </div>
     <!-- END circle -->
+    <!-- BEGIN label -->
+<!-- END label -->
 </div>
 
 {OVERALL_GAME_FOOTER}

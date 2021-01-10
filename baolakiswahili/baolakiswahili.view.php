@@ -51,6 +51,8 @@
         self::createLine(3, 108, 100, 62, 49, $player1, True);
         self::createLine(4, 112, 100, 46, 68, $player1, False);
 
+
+
         /*
         
         // Examples: set the value of some element defined in your tpl file like this: {MY_VARIABLE_ELEMENT}
@@ -102,11 +104,12 @@
       {
           // insert an invisible circle for later clicking with ID according to board in DB
           $this->page->insert_block( "circle", array(
-              'PLAYER' => $player,
-              'FIELD' => $field,
-              'LEFT' => round( ($x-1)*$hor_scale+$hor_shift ),
-              'TOP' => round( ($y-1)*$ver_scale+$ver_shift )
+            'PLAYER' => $player,
+            'FIELD' => $field,
+            'LEFT' => round( ($x-1)*$hor_scale+$hor_shift ),
+            'TOP' => round( ($y-1)*$ver_scale+$ver_shift )
           ) );
+
        $field += ($up) ? +1 : -1;
       }
     }      

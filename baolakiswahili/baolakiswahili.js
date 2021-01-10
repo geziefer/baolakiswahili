@@ -59,7 +59,10 @@ function (dojo, declare) {
                     this.addStoneOnBoard( bowl.player, bowl.no, number );
                     number++;
                 }
-                
+
+                // update label to display stone count
+                dojo.byId( 'label_'+bowl.player+'_'+bowl.no).innerHTML = "<p>"+bowl.count+"</p>";
+
             }
             
             // click handlers for both possible click situations on bowl
@@ -192,9 +195,6 @@ function (dojo, declare) {
                     {
                         // every entry in this array is a possible bowl
                         dojo.addClass( 'circle_'+player+'_'+field, 'possibleBowl' );
-                        var count = possibleBowls[player][field].count;
-                        var message = dojo.string.substitute(_("Move ${count} stones"), { count : count});
-                        this.addTooltip( 'circle_'+player+'_'+field, '', message );
                     }            
                 }
             }
@@ -211,18 +211,11 @@ function (dojo, declare) {
                 // only 1 player in array
                 for( var player in possibleDirections )
                 {
-                    for( i=1; i<=16; i++ )
-                    {
-                        // remove all previously set tooltips
-                        this.removeTooltip( 'circle_'+player+'_'+i )
-                    }
-
                     for( var field in possibleDirections[player] )
                     {
                         // true entries are directions, the false entry is the selected
                         if (possibleDirections[player][field]) {
                             dojo.addClass( 'circle_'+player+'_'+field, 'possibleDirection' );
-                            this.addTooltip( 'circle_'+player+'_'+field, '', "Start in this direction" );
                         } 
                         else
                         {
