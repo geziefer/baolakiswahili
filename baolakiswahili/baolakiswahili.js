@@ -62,8 +62,9 @@ function (dojo, declare) {
                 
             }
             
-            // click handler
-            dojo.query( '.circle' ).connect( 'onclick', this, 'onBowlClick');
+            // click handlers for both possible click situations on bowl
+            dojo.query( '.circle' ).connect( 'onclick', this, 'onSelectBowl');
+            dojo.query( '.circle' ).connect( 'onclick', this, 'onSelectDirection');
 
             // Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
@@ -246,40 +247,57 @@ function (dojo, declare) {
         
         */
         
-        onBowlClick: function( evt )
-        {
-            // Stop event propagation
-            dojo.stopEvent( evt );
+       onSelectBowl: function( evt )
+       {
+           // Stop event propagation
+           dojo.stopEvent( evt );
 
-            var params = evt.currentTarget.id.split('_');
-            var player = params[1];
-            var field = params[2];
+           var params = evt.currentTarget.id.split('_');
+           var player = params[1];
+           var field = params[2];
 
-            if( ! dojo.hasClass( 'circle_'+player+'_'+field, 'possibleBowl') &&
-            ! dojo.hasClass( 'circle_'+player+'_'+field, 'possibleDirection'))
-            {
-                // This is not a possible move => the click does nothing
-                return ;
-            }
+           if( ! dojo.hasClass( 'circle_'+player+'_'+field, 'possibleBowl') )
+           {
+               // This is not a possible move => the click does nothing
+               return ;
+           }
 
-            // Check that this action is possible at this moment
-            // and distinguish 1st or 2nd step in move selection
-            if( this.checkAction( 'selectBowl' ) )    
-            {            
-                this.ajaxcall( "/baolakiswahili/baolakiswahili/selectBowl.html", {
-                    player:player,
-                    field:field
-                }, this, function( result ) {} );
-            }  else if( this.checkAction( 'selectDirection' ) )
-            {
-                this.ajaxcall( "/baolakiswahili/baolakiswahili/selectDirection.html", {
-                    player:player,
-                    field:field
-                }, this, function( result ) {} );
-            }
-        },
+           // Check that this action is possible at this moment
+           if( this.checkAction( 'selectBowl' ) )    
+           {            
+               this.ajaxcall( "/baolakiswahili/baolakiswahili/selectBowl.html", {
+                   player:player,
+                   field:field
+               }, this, function( result ) {} );
+           }  
+       },
 
-        /* Example:
+       onSelectDirection: function( evt )
+       {
+           // Stop event propagation
+           dojo.stopEvent( evt );
+
+           var params = evt.currentTarget.id.split('_');
+           var player = params[1];
+           var field = params[2];
+
+           if( ! dojo.hasClass( 'circle_'+player+'_'+field, 'possibleDirection'))
+           {
+               // This is not a possible move => the click does nothing
+               return ;
+           }
+
+           // Check that this action is possible at this moment
+           if( this.checkAction( 'selectDirection' ) )
+           {
+               this.ajaxcall( "/baolakiswahili/baolakiswahili/selectDirection.html", {
+                   player:player,
+                   field:field
+               }, this, function( result ) {} );
+           }
+       },
+
+      /* Example:
         
         onMyMethodToCall1: function( evt )
         {
