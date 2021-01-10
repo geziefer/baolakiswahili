@@ -65,12 +65,12 @@ class BaoLaKiswahili extends Table
  
         // Create players
         // Note: if you added some extra field on "player" table in the database (dbmodel.sql), you can initialize it there.
-        $sql = "INSERT INTO player (player_id, player_color, player_canal, player_name, player_avatar) VALUES ";
+        $sql = "INSERT INTO player (player_id, player_color, player_score, player_canal, player_name, player_avatar) VALUES ";
         $values = array();
         foreach( $players as $player_id => $player )
         {
             $color = array_shift( $default_colors );
-            $values[] = "('".$player_id."','$color','".$player['player_canal']."','".addslashes( $player['player_name'] )."','".addslashes( $player['player_avatar'] )."')";
+            $values[] = "('".$player_id."','$color','32','".$player['player_canal']."','".addslashes( $player['player_name'] )."','".addslashes( $player['player_avatar'] )."')";
         }
         $sql .= implode( $values, ',' );
         self::DbQuery( $sql );
@@ -162,7 +162,7 @@ class BaoLaKiswahili extends Table
     // Get the complete board with a double associative array player/no -> count
     function getBoard()
     {
-        $sql = "SELECT player player, field no, stones count FROM board ";
+        $sql = "SELECT player player, field no, stones count, stones countBackup FROM board ";
         return self::getDoubleKeyCollectionFromDB( $sql );            
     }
 
@@ -186,15 +186,15 @@ class BaoLaKiswahili extends Table
         $result = array();
         
         $board = self::getBoard();
-        
+
         for( $i=1; $i<=16; $i++ )
         {
-            if( $board[$player_id][$i] >= 2 )
+            if( $board[$player_id][$i]["count"] >= 2 )
             {
                 $result[$player_id][$i] = $board[$player_id][$i];
             }
         }
-                
+
         return $result;
     }
 
@@ -210,6 +210,17 @@ class BaoLaKiswahili extends Table
         $result[$player_id][$right] = true;
 
         return $result;
+    }
+
+    // Calculate next field from given field in given direction (-1 / +1)
+    function getNextField( $field, $direction )
+    {
+        // calculate next field to move to, adapt overflow in field no
+        $destinationField = $field + $direction;
+        $destinationField = ($destinationField == 0) ? 16 : $destinationField;
+        $destinationField = ($destinationField == 17) ? 1 : $destinationField;
+        
+        return $destinationField;
     }
 
 
@@ -352,16 +363,66 @@ class BaoLaKiswahili extends Table
     
     function stNextMove()
     {
+        // get start situation
+        $player = self::getActivePlayerId();
+        $selectedField = self::getSelectedField( $player );
+        $sourceField = $selectedField;
+        $direction = self::getMoveDirection( $player );
 
+        // get board data and initialize counter for statistics
+        $board = self::getBoard();
+        $overallMoved = 0;
 
+        // get stones for move and empty start field
+        $count = $board[$player][$sourceField]["count"];
+        $board[$player][$sourceField]["count"] = 0;
+        $overallMoved += $count;
 
+        // distribute stones in the next fields in selected direction until last one
+        while ($count > 0)
+        {
+            // calculate next field to move to and leave 1 stone
+            $destinationField = self::getNextField( $sourceField, $direction );
+            $board[$player][$destinationField]["count"] += 1;
+            $sourceField = $destinationField;
+            $count -= 1;
+        }
+        
+        // save all changed fields and update score
+        for ($i=1; $i<=16; $i++)
+        {
+            $count = $board[$player][$i]["count"];
+            $countBackup = $board[$player][$i]["countBackup"];
+            if ($count <> $countBackup)
+            {
+                $sql = "UPDATE board SET stones = '$count' WHERE player = '$player' AND field = '$i'";
+                self::DbQuery( $sql );
+            }
+        }
+
+        // clear selections
+        $sql = "UPDATE player SET selected_field = NULL AND move_direction = NULL WHERE player_id = '$player'";
+        self::DbQuery( $sql );
+
+        // update statistics
+        //self::incStat($overallMoved, "overallMoved", $player);
+
+        // notify other player
+        // TODO: returnin board is only a workaround
+        self::notifyAllPlayers( "moveStones", clienttranslate( '${player_name} makes move'), array(
+            'player' => $player,
+            'player_name' => self::getActivePlayerName(),
+            'selectedField' => $selectedField,
+            'direction' => $direction,
+            'board' => $board
+        ) );
 
         // Active next player
         $player_id = self::activeNextPlayer();
 
         // Go to the next state
-        $this->gamestate->nextState( 'nextPlayer' );    }
-
+        $this->gamestate->nextState( 'nextPlayer' );    
+    }
     /*
     
     Example for game state "MyGameState":

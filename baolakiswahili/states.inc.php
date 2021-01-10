@@ -85,8 +85,8 @@ $machinestates = array(
     ),
 
     // game moves stones from selected bowl in the selected direction
-    // which is making one move; depending on the destination field,
-    // either another game move follows or it's the next player's move
+    // which is making one move; moves are continued until destination
+    // field is empty; after the moves, it's eitner the next player's move
     // or game end is reached
     20=> array(
         "name" => "stoneMove",
@@ -94,7 +94,7 @@ $machinestates = array(
         "type" => "game",
         "action" => "stNextMove",
         "updateGameProgression" => true,   
-        "transitions" => array( "nextMove" => 11, "nextPlayer" => 10, "endGame" => 99 )
+        "transitions" => array( "nextPlayer" => 10, "endGame" => 99 )
     ),
 
 

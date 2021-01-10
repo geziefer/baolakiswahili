@@ -181,50 +181,54 @@ function (dojo, declare) {
 
         updateBowlSelection: function( possibleBowls )
         {
-            // Remove previously set css markers for possible directions and selected bowl
-            dojo.query( '.possibleDirection' ).removeClass( 'possibleDirection' );
-            dojo.query( '.selectedBowl' ).removeClass( 'selectedBowl' );
-
-            // only 1 player in array
-            for( var player in possibleBowls )
+            // only display for current player
+            if( this.isCurrentPlayerActive() )
             {
-                for( var field in possibleBowls[player] )
+                // only 1 player in array
+                for( var player in possibleBowls )
                 {
-                    // every entry in this array is a possible bowl
-                    dojo.addClass( 'circle_'+player+'_'+field, 'possibleBowl' );
-                    var count = possibleBowls[player][field].count;
-                    var message = dojo.string.substitute(_("Move ${count} stones"), { count : count});
-                    this.addTooltip( 'circle_'+player+'_'+field, '', message );
-                }            
+                    for( var field in possibleBowls[player] )
+                    {
+                        // every entry in this array is a possible bowl
+                        dojo.addClass( 'circle_'+player+'_'+field, 'possibleBowl' );
+                        var count = possibleBowls[player][field].count;
+                        var message = dojo.string.substitute(_("Move ${count} stones"), { count : count});
+                        this.addTooltip( 'circle_'+player+'_'+field, '', message );
+                    }            
+                }
             }
         },
 
         updateMoveDirection: function( possibleDirections )
         {
-            // Remove previously set css markers for possible bowls
-            dojo.query( '.possibleBowl' ).removeClass( 'possibleBowl' );
-
-            // only 1 player in array
-            for( var player in possibleDirections )
+            // only display for current player
+            if( this.isCurrentPlayerActive() )
             {
-                for( i=1; i<=16; i++ )
-                {
-                    // remove all previously set tooltips
-                    this.removeTooltip( 'circle_'+player+'_'+i )
-                }
+                // Remove previously set css markers for possible bowls
+                dojo.query( '.possibleBowl' ).removeClass( 'possibleBowl' );
 
-                for( var field in possibleDirections[player] )
+                // only 1 player in array
+                for( var player in possibleDirections )
                 {
-                    // true entries are directions, the false entry is the selected
-                    if (possibleDirections[player][field]) {
-                        dojo.addClass( 'circle_'+player+'_'+field, 'possibleDirection' );
-                        this.addTooltip( 'circle_'+player+'_'+field, '', "Start in this direction" );
-                    } 
-                    else
+                    for( i=1; i<=16; i++ )
                     {
-                        dojo.addClass( 'circle_'+player+'_'+field, 'selectedBowl' );
+                        // remove all previously set tooltips
+                        this.removeTooltip( 'circle_'+player+'_'+i )
                     }
-                }            
+
+                    for( var field in possibleDirections[player] )
+                    {
+                        // true entries are directions, the false entry is the selected
+                        if (possibleDirections[player][field]) {
+                            dojo.addClass( 'circle_'+player+'_'+field, 'possibleDirection' );
+                            this.addTooltip( 'circle_'+player+'_'+field, '', "Start in this direction" );
+                        } 
+                        else
+                        {
+                            dojo.addClass( 'circle_'+player+'_'+field, 'selectedBowl' );
+                        }
+                    }            
+                }
             }
         },
 
@@ -328,6 +332,8 @@ function (dojo, declare) {
             
             // TODO: here, associate your game notifications with local methods
             
+            dojo.subscribe( 'moveStones', this, "notif_moveStones" );
+
             // Example 1: standard notification handling
             // dojo.subscribe( 'cardPlayed', this, "notif_cardPlayed" );
             
@@ -341,6 +347,16 @@ function (dojo, declare) {
         
         // TODO: from this point and below, you can write your game notifications handling methods
         
+        notif_moveStones: function( notif )
+        {
+            // Remove previously set css markers for possible directions and selected bowl
+            dojo.query( '.possibleDirection' ).removeClass( 'possibleDirection' );
+            dojo.query( '.selectedBowl' ).removeClass( 'selectedBowl' );
+
+            // TODO: this is a workaround to see the moves directly
+            document.location.reload();            
+        },
+
         /*
         Example:
         
