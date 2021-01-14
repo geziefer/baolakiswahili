@@ -76,6 +76,18 @@ $stats_type = array(
         "turns_number" => array("id"=> 10,
                     "name" => totranslate("Number of turns"),
                     "type" => "int" ),
+
+        "overallMoved" => array("id"=> 11,
+                    "name" => totranslate("Number of moved stones"),
+                    "type" => "int" ),
+
+        "overallStolen" => array("id"=> 12,
+                    "name" => totranslate("Number of stolen stones from oponent"),
+                    "type" => "int" ),
+
+        "overallEmptied" => array("id"=> 13,
+                    "name" => totranslate("Number of emptied bowls from oponent"),
+                    "type" => "int" ),
     
 /*
         Examples:    

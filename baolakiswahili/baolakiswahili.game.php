@@ -100,6 +100,11 @@ class BaoLaKiswahili extends Table
         $sql .= implode( ',', $values );
         self::DbQuery( $sql );
 
+        // Init stats
+        self::initStat( 'player', 'overallMoved', 0 );
+        self::initStat( 'player', 'overallStolen', 0 );
+        self::initStat( 'player', 'overallEmptied', 0 );
+
         // Activate first player (which is in general a good idea :) )
         $this->activeNextPlayer();
 
@@ -387,57 +392,100 @@ class BaoLaKiswahili extends Table
     function stNextMove()
     {
         // get start situation
-        $player = self::getActivePlayerId();
-        $selectedField = self::getSelectedField( $player );
+        $active = self::getActivePlayerId();
+        $oponent = self::getPlayerAfter( $active );
+        $players = array($active, $oponent);
+        $selectedField = self::getSelectedField( $active );
         $sourceField = $selectedField;
-        $direction = self::getMoveDirection( $player );
-
-        // get board data and initialize counter for statistics
+        $direction = self::getMoveDirection( $active );
         $board = self::getBoard();
-        $overallMoved = 0;
 
-        // get stones for move and empty start field
-        $count = $board[$player][$sourceField]["count"];
-        $board[$player][$sourceField]["count"] = 0;
-        $overallMoved += $count;
+        // initialize result array for later notification of moves to do;
+        // moves are ordered list of pattern "<command>_<field>"
+        // where command is: emptyActive, emptyOponent, moveStone, blinkStones
+        $moves = array();
 
-        // distribute stones in the next fields in selected direction until last one
-        while ($count > 0)
+        // get stones for move and empty the start field
+        $count = $board[$active][$sourceField]["count"];
+        $board[$active][$sourceField]["count"] = 0;
+        array_push($moves, "emptyActive_".$sourceField);
+        $overallMoved = $count;
+        $overallStolen = 0;
+        $overallEmptied = 0;
+
+        // make moves until last field was empty before putting stone
+        while ($count > 1 )
         {
-            // calculate next field to move to and leave 1 stone
-            $destinationField = self::getNextField( $sourceField, $direction );
-            $board[$player][$destinationField]["count"] += 1;
-            $sourceField = $destinationField;
-            $count -= 1;
+            // distribute stones in the next fields in selected direction until last one
+            while ($count > 0)
+            {
+                // calculate next field to move to and leave 1 stone
+                $destinationField = self::getNextField( $sourceField, $direction );
+                $board[$active][$destinationField]["count"] += 1;
+                array_push($moves, "moveStone_".$destinationField);
+                $sourceField = $destinationField;
+                $count -= 1;
+            }
+
+            // source field now points to field of last put stone
+            $count = $board[$active][$sourceField]["count"];
+            array_push($moves, "blinkStones_".$sourceField);
+
+            if ($count > 1)
+            {
+                // empty own bowl for next move
+                $board[$active][$sourceField]["count"] = 0;
+                // also empty oponets oposite bowl in 1st row and add to own stones for move,
+                // if empty, nothing changes
+                if ($sourceField <= 8)
+                {
+                    $countOponent = $board[$oponent][$sourceField]["count"];
+                    $overallStolen += $countOponent;
+                    $overallEmptied += 1;
+                    $count += $countOponent;
+                    $board[$oponent][$sourceField]["count"] = 0;
+                    array_push($moves, "emptyOponent_".$sourceField);
+                    $overallMoved += $count;
+                }
+            }
         }
         
         // save all changed fields and update score
-        for ($i=1; $i<=16; $i++)
+        foreach ($players as $player)
         {
-            $count = $board[$player][$i]["count"];
-            $countBackup = $board[$player][$i]["countBackup"];
-            if ($count <> $countBackup)
+            for ($field=1; $field<=16; $field++)
             {
-                $sql = "UPDATE board SET stones = '$count' WHERE player = '$player' AND field = '$i'";
-                self::DbQuery( $sql );
+                $count = $board[$player][$field]["count"];
+                $countBackup = $board[$player][$field]["countBackup"];
+                if ($count <> $countBackup)
+                {
+                    $sql = "UPDATE board SET stones = '$count' WHERE player = '$player' AND field = '$field'";
+                    self::DbQuery( $sql );
+                }
             }
         }
 
         // clear selections
-        $sql = "UPDATE player SET selected_field = NULL AND move_direction = NULL WHERE player_id = '$player'";
+        $sql = "UPDATE player SET selected_field = NULL AND move_direction = NULL WHERE player_id = '$active'";
         self::DbQuery( $sql );
 
         // update statistics
-        //self::incStat($overallMoved, "overallMoved", $player);
+        self::incStat($overallMoved, "overallMoved", $player);
+        self::incStat($overallStolen, "overallStolen", $player);
+        self::incStat($overallEmptied, "overallEmptied", $player);
 
-        // notify other player
-        // TODO: returnin board is only a workaround
-        self::notifyAllPlayers( "moveStones", clienttranslate( '${player_name} makes move'), array(
-            'player' => $player,
+        // notify other player of all moves
+        $messageDirection = ($direction < 0) ? clienttranslate( 'down' ) : clienttranslate( 'up' );
+        $message = clienttranslate( '${player_name} moved ${messageDirection} from field ${selectedField} to field ${sourceField} emptying ${overallEmptied} bowls.');
+        self::notifyAllPlayers( "moveStones", $message, array(
+            'player' => $active,
             'player_name' => self::getActivePlayerName(),
+            'messageDirection' => $messageDirection,
             'selectedField' => $selectedField,
-            'direction' => $direction,
-            'board' => $board
+            'sourceField' => $sourceField,
+            'sourceField' => $sourceField,
+            'overallEmptied' => $overallEmptied,
+            'moves' => $moves
         ) );
 
         // Active next player
