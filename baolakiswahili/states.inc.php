@@ -73,7 +73,10 @@ $machinestates = array(
     		"transitions" => array( "selectBowl" => 11, "giveUp" => 99 )
     ),
 
-    // player selects direction where stones should be moved to
+    // player selects direction where stones should be moved to;
+    // game moves stones from selected bowl in the selected direction
+    // which is making one move; moves are continued until destination
+    // field is empty
     11 => array(
         "name" => "moveDirection",
         "description" => clienttranslate('${actplayer} must select a direction'),
@@ -84,15 +87,12 @@ $machinestates = array(
         "transitions" => array( "selectDirection" => 20, "cancelDirection" => 10,  )
     ),
 
-    // game moves stones from selected bowl in the selected direction
-    // which is making one move; moves are continued until destination
-    // field is empty; after the moves, it's eitner the next player's move
-    // or game end is reached
+    // game checks situation if next player is on or if current one wins
     20=> array(
-        "name" => "stoneMove",
-        "description" => clienttranslate('Stones are moved until empty field is reached'),
+        "name" => "nextPlayer",
+        "description" => "",
         "type" => "game",
-        "action" => "stNextMove",
+        "action" => "stNextPlayer",
         "updateGameProgression" => true,   
         "transitions" => array( "nextPlayer" => 10, "endGame" => 99 )
     ),

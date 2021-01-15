@@ -223,13 +223,16 @@ function (dojo, declare) {
                 {
                     for( var field in possibleDirections[player] )
                     {
-                        // true entries are directions, the false entry is the selected
-                        if (possibleDirections[player][field]) {
-                            dojo.addClass( 'circle_'+player+'_'+field, 'possibleDirection' );
-                        } 
-                        else
-                        {
-                            dojo.addClass( 'circle_'+player+'_'+field, 'selectedBowl' );
+                        // true entries are directions, the false entry is the selected,
+                        // if not possible to select, nothing happens
+                        if (possibleDirections[player][field] != null) {
+                            if (possibleDirections[player][field]) {
+                                dojo.addClass( 'circle_'+player+'_'+field, 'possibleDirection' );
+                            } 
+                            else
+                            {
+                                dojo.addClass( 'circle_'+player+'_'+field, 'selectedBowl' );
+                            }
                         }
                     }            
                 }
@@ -392,6 +395,15 @@ function (dojo, declare) {
 
             // TODO: this is a workaround to see the moves directly
             document.location.reload();            
+        },
+
+        notif_newScores: function( notif )
+        {
+            for( var player_id in notif.args )
+            {
+                var newScore = notif.args[ player_id ];
+                this.scoreCtrl[ player_id ].toValue( newScore );
+            }
         },
 
         /*

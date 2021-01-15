@@ -34,7 +34,6 @@
 -- ALTER TABLE `player` ADD `player_my_custom_field` INT UNSIGNED NOT NULL DEFAULT '0';
 -- add selected field and direction to store current move
 ALTER TABLE `player` ADD `selected_field` TINYINT;
-ALTER TABLE `player` ADD `move_direction` TINYINT;
 
 CREATE TABLE IF NOT EXISTS `board` ( 
     `player` INT UNSIGNED NOT NULL, 
