@@ -373,6 +373,7 @@ function (dojo, declare) {
             // TODO: here, associate your game notifications with local methods
             
             dojo.subscribe( 'moveStones', this, "notif_moveStones" );
+            dojo.subscribe( 'newScores', this, "notif_newScores" );
 
             // Example 1: standard notification handling
             // dojo.subscribe( 'cardPlayed', this, "notif_cardPlayed" );
@@ -393,15 +394,42 @@ function (dojo, declare) {
             dojo.query( '.possibleDirection' ).removeClass( 'possibleDirection' );
             dojo.query( '.selectedBowl' ).removeClass( 'selectedBowl' );
 
-            // TODO: this is a workaround to see the moves directly
-            document.location.reload();            
+            // init field to operate moves from, will be set by first emptyActive command
+            var currentField = 0;
+            player = notif.args.player;
+
+                // play each move
+            for( var move in notif.args.moves )
+            {
+                // extract command and field of a move
+                var params = notif.args.moves[move].split('_');
+                var command = params[0];
+                var field = params[1];
+
+                switch( command ) 
+                {
+                    case "emptyActive":
+                        currentField = field;
+                        break;
+                    case "emptyOponent":
+                        // code block
+                        break;
+                    case "moveStone":
+                        var node = dojo.query('#circle_'+ player + '_' + currentField +' > .stone')[0];
+                        this.slideToObject( node.id, 'circle_'+ player + '_' + currentField ).play(); 
+                        break;
+                    case "blinkStones":
+                        // code block
+                        break;
+                  }
+            }
         },
 
         notif_newScores: function( notif )
         {
-            for( var player_id in notif.args )
+            for( var player_id in notif.args.scores )
             {
-                var newScore = notif.args[ player_id ];
+                var newScore = notif.args.scores[ player_id ];
                 this.scoreCtrl[ player_id ].toValue( newScore );
             }
         },

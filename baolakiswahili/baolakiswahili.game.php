@@ -392,10 +392,6 @@ class BaoLaKiswahili extends Table
             $sql = "UPDATE player SET selected_field = NULL WHERE player_id = '$player'";
             self::DbQuery( $sql );
 
-            // save score
-            $sql = "UPDATE player SET player_score = (SELECT SUM(stones) FROM board WHERE player=player_id)";
-            self::DbQuery( $sql );
-
             // update statistics
             self::incStat($overallMoved, "overallMoved", $player);
             self::incStat($overallStolen, "overallStolen", $player);
@@ -403,23 +399,17 @@ class BaoLaKiswahili extends Table
 
             // notify players of all moves
             $messageDirection = ($moveDirection < 0) ? clienttranslate( 'down' ) : clienttranslate( 'up' );
-            $message = clienttranslate( '${player_name} moved ${messageDirection} from field ${selectedField} to field ${sourceField} emptying ${overallEmptied} bowls.');
+            $message = clienttranslate( '${player_name} moved ${messageDirection} from field ${selectedField} to field ${sourceField} emptying ${overallEmptied} bowl(s).');
             self::notifyAllPlayers( "moveStones", $message, array(
                 'player' => $player,
                 'player_name' => self::getActivePlayerName(),
                 'messageDirection' => $messageDirection,
                 'selectedField' => $selectedField,
                 'sourceField' => $sourceField,
-                'sourceField' => $sourceField,
                 'overallEmptied' => $overallEmptied,
                 'moves' => $moves
             ) );
 
-            // notify players of new scores
-            $newScores = self::getCollectionFromDb( "SELECT player_id, player_score FROM player", true );
-            self::notifyAllPlayers( "newScores", "", array(
-                "scores" => $newScores
-            ) );
             // Go to the next state
             $this->gamestate->nextState( 'selectDirection' );    
         } 
