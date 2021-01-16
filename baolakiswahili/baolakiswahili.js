@@ -397,31 +397,55 @@ function (dojo, declare) {
             // init field to operate moves from, will be set by first emptyActive command
             var currentField = 0;
             player = notif.args.player;
+            oponent = notif.args.oponent;
 
-                // play each move
+console.log('moves: ', notif.args.moves);
+            // play each move
             for( var move in notif.args.moves )
             {
                 // extract command and field of a move
                 var params = notif.args.moves[move].split('_');
                 var command = params[0];
                 var field = params[1];
+console.log('############# Executing command ', command, ' on field ', field);
 
                 switch( command ) 
                 {
                     case "emptyActive":
                         currentField = field;
+console.log('currentField: ', currentField);
                         break;
                     case "emptyOponent":
-                        // code block
+                        currentField = field;
+console.log('currentField: ', currentField);
+console.log('circle_'+ oponent + '_' + currentField);
+                        var nodes = dojo.query('#circle_'+ oponent + '_' + currentField +' > .stone');
+console.log('nodes', nodes, 'nodes.length: ', nodes.length);
+                        var ids = [];
+                        for( var pos=0; pos<nodes.length; pos++ )
+                        {
+console.log('pos: ', pos);
+console.log('nodes[pos]: ', nodes[pos]);
+console.log('nodes[pos].id: ', nodes[pos].id);
+                            ids.push(nodes[pos].id);
+                        }
+console.log('ids: ', ids);
+                        for ( var id=0; id<ids.length; id++ )
+                        {
+console.log('id', id);
+console.log('circle_'+ player + '_' + currentField);
+                            this.attachToNewParent( ids[id], 'circle_'+ player + '_' + currentField)
+                            this.slideToObject( ids[id], 'circle_'+ player + '_' + field ).play(); 
+                        }
                         break;
                     case "moveStone":
                         var node = dojo.query('#circle_'+ player + '_' + currentField +' > .stone')[0];
-                        this.slideToObject( node.id, 'circle_'+ player + '_' + currentField ).play(); 
+console.log('node: ', node);
+console.log('circle_'+ player + '_' + field);
+                        this.attachToNewParent( node.id, 'circle_'+ player + '_' + field)
+                        this.slideToObject( node.id, 'circle_'+ player + '_' + field ).play(); 
                         break;
-                    case "blinkStones":
-                        // code block
-                        break;
-                  }
+                }
             }
         },
 

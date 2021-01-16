@@ -94,9 +94,44 @@ class BaoLaKiswahili extends Table
         list( $player1, $player2 ) = array_keys( $players );
         for ( $i=1; $i<=16; $i++ )
         {
-            $values[] = "('$player1', '$i', '2')";
-            $values[] = "('$player2', '$i', '2')";
+            //$values[] = "('$player1', '$i', '2')";
+            //$values[] = "('$player2', '$i', '2')";
         }
+        $i = 1;
+
+        $values[] = "('$player1', '1', '2')";
+        $values[] = "('$player1', '2', '0')";
+        $values[] = "('$player1', '3', '1')";
+        $values[] = "('$player1', '4', '0')";
+        $values[] = "('$player1', '5', '2')";
+        $values[] = "('$player1', '6', '0')";
+        $values[] = "('$player1', '7', '0')";
+        $values[] = "('$player1', '8', '0')";
+        $values[] = "('$player1', '9', '2')";
+        $values[] = "('$player1', '10', '0')";
+        $values[] = "('$player1', '11', '1')";
+        $values[] = "('$player1', '12', '0')";
+        $values[] = "('$player1', '13', '0')";
+        $values[] = "('$player1', '14', '2')";
+        $values[] = "('$player1', '15', '0')";
+        $values[] = "('$player1', '16', '1')";
+
+        $values[] = "('$player2', '1', '2')";
+        $values[] = "('$player2', '2', '0')";
+        $values[] = "('$player2', '3', '2')";
+        $values[] = "('$player2', '4', '0')";
+        $values[] = "('$player2', '5', '2')";
+        $values[] = "('$player2', '6', '0')";
+        $values[] = "('$player2', '7', '0')";
+        $values[] = "('$player2', '8', '0')";
+        $values[] = "('$player2', '9', '2')";
+        $values[] = "('$player2', '10', '0')";
+        $values[] = "('$player2', '11', '1')";
+        $values[] = "('$player2', '12', '0')";
+        $values[] = "('$player2', '13', '0')";
+        $values[] = "('$player2', '14', '2')";
+        $values[] = "('$player2', '15', '0')";
+        $values[] = "('$player2', '16', '1')";
 
         $sql .= implode( ',', $values );
         self::DbQuery( $sql );
@@ -325,7 +360,7 @@ class BaoLaKiswahili extends Table
 
             // initialize result array for later notification of moves to do;
             // moves are ordered list of pattern "<command>_<field>"
-            // where command is: emptyActive, emptyOponent, moveStone, blinkStones
+            // where command is: emptyActive, emptyOponent, moveStone
             $moves = array();
 
             // get stones for move and empty the start field
@@ -352,24 +387,28 @@ class BaoLaKiswahili extends Table
 
                 // source field now points to field of last put stone
                 $count = $board[$player][$sourceField]["count"];
-                array_push($moves, "blinkStones_".$sourceField);
 
                 if ($count > 1)
                 {
-                    // empty own bowl for next move
-                    $board[$player][$sourceField]["count"] = 0;
-                    // also empty oponets oposite bowl in 1st row and add to own stones for move,
+                    // empty oponents oposite bowl in 1st row and add to own stones for move,
                     // if empty, nothing changes
                     if ($sourceField <= 8)
                     {
                         $countOponent = $board[$oponent][$sourceField]["count"];
-                        $overallStolen += $countOponent;
-                        $overallEmptied += 1;
-                        $count += $countOponent;
-                        $board[$oponent][$sourceField]["count"] = 0;
-                        array_push($moves, "emptyOponent_".$sourceField);
-                        $overallMoved += $count;
+                        if ($countOponent > 0)
+                        {
+                            $overallStolen += $countOponent;
+                            $overallEmptied += 1;
+                            $count += $countOponent;
+                            $board[$oponent][$sourceField]["count"] = 0;
+                            array_push($moves, "emptyOponent_".$sourceField);
+                            $overallMoved += $count;
+                        }
                     }
+
+                    // empty own bowl for next move
+                    $board[$player][$sourceField]["count"] = 0;
+                    array_push($moves, "emptyActive_".$sourceField);
                 }
             }
             
@@ -403,6 +442,7 @@ class BaoLaKiswahili extends Table
             self::notifyAllPlayers( "moveStones", $message, array(
                 'player' => $player,
                 'player_name' => self::getActivePlayerName(),
+                'oponent' => $oponent,
                 'messageDirection' => $messageDirection,
                 'selectedField' => $selectedField,
                 'sourceField' => $sourceField,
