@@ -373,7 +373,7 @@ function (dojo, declare) {
             // TODO: here, associate your game notifications with local methods
             
             dojo.subscribe( 'moveStones', this, "notif_moveStones" );
-            this.notifqueue.setSynchronous( 'moveStones', 3000 );
+            this.notifqueue.setSynchronous( 'moveStones' );
             dojo.subscribe( 'newScores', this, "notif_newScores" );
 
             // Example 1: standard notification handling
@@ -394,15 +394,39 @@ function (dojo, declare) {
             // Remove previously set css markers for possible directions and selected bowl
             dojo.query( '.possibleDirection' ).removeClass( 'possibleDirection' );
             dojo.query( '.selectedBowl' ).removeClass( 'selectedBowl' );
+            dojo.query( '.possibleStone' ).removeClass( 'possibleStone' );
+            dojo.query( '.selectedStone' ).removeClass( 'selectedStone' );
 
-            // init field to operate moves from, will be set by first emptyActive command
-            var currentField = 0;
+            // get players
             var player = notif.args.player;
             var oponent = notif.args.oponent;
-            var animations = [];
+            var players = [ player, oponent ];
 
-            // play each move
-            for( var move in notif.args.moves )
+            // get all stones in all circles and their stones to have them ready for the moves
+            // and avoid problems during animations and reattachement of html elements
+            var circles = new Map();
+            for ( i=1; i<= 16; i++)
+            {
+                for ( p of players )
+                {
+                    var id = 'circle_' + p + '_' + i;
+                    var circle = dojo.byId( id );
+                    var nodes = dojo.query('#' + id + ' > .stone');
+                    var stones = [];
+                    for ( j = 0; j<nodes.length; j++)
+                    {
+                        stones.push( nodes[j].id );
+                    }
+                    circles.set( id, stones );
+                }
+            }
+
+            // list for animations for each move
+            var animations = [];
+            // list of stones to move
+            var movingStones = [];
+
+            for ( var move in notif.args.moves )
             {
                 // extract command and field of a move
                 var params = notif.args.moves[move].split('_');
@@ -412,51 +436,69 @@ function (dojo, declare) {
                 switch( command ) 
                 {
                     case "emptyActive":
-                        currentField = field;
+                        // put all stones (= their ids) into list and empty their circle
+                        var stones = circles.get('circle_' + player + '_' + field);
+                        for ( var id=0; id<stones.length; id++ )
+                        {
+                            movingStones.push(stones[id]);
+                        }
+                        circles.set('circle_' + player + '_' + field, []);
                         break;
                     case "emptyOponent":
-console.log('emptyOponent: ', field);
-                        currentField = field;
-                        var nodes = dojo.query('#circle_'+ oponent + '_' + currentField +' > .stone');
-                        var ids = [];
-                        for( var pos=0; pos<nodes.length; pos++ )
+                        // put all oposite stones (= their ids) into list and empty their circle
+                        var stones = circles.get('circle_' + oponent + '_' + field);
+                        for ( var id=0; id<stones.length; id++ )
                         {
-                            ids.push(nodes[pos].id);
+                            movingStones.push(stones[id]);
                         }
-                        for ( var id=0; id<ids.length; id++ )
+                        circles.set('circle_' + oponent + '_' + field, []);
+
+                        // move all emptied stones to new field
+                        var combinedAnimation = [];
+                        for ( var id=0; id<stones.length; id++ )
                         {
-console.log(ids[id], ' moves to ', 'circle_'+ player + '_' + currentField);
-                            this.attachToNewParent( ids[id], 'circle_'+ player + '_' + currentField);
-                            animations.push(this.slideToObject( ids[id], 'circle_'+ player + '_' + currentField )); 
+                            var stone = stones[id];
+                             combinedAnimation.push(this.slideToObject( stone, 'circle_'+ player + '_' + field, 333 )); 
                         }
+                        // combine all animations to one
+                        animations.push(dojo.fx.combine(combinedAnimation));
                         break;
                     case "moveStone":
-                        var node = dojo.query('#circle_'+ player + '_' + currentField +' > .stone')[0];
-                        this.attachToNewParent( node.id, 'circle_'+ player + '_' + field);
-                        animations.push(this.slideToObject( node.id, 'circle_'+ player + '_' + field )); 
-console.log(node.id, ' moves to ', 'circle_'+ player + '_' + field);
+                        // move all remaining stones to new field
+                        var combinedAnimation = [];
+                        for ( var id=0; id<movingStones.length; id++ )
+                        {
+                            var stone = movingStones[id];
+                            combinedAnimation.push(this.slideToObject( stone, 'circle_'+ player + '_' + field, 333 )); 
+                        }
+                        // combine all animations to one
+                        animations.push(dojo.fx.combine(combinedAnimation));
+
+                        // leave one stone in current field
+                        var stone = movingStones.splice(0, 1)[0];
+                        var stones = circles.get('circle_' + player + '_' + field);
+                        stones.push(stone);
                         break;
                 }
             }
 
-/*animations.push(dojo.fx.slideTo({
-    node: "stone_1",
-    top: "100",
-    left: "100",
-    units: "px"}),
-    dojo.fx.slideTo({
-        node: "stone_1",
-        top: "200",
-        left: "50",
-        units: "px"}));*/
-/*animations.push(this.placeOnObject('stone_1', 'circle_' + player + '_1'));
-animations.push(this.slideToObject('stone_1', 'circle_' + player + '_3'));
-this.attachToNewParent('stone_1', 'circle_' + player + '_3');
-animations.push(this.slideToObject('stone_1', 'circle_' + player + '_3'));
-animations.push(this.slideToObject('stone_1', 'circle_' + player + '_5'));
-console.log(animations);
-*/
-            dojo.fx.chain(animations).play();
+            // play all animations in order 
+            var anim = dojo.fx.chain(animations).play();
+            // will be called after all animations are done
+            dojo.connect(anim, "onEnd", () => {
+                // attach all stones to correct circles after move is done
+                for ( [circle, stones] of circles.entries() ) 
+                {
+                    for ( var id=0; id<stones.length; id++ )
+                    {
+                        // "this" points to the outer function due to () => call
+                        this.attachToNewParent( stones[id], circle );
+                    }
+                }
+            });
+            
+            // synchronize duration so that game waits until finished 
+            this.notifqueue.setSynchronousDuration(anim.duration);
 
             // update bowl labels
             board = notif.args.board;
