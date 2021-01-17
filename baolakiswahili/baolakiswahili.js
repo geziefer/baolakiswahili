@@ -373,6 +373,7 @@ function (dojo, declare) {
             // TODO: here, associate your game notifications with local methods
             
             dojo.subscribe( 'moveStones', this, "notif_moveStones" );
+            this.notifqueue.setSynchronous( 'moveStones', 3000 );
             dojo.subscribe( 'newScores', this, "notif_newScores" );
 
             // Example 1: standard notification handling
@@ -396,8 +397,9 @@ function (dojo, declare) {
 
             // init field to operate moves from, will be set by first emptyActive command
             var currentField = 0;
-            player = notif.args.player;
-            oponent = notif.args.oponent;
+            var player = notif.args.player;
+            var oponent = notif.args.oponent;
+            var animations = [];
 
             // play each move
             for( var move in notif.args.moves )
@@ -413,6 +415,7 @@ function (dojo, declare) {
                         currentField = field;
                         break;
                     case "emptyOponent":
+console.log('emptyOponent: ', field);
                         currentField = field;
                         var nodes = dojo.query('#circle_'+ oponent + '_' + currentField +' > .stone');
                         var ids = [];
@@ -422,21 +425,41 @@ function (dojo, declare) {
                         }
                         for ( var id=0; id<ids.length; id++ )
                         {
-                            this.attachToNewParent( ids[id], 'circle_'+ player + '_' + currentField)
-                            this.slideToObject( ids[id], 'circle_'+ player + '_' + field ).play(); 
+console.log(ids[id], ' moves to ', 'circle_'+ player + '_' + currentField);
+                            this.attachToNewParent( ids[id], 'circle_'+ player + '_' + currentField);
+                            animations.push(this.slideToObject( ids[id], 'circle_'+ player + '_' + currentField )); 
                         }
                         break;
                     case "moveStone":
                         var node = dojo.query('#circle_'+ player + '_' + currentField +' > .stone')[0];
-                        this.attachToNewParent( node.id, 'circle_'+ player + '_' + field)
-                        this.slideToObject( node.id, 'circle_'+ player + '_' + field ).play(); 
+                        this.attachToNewParent( node.id, 'circle_'+ player + '_' + field);
+                        animations.push(this.slideToObject( node.id, 'circle_'+ player + '_' + field )); 
+console.log(node.id, ' moves to ', 'circle_'+ player + '_' + field);
                         break;
                 }
             }
 
+/*animations.push(dojo.fx.slideTo({
+    node: "stone_1",
+    top: "100",
+    left: "100",
+    units: "px"}),
+    dojo.fx.slideTo({
+        node: "stone_1",
+        top: "200",
+        left: "50",
+        units: "px"}));*/
+/*animations.push(this.placeOnObject('stone_1', 'circle_' + player + '_1'));
+animations.push(this.slideToObject('stone_1', 'circle_' + player + '_3'));
+this.attachToNewParent('stone_1', 'circle_' + player + '_3');
+animations.push(this.slideToObject('stone_1', 'circle_' + player + '_3'));
+animations.push(this.slideToObject('stone_1', 'circle_' + player + '_5'));
+console.log(animations);
+*/
+            dojo.fx.chain(animations).play();
+
             // update bowl labels
             board = notif.args.board;
-        console.log(board);
             for( var player in board )
             {
                 for ( var field in board[player] )
