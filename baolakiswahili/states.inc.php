@@ -69,8 +69,8 @@ $machinestates = array(
     		"descriptionmyturn" => clienttranslate('${you} must select a bowl'),
             "type" => "activeplayer",
             "args" => "argBowlSelect",
-    		"possibleactions" => array( "selectBowl", "cancel", "giveUp" ),
-    		"transitions" => array( "selectBowl" => 11, "giveUp" => 99 )
+    		"possibleactions" => array( "selectBowl", "cancel" ),
+    		"transitions" => array( "selectBowl" => 11 )
     ),
 
     // player selects direction where stones should be moved to;

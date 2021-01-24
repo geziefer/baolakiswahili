@@ -97,6 +97,8 @@
     width: 45px;
     height: 32px;
     position: absolute;
+    left: 20px;
+    top: 25px;
     background-image: url('img/stone.png'); 
 }
 

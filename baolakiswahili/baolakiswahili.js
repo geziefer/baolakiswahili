@@ -177,8 +177,6 @@ function (dojo, declare) {
         {
             dojo.place( this.format_block( 'jstpl_stone', {
                 no: number,
-                left: Math.floor(((Math.random() * 5) - 2) * 5) + 20,
-                top: Math.floor(((Math.random() * 5) - 1) * 5) + 25,
                 degree: Math.floor((Math.random() * 73) * 5)
             } ) , 'circle_'+player+'_'+field );
         },
@@ -495,23 +493,23 @@ function (dojo, declare) {
                         this.attachToNewParent( stones[id], circle );
                     }
                 }
+
+                // update bowl labels
+                board = notif.args.board;
+                for( var player in board )
+                {
+                    for ( var field in board[player] )
+                    {
+                        var bowl = board[player][field];
+
+                        // update label to display stone count
+                        dojo.byId( 'label_'+bowl.player+'_'+bowl.no).innerHTML = "<p>"+bowl.count+"</p>";
+                    }
+                }
             });
             
             // synchronize duration so that game waits until finished 
             this.notifqueue.setSynchronousDuration(anim.duration);
-
-            // update bowl labels
-            board = notif.args.board;
-            for( var player in board )
-            {
-                for ( var field in board[player] )
-                {
-                    var bowl = board[player][field];
-
-                    // update label to display stone count
-                    dojo.byId( 'label_'+bowl.player+'_'+bowl.no).innerHTML = "<p>"+bowl.count+"</p>";
-                }
-            }
 
         },
 

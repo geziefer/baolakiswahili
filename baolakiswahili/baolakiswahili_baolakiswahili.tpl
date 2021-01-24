@@ -27,7 +27,7 @@
 
 
 <script type="text/javascript">
-    var jstpl_stone='<div id="stone_${no}" class="stone" style="left: ${left}px; top: ${top}px; transform: rotate(${degree}deg);"></div>';
+    var jstpl_stone='<div id="stone_${no}" class="stone" style="transform: rotate(${degree}deg);"></div>';
 </script>  
 
 <div id="board">

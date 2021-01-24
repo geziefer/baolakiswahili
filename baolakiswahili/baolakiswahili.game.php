@@ -94,12 +94,12 @@ class BaoLaKiswahili extends Table
         list( $player1, $player2 ) = array_keys( $players );
         for ( $i=1; $i<=16; $i++ )
         {
-//            $values[] = "('$player1', '$i', '2')";
-//            $values[] = "('$player2', '$i', '2')";
+            $values[] = "('$player1', '$i', '2')";
+            $values[] = "('$player2', '$i', '2')";
         }
         $i = 1;
 
-        $values[] = "('$player1', '1', '1')";
+/*       $values[] = "('$player1', '1', '1')";
         $values[] = "('$player1', '2', '0')";
         $values[] = "('$player1', '3', '2')";
         $values[] = "('$player1', '4', '0')";
@@ -132,7 +132,7 @@ class BaoLaKiswahili extends Table
         $values[] = "('$player2', '14', '2')";
         $values[] = "('$player2', '15', '0')";
         $values[] = "('$player2', '16', '1')";
-
+*/
         $sql .= implode( ',', $values );
         self::DbQuery( $sql );
 
