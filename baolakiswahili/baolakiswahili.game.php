@@ -94,33 +94,33 @@ class BaoLaKiswahili extends Table
         list( $player1, $player2 ) = array_keys( $players );
         for ( $i=1; $i<=16; $i++ )
         {
-            $values[] = "('$player1', '$i', '2')";
-            $values[] = "('$player2', '$i', '2')";
+//            $values[] = "('$player1', '$i', '2')";
+//            $values[] = "('$player2', '$i', '2')";
         }
         $i = 1;
 
-/*        $values[] = "('$player1', '1', '2')";
+        $values[] = "('$player1', '1', '1')";
         $values[] = "('$player1', '2', '0')";
-        $values[] = "('$player1', '3', '1')";
+        $values[] = "('$player1', '3', '2')";
         $values[] = "('$player1', '4', '0')";
-        $values[] = "('$player1', '5', '2')";
+        $values[] = "('$player1', '5', '0')";
         $values[] = "('$player1', '6', '0')";
         $values[] = "('$player1', '7', '0')";
         $values[] = "('$player1', '8', '0')";
-        $values[] = "('$player1', '9', '2')";
-        $values[] = "('$player1', '10', '0')";
+        $values[] = "('$player1', '9', '4')";
+        $values[] = "('$player1', '10', '3')";
         $values[] = "('$player1', '11', '1')";
-        $values[] = "('$player1', '12', '0')";
-        $values[] = "('$player1', '13', '0')";
+        $values[] = "('$player1', '12', '2')";
+        $values[] = "('$player1', '13', '2')";
         $values[] = "('$player1', '14', '2')";
-        $values[] = "('$player1', '15', '0')";
+        $values[] = "('$player1', '15', '1')";
         $values[] = "('$player1', '16', '1')";
 
         $values[] = "('$player2', '1', '2')";
         $values[] = "('$player2', '2', '0')";
-        $values[] = "('$player2', '3', '2')";
+        $values[] = "('$player2', '3', '0')";
         $values[] = "('$player2', '4', '0')";
-        $values[] = "('$player2', '5', '2')";
+        $values[] = "('$player2', '5', '0')";
         $values[] = "('$player2', '6', '0')";
         $values[] = "('$player2', '7', '0')";
         $values[] = "('$player2', '8', '0')";
@@ -132,7 +132,7 @@ class BaoLaKiswahili extends Table
         $values[] = "('$player2', '14', '2')";
         $values[] = "('$player2', '15', '0')";
         $values[] = "('$player2', '16', '1')";
-*/
+
         $sql .= implode( ',', $values );
         self::DbQuery( $sql );
 
@@ -258,12 +258,10 @@ class BaoLaKiswahili extends Table
         return $destinationField;
     }
 
-    // Calculate player's score, which is 0 if lost or sum of fields if not
-    function getScore( $player)
+    // Calculate player's score, which is 0 if lost or sum of fields if not;
+    // board can be given or null
+    function getScore( $player, $board)
     {
-        // get current situation
-        $board = self::getBoard();
-
         // first check if the player can still move and sum up stones
         $sum = 0;
         $canMove = false;
@@ -397,12 +395,20 @@ class BaoLaKiswahili extends Table
                         $countOponent = $board[$oponent][$sourceField]["count"];
                         if ($countOponent > 0)
                         {
+                            // empty and count stones
                             $overallStolen += $countOponent;
                             $overallEmptied += 1;
                             $count += $countOponent;
                             $board[$oponent][$sourceField]["count"] = 0;
                             array_push($moves, "emptyOponent_".$sourceField);
                             $overallMoved += $count;
+
+                            // check if oponent has lost and stop moves if lost
+                            $scoreOponent = self::getScore($oponent, $board);
+                            if ($scoreOponent == 0)
+                            {
+                                break;
+                            }
                         }
                     }
 
@@ -564,10 +570,14 @@ class BaoLaKiswahili extends Table
     
     function stNextPlayer()
     {
+        // get current situation
+        $board = self::getBoard();
+
+        // calculate scores and thereby if someone has lost (score = 0)
         $playerLast = self::getActivePlayerId();
-        $scoreLast = self::getScore( $playerLast );
+        $scoreLast = self::getScore( $playerLast, $board );
         $playerNext = self::activeNextPlayer();
-        $scoreNext = self::getScore( $playerNext );
+        $scoreNext = self::getScore( $playerNext, $board );
 
         // save scores
         $sql = "UPDATE player SET player_score = '$scoreLast' WHERE player_id ='$playerLast'";
