@@ -177,6 +177,8 @@ function (dojo, declare) {
         {
             dojo.place( this.format_block( 'jstpl_stone', {
                 no: number,
+                left: Math.floor(((Math.random() * 5) - 2) * 5) + 20,
+                top: Math.floor(((Math.random() * 5) - 1) * 5) + 25,
                 degree: Math.floor((Math.random() * 73) * 5)
             } ) , 'circle_'+player+'_'+field );
         },
