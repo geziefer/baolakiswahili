@@ -456,7 +456,7 @@ function (dojo, declare) {
                         for ( var id=0; id<stones.length; id++ )
                         {
                             var stone = stones[id];
-                             combinedAnimation.push(this.slideToObject( stone, 'circle_'+ player + '_' + field, 333 )); 
+                            combinedAnimation.push(this.slideToObject( stone, 'circle_'+ player + '_' + field, 333 )); 
                         }
                         // combine all animations to one
                         animations.push(dojo.fx.combine(combinedAnimation));
@@ -467,7 +467,11 @@ function (dojo, declare) {
                         for ( var id=0; id<movingStones.length; id++ )
                         {
                             var stone = movingStones[id];
-                            combinedAnimation.push(this.slideToObject( stone, 'circle_'+ player + '_' + field, 333 )); 
+                            // change constructed animation to have positional offset
+                            var currentAnimation = this.slideToObject( stone, 'circle_'+ player + '_' + field, 333 );
+                            currentAnimation.properties.left += Math.floor((Math.random() * 11) -5) * 2;
+                            currentAnimation.properties.top += Math.floor((Math.random() * 11) -5) * 2;
+                            combinedAnimation.push(currentAnimation); 
                         }
                         // combine all animations to one
                         animations.push(dojo.fx.combine(combinedAnimation));
