@@ -1,52 +1,33 @@
 <?php
- /**
-  *------
-  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
-  * BaoLaKiswahili implementation : © <Your name here> <Your email address here>
-  * 
-  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
-  * See http://en.boardgamearena.com/#!doc/Studio for more information.
-  * -----
-  * 
-  * baolakiswahili.game.php
-  *
-  * This is the main file for your game logic.
-  *
-  * In this PHP file, you are going to defines the rules of the game.
-  *
-  */
+
+/**
+ *------
+ * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
+ * BaoLaKiswahili implementation : © <Alexander Rühl> <alex@geziefer.de>
+ * 
+ * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
+ * See http://en.boardgamearena.com/#!doc/Studio for more information.
+ * -----
+ */
 
 
-require_once( APP_GAMEMODULE_PATH.'module/table/table.game.php' );
-
+require_once(APP_GAMEMODULE_PATH . 'module/table/table.game.php');
 
 class BaoLaKiswahili extends Table
 {
-	function __construct( )
-	{
-        // Your global variables labels:
-        //  Here, you can assign labels to global variables you are using for this game.
-        //  You can use any number of global variables with IDs between 10 and 99.
-        //  If your game has options (variants), you also have to associate here a label to
-        //  the corresponding ID in gameoptions.inc.php.
-        // Note: afterwards, you can get/set the global variables with getGameStateValue/setGameStateInitialValue/setGameStateValue
-        parent::__construct();
-        
-        self::initGameStateLabels( array( 
-            //    "my_first_global_variable" => 10,
-            //    "my_second_global_variable" => 11,
-            //      ...
-            //    "my_first_game_variant" => 100,
-            //    "my_second_game_variant" => 101,
-            //      ...
-        ) );        
-	}
-	
-    protected function getGameName( )
+    function __construct()
     {
-		// Used for translations and stuff. Please do not modify.
+        parent::__construct();
+
+        self::initGameStateLabels(array(
+        ));
+    }
+
+    protected function getGameName()
+    {
+        // Used for translations and stuff. Please do not modify.
         return "baolakiswahili";
-    }	
+    }
 
     /*
         setupNewGame:
@@ -55,91 +36,45 @@ class BaoLaKiswahili extends Table
         In this method, you must setup the game according to the game rules, so that
         the game is ready to be played.
     */
-    protected function setupNewGame( $players, $options = array() )
-    {    
+    protected function setupNewGame($players, $options = array())
+    {
         // Set the colors of the players with HTML color code
         // The default below is red/green/blue/orange/brown
         // The number of colors defined here must correspond to the maximum number of players allowed for the gams
         $gameinfos = self::getGameinfos();
         $default_colors = $gameinfos['player_colors'];
- 
+
         // Create players
         // Note: if you added some extra field on "player" table in the database (dbmodel.sql), you can initialize it there.
         $sql = "INSERT INTO player (player_id, player_color, player_score, player_canal, player_name, player_avatar) VALUES ";
         $values = array();
-        foreach( $players as $player_id => $player )
-        {
-            $color = array_shift( $default_colors );
-            $values[] = "('".$player_id."','$color','32','".$player['player_canal']."','".addslashes( $player['player_name'] )."','".addslashes( $player['player_avatar'] )."')";
+        foreach ($players as $player_id => $player) {
+            $color = array_shift($default_colors);
+            $values[] = "('" . $player_id . "','$color','32','" . $player['player_canal'] . "','" . addslashes($player['player_name']) . "','" . addslashes($player['player_avatar']) . "')";
         }
-        $sql .= implode( $values, ',' );
-        self::DbQuery( $sql );
-        self::reattributeColorsBasedOnPreferences( $players, $gameinfos['player_colors'] );
+        $sql .= implode($values, ',');
+        self::DbQuery($sql);
+        self::reattributeColorsBasedOnPreferences($players, $gameinfos['player_colors']);
         self::reloadPlayersBasicInfos();
-        
+
         /************ Start the game initialization *****/
-
-        // Init global values with their initial values
-        //self::setGameStateInitialValue( 'my_first_global_variable', 0 );
-        
-        // Init game statistics
-        // (note: statistics used in this file must be defined in your stats.inc.php file)
-        //self::initStat( 'table', 'table_teststat1', 0 );    // Init a table statistics
-        //self::initStat( 'player', 'player_teststat1', 0 );  // Init a player statistics (for all players)
-
-        // TODO: setup the initial game situation here
 
         $sql = "INSERT INTO board (player, field, stones) VALUES ";
         $values = array();
-        list( $player1, $player2 ) = array_keys( $players );
-        for ( $i=1; $i<=16; $i++ )
-        {
+        list($player1, $player2) = array_keys($players);
+        for ($i = 1; $i <= 16; $i++) {
             $values[] = "('$player1', '$i', '2')";
             $values[] = "('$player2', '$i', '2')";
         }
         $i = 1;
 
-/*       $values[] = "('$player1', '1', '1')";
-        $values[] = "('$player1', '2', '0')";
-        $values[] = "('$player1', '3', '2')";
-        $values[] = "('$player1', '4', '0')";
-        $values[] = "('$player1', '5', '0')";
-        $values[] = "('$player1', '6', '0')";
-        $values[] = "('$player1', '7', '0')";
-        $values[] = "('$player1', '8', '0')";
-        $values[] = "('$player1', '9', '4')";
-        $values[] = "('$player1', '10', '3')";
-        $values[] = "('$player1', '11', '1')";
-        $values[] = "('$player1', '12', '2')";
-        $values[] = "('$player1', '13', '2')";
-        $values[] = "('$player1', '14', '2')";
-        $values[] = "('$player1', '15', '1')";
-        $values[] = "('$player1', '16', '1')";
-
-        $values[] = "('$player2', '1', '2')";
-        $values[] = "('$player2', '2', '0')";
-        $values[] = "('$player2', '3', '0')";
-        $values[] = "('$player2', '4', '0')";
-        $values[] = "('$player2', '5', '0')";
-        $values[] = "('$player2', '6', '0')";
-        $values[] = "('$player2', '7', '0')";
-        $values[] = "('$player2', '8', '0')";
-        $values[] = "('$player2', '9', '2')";
-        $values[] = "('$player2', '10', '0')";
-        $values[] = "('$player2', '11', '1')";
-        $values[] = "('$player2', '12', '0')";
-        $values[] = "('$player2', '13', '0')";
-        $values[] = "('$player2', '14', '2')";
-        $values[] = "('$player2', '15', '0')";
-        $values[] = "('$player2', '16', '1')";
-*/
-        $sql .= implode( ',', $values );
-        self::DbQuery( $sql );
+        $sql .= implode(',', $values);
+        self::DbQuery($sql);
 
         // Init stats
-        self::initStat( 'player', 'overallMoved', 0 );
-        self::initStat( 'player', 'overallStolen', 0 );
-        self::initStat( 'player', 'overallEmptied', 0 );
+        self::initStat('player', 'overallMoved', 0);
+        self::initStat('player', 'overallStolen', 0);
+        self::initStat('player', 'overallEmptied', 0);
 
         // Activate first player (which is in general a good idea :) )
         $this->activeNextPlayer();
@@ -159,17 +94,16 @@ class BaoLaKiswahili extends Table
     protected function getAllDatas()
     {
         $result = array();
-    
+
         $current_player_id = self::getCurrentPlayerId();    // !! We must only return informations visible by this player !!
-    
+
         // Get information about players
         // Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
         $sql = "SELECT player_id id, player_score score FROM player ";
-        $result['players'] = self::getCollectionFromDb( $sql );
-  
-        // TODO: Gather all information about current game situation (visible by player $current_player_id).
+        $result['players'] = self::getCollectionFromDb($sql);
+
         $sql = "SELECT player player, field no, stones count FROM board ";
-        $result['board'] = self::getObjectListFromDB( $sql );            
+        $result['board'] = self::getObjectListFromDB($sql);
 
         return $result;
     }
@@ -186,15 +120,13 @@ class BaoLaKiswahili extends Table
     */
     function getGameProgression()
     {
-        // TODO: compute and return the game progression
-
         return 0;
     }
 
 
-//////////////////////////////////////////////////////////////////////////////
-//////////// Utility functions
-////////////    
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Utility functions
+    ////////////    
 
     /*
         In this space, you can put any utility methods useful for your game logic
@@ -204,27 +136,25 @@ class BaoLaKiswahili extends Table
     function getBoard()
     {
         $sql = "SELECT player player, field no, stones count, stones countBackup FROM board ";
-        return self::getDoubleKeyCollectionFromDB( $sql );            
+        return self::getDoubleKeyCollectionFromDB($sql);
     }
 
     // Get selected field of player from db
-    function getSelectedField( $player_id)
+    function getSelectedField($player_id)
     {
         $sql = "SELECT selected_field FROM player WHERE player_id = '$player_id'";
-        return self::getUniqueValueFromDB( $sql );
+        return self::getUniqueValueFromDB($sql);
     }
 
     // Possible bowls to select are all of players bowls with at least 2 stones
-    function getPossibleBowls( $player_id )
+    function getPossibleBowls($player_id)
     {
         $result = array();
-        
+
         $board = self::getBoard();
 
-        for( $i=1; $i<=16; $i++ )
-        {
-            if( $board[$player_id][$i]["count"] >= 2 )
-            {
+        for ($i = 1; $i <= 16; $i++) {
+            if ($board[$player_id][$i]["count"] >= 2) {
                 $result[$player_id][$i] = $board[$player_id][$i];
             }
         }
@@ -233,13 +163,13 @@ class BaoLaKiswahili extends Table
     }
 
     // Possible directions to select are always the previous and next bowl to the selected one
-    function getPossibleDirections( $player_id, $selected )
+    function getPossibleDirections($player_id, $selected)
     {
         $result = array();
 
         $board = self::getBoard();
-        $left = $selected == 1 ? 16 : $selected-1;
-        $right = $selected == 16 ? 1 : $selected+1;
+        $left = $selected == 1 ? 16 : $selected - 1;
+        $right = $selected == 16 ? 1 : $selected + 1;
 
         $result[$player_id][$left] = true;
         $result[$player_id][$selected] = false;
@@ -248,41 +178,36 @@ class BaoLaKiswahili extends Table
     }
 
     // Calculate next field from given field in given direction (-1 / +1)
-    function getNextField( $field, $direction )
+    function getNextField($field, $direction)
     {
         // calculate next field to move to, adapt overflow in field no
         $destinationField = $field + $direction;
         $destinationField = ($destinationField == 0) ? 16 : $destinationField;
         $destinationField = ($destinationField == 17) ? 1 : $destinationField;
-        
+
         return $destinationField;
     }
 
     // Calculate player's score, which is 0 if lost or sum of fields if not;
     // board can be given or null
-    function getScore( $player, $board)
+    function getScore($player, $board)
     {
         // first check if the player can still move and sum up stones
         $sum = 0;
         $canMove = false;
-        for( $i=1; $i<=16; $i++ )
-        {
+        for ($i = 1; $i <= 16; $i++) {
             $count = $board[$player][$i]["count"];
             $sum += $count;
-            if( $count > 1 )
-            {
+            if ($count > 1) {
                 $canMove = true;
             }
         }
 
         // if he can move, check if 1st line is not empty
         $isEmpty = true;
-        if ($canMove)
-        {
-            for( $i=1; $i<=8; $i++ )
-            {
-                if( $board[$player][$i]["count"] > 0 )
-                {
+        if ($canMove) {
+            for ($i = 1; $i <= 8; $i++) {
+                if ($board[$player][$i]["count"] > 0) {
                     $isEmpty = false;
                     break;
                 }
@@ -290,21 +215,17 @@ class BaoLaKiswahili extends Table
         }
 
         // check both conditions for determine if lost
-        if ($canMove && !$isEmpty)
-        {
+        if ($canMove && !$isEmpty) {
             return $sum;
-        }
-        else
-        {
+        } else {
             return 0;
         }
-
     }
 
 
-//////////////////////////////////////////////////////////////////////////////
-//////////// Player actions
-//////////// 
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Player actions
+    //////////// 
 
     /*
         Each time a player is doing some game action, one of the methods below is called.
@@ -312,46 +233,42 @@ class BaoLaKiswahili extends Table
     */
 
     // player has selected a bowl for his move
-    function selectBowl( $player, $field )
+    function selectBowl($player, $field)
     {
         // Check that this player is active and that this action is possible at this moment
-        self::checkAction( 'selectBowl' ); 
+        self::checkAction('selectBowl');
 
         // Check that selection is possible
-        $possibleBowls = self::getPossibleBowls( $player );
-        if( $possibleBowls[$player][$field] >= 2)
-        {
+        $possibleBowls = self::getPossibleBowls($player);
+        if ($possibleBowls[$player][$field] >= 2) {
             // Save selected bowl
             $sql = "UPDATE player SET selected_field = $field where player_id = $player";
-            self::DbQuery( $sql );
+            self::DbQuery($sql);
 
             // Then, go to the next state
-            $this->gamestate->nextState( 'selectBowl' );
-        } 
-        else
-        {
-            throw new feException( "Impossible move" );
+            $this->gamestate->nextState('selectBowl');
+        } else {
+            throw new feException("Impossible move");
         }
     }
 
     // player has selected a direction for his move
     // and move is calculated
-    function selectDirection( $player, $field ) 
+    function selectDirection($player, $field)
     {
         // Check that this player is active and that this action is possible at this moment
-        self::checkAction( 'selectDirection' ); 
+        self::checkAction('selectDirection');
 
         // Check that selection is possible
-        $selectedField = self::getSelectedField( $player );
-        $possibleDirection = self::getPossibleDirections( $player, $selectedField );
-        if( $possibleDirection[$player][$field] )
-        {
+        $selectedField = self::getSelectedField($player);
+        $possibleDirection = self::getPossibleDirections($player, $selectedField);
+        if ($possibleDirection[$player][$field]) {
             // we only want to have -1 or +1, thus correct if overflown
             $moveDirection = ($field - $selectedField);
             $moveDirection = (abs($moveDirection) > 1) ? $moveDirection / -15 : $moveDirection;
 
             // get start situation
-            $oponent = self::getPlayerAfter( $player );
+            $oponent = self::getPlayerAfter($player);
             $players = array($player, $oponent);
             $sourceField = $selectedField;
             $board = self::getBoard();
@@ -364,21 +281,19 @@ class BaoLaKiswahili extends Table
             // get stones for move and empty the start field
             $count = $board[$player][$sourceField]["count"];
             $board[$player][$sourceField]["count"] = 0;
-            array_push($moves, "emptyActive_".$sourceField);
+            array_push($moves, "emptyActive_" . $sourceField);
             $overallMoved = $count;
             $overallStolen = 0;
             $overallEmptied = 0;
 
             // make moves until last field was empty before putting stone
-            while ($count > 1 )
-            {
+            while ($count > 1) {
                 // distribute stones in the next fields in selected direction until last one
-                while ($count > 0)
-                {
+                while ($count > 0) {
                     // calculate next field to move to and leave 1 stone
-                    $destinationField = self::getNextField( $sourceField, $moveDirection );
+                    $destinationField = self::getNextField($sourceField, $moveDirection);
                     $board[$player][$destinationField]["count"] += 1;
-                    array_push($moves, "moveStone_".$destinationField);
+                    array_push($moves, "moveStone_" . $destinationField);
                     $sourceField = $destinationField;
                     $count -= 1;
                 }
@@ -386,27 +301,23 @@ class BaoLaKiswahili extends Table
                 // source field now points to field of last put stone
                 $count = $board[$player][$sourceField]["count"];
 
-                if ($count > 1)
-                {
+                if ($count > 1) {
                     // empty oponents oposite bowl in 1st row and add to own stones for move,
                     // if empty, nothing changes
-                    if ($sourceField <= 8)
-                    {
+                    if ($sourceField <= 8) {
                         $countOponent = $board[$oponent][$sourceField]["count"];
-                        if ($countOponent > 0)
-                        {
+                        if ($countOponent > 0) {
                             // empty and count stones
                             $overallStolen += $countOponent;
                             $overallEmptied += 1;
                             $count += $countOponent;
                             $board[$oponent][$sourceField]["count"] = 0;
-                            array_push($moves, "emptyOponent_".$sourceField);
+                            array_push($moves, "emptyOponent_" . $sourceField);
                             $overallMoved += $count;
 
                             // check if oponent has lost and stop moves if lost
                             $scoreOponent = self::getScore($oponent, $board);
-                            if ($scoreOponent == 0)
-                            {
+                            if ($scoreOponent == 0) {
                                 break;
                             }
                         }
@@ -414,28 +325,25 @@ class BaoLaKiswahili extends Table
 
                     // empty own bowl for next move
                     $board[$player][$sourceField]["count"] = 0;
-                    array_push($moves, "emptyActive_".$sourceField);
+                    array_push($moves, "emptyActive_" . $sourceField);
                 }
             }
-            
+
             // save all changed fields and update score
-            foreach ($players as $player_id)
-            {
-                for ($field=1; $field<=16; $field++)
-                {
+            foreach ($players as $player_id) {
+                for ($field = 1; $field <= 16; $field++) {
                     $count = $board[$player_id][$field]["count"];
                     $countBackup = $board[$player_id][$field]["countBackup"];
-                    if ($count <> $countBackup)
-                    {
+                    if ($count <> $countBackup) {
                         $sql = "UPDATE board SET stones = '$count' WHERE player = '$player_id' AND field = '$field'";
-                        self::DbQuery( $sql );
+                        self::DbQuery($sql);
                     }
                 }
             }
 
             // clear selections
             $sql = "UPDATE player SET selected_field = NULL WHERE player_id = '$player'";
-            self::DbQuery( $sql );
+            self::DbQuery($sql);
 
             // update statistics
             self::incStat($overallMoved, "overallMoved", $player);
@@ -443,9 +351,9 @@ class BaoLaKiswahili extends Table
             self::incStat($overallEmptied, "overallEmptied", $player);
 
             // notify players of all moves
-            $messageDirection = ($moveDirection < 0) ? clienttranslate( 'down' ) : clienttranslate( 'up' );
-            $message = clienttranslate( '${player_name} moved ${messageDirection} from field ${selectedField} to field ${sourceField} emptying ${overallEmptied} bowl(s).');
-            self::notifyAllPlayers( "moveStones", $message, array(
+            $messageDirection = ($moveDirection < 0) ? clienttranslate('down') : clienttranslate('up');
+            $message = clienttranslate('${player_name} moved ${messageDirection} from field ${selectedField} to field ${sourceField} emptying ${overallEmptied} bowl(s).');
+            self::notifyAllPlayers("moveStones", $message, array(
                 'player' => $player,
                 'player_name' => self::getActivePlayerName(),
                 'oponent' => $oponent,
@@ -455,70 +363,38 @@ class BaoLaKiswahili extends Table
                 'overallEmptied' => $overallEmptied,
                 'moves' => $moves,
                 'board' => $board
-            ) );
+            ));
 
             // Go to the next state
-            $this->gamestate->nextState( 'selectDirection' );    
-        } 
-        else
-        {
-            throw new feException( "Impossible move" );
+            $this->gamestate->nextState('selectDirection');
+        } else {
+            throw new feException("Impossible move");
         }
     }
 
     // player has canceled the direction selection
-    function cancelDirection( $player, $field ) 
+    function cancelDirection($player, $field)
     {
         // Check that this player is active and that this action is possible at this moment
-        self::checkAction( 'selectDirection' ); 
+        self::checkAction('selectDirection');
 
         // Check that selection is possible
-        $selected = self::getSelectedField( $player );
-        if( $selected == $field )
-        {
+        $selected = self::getSelectedField($player);
+        if ($selected == $field) {
             // delete selection
             $sql = "UPDATE player SET selected_field = NULL where player_id = $player";
-            self::DbQuery( $sql );
+            self::DbQuery($sql);
 
             // Then go to the next state
-            $this->gamestate->nextState( 'cancelDirection' );
-        } 
-        else
-        {
-            throw new feException( "Impossible move" );
+            $this->gamestate->nextState('cancelDirection');
+        } else {
+            throw new feException("Impossible move");
         }
     }
 
-    /*
-    
-    Example:
-
-    function playCard( $card_id )
-    {
-        // Check that this is the player's turn and that it is a "possible action" at this game state (see states.inc.php)
-        self::checkAction( 'playCard' ); 
-        
-        $player_id = self::getActivePlayerId();
-        
-        // Add your game logic to play a card there 
-        ...
-        
-        // Notify all players about the card played
-        self::notifyAllPlayers( "cardPlayed", clienttranslate( '${player_name} plays ${card_name}' ), array(
-            'player_id' => $player_id,
-            'player_name' => self::getActivePlayerName(),
-            'card_name' => $card_name,
-            'card_id' => $card_id
-        ) );
-          
-    }
-    
-    */
-
-    
-//////////////////////////////////////////////////////////////////////////////
-//////////// Game state arguments
-////////////
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Game state arguments
+    ////////////
 
     /*
         Here, you can create methods defined as "game state arguments" (see "args" property in states.inc.php).
@@ -529,45 +405,28 @@ class BaoLaKiswahili extends Table
     function argBowlSelect()
     {
         return array(
-            'possibleBowls' => self::getPossibleBowls( self::getActivePlayerId() )
+            'possibleBowls' => self::getPossibleBowls(self::getActivePlayerId())
         );
     }
 
     function argDirectionSelect()
     {
-        $field = self::getSelectedField(self::getActivePlayerId() );
+        $field = self::getSelectedField(self::getActivePlayerId());
 
         return array(
-            'possibleDirections' => self::getPossibleDirections( self::getActivePlayerId(), $field )
+            'possibleDirections' => self::getPossibleDirections(self::getActivePlayerId(), $field)
         );
     }
 
-    /*
-    
-    Example for game state "MyGameState":
-    
-    function argMyGameState()
-    {
-        // Get some values from the current game situation in database...
-    
-        // return values:
-        return array(
-            'variable1' => $value1,
-            'variable2' => $value2,
-            ...
-        );
-    }    
-    */
-
-//////////////////////////////////////////////////////////////////////////////
-//////////// Game state actions
-////////////
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Game state actions
+    ////////////
 
     /*
         Here, you can create methods defined as "game state actions" (see "action" property in states.inc.php).
         The action method of state X is called everytime the current game state is set to X.
     */
-    
+
     function stNextPlayer()
     {
         // get current situation
@@ -575,50 +434,35 @@ class BaoLaKiswahili extends Table
 
         // calculate scores and thereby if someone has lost (score = 0)
         $playerLast = self::getActivePlayerId();
-        $scoreLast = self::getScore( $playerLast, $board );
+        $scoreLast = self::getScore($playerLast, $board);
         $playerNext = self::activeNextPlayer();
-        $scoreNext = self::getScore( $playerNext, $board );
+        $scoreNext = self::getScore($playerNext, $board);
 
         // save scores
         $sql = "UPDATE player SET player_score = '$scoreLast' WHERE player_id ='$playerLast'";
-        self::DbQuery( $sql );
+        self::DbQuery($sql);
         $sql = "UPDATE player SET player_score = '$scoreNext' WHERE player_id ='$playerNext'";
-        self::DbQuery( $sql );
+        self::DbQuery($sql);
 
         // notify players of new scores
-        $newScores = array($playerLast => $scoreLast, $playerNext => $scoreNext );
-        self::notifyAllPlayers( "newScores", "", array(
+        $newScores = array($playerLast => $scoreLast, $playerNext => $scoreNext);
+        self::notifyAllPlayers("newScores", "", array(
             "scores" => $newScores
-        ) );
+        ));
 
         // set next state depending on lost state
-        if ($scoreLast == 0 || $scoreNext == 0)
-        {
-            $this->gamestate->nextState( 'endGame' );
-        }
-        else
-        {
+        if ($scoreLast == 0 || $scoreNext == 0) {
+            $this->gamestate->nextState('endGame');
+        } else {
             // Next player can play and gets extra time
-            self::giveExtraTime( $playerNext );
-            $this->gamestate->nextState( 'nextPlayer' );    
+            self::giveExtraTime($playerNext);
+            $this->gamestate->nextState('nextPlayer');
         }
     }
-    /*
-    
-    Example for game state "MyGameState":
 
-    function stMyGameState()
-    {
-        // Do some stuff ...
-        
-        // (very often) go to another gamestate
-        $this->gamestate->nextState( 'some_gamestate_transition' );
-    }    
-    */
-
-//////////////////////////////////////////////////////////////////////////////
-//////////// Zombie
-////////////
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Zombie
+    ////////////
 
     /*
         zombieTurn:
@@ -633,15 +477,15 @@ class BaoLaKiswahili extends Table
         you must _never_ use getCurrentPlayerId() or getCurrentPlayerName(), otherwise it will fail with a "Not logged" error message. 
     */
 
-    function zombieTurn( $state, $active_player )
+    function zombieTurn($state, $active_player)
     {
-    	$statename = $state['name'];
-    	
+        $statename = $state['name'];
+
         if ($state['type'] === "activeplayer") {
             switch ($statename) {
                 default:
-                    $this->gamestate->nextState( "zombiePass" );
-                	break;
+                    $this->gamestate->nextState("zombiePass");
+                    break;
             }
 
             return;
@@ -649,17 +493,17 @@ class BaoLaKiswahili extends Table
 
         if ($state['type'] === "multipleactiveplayer") {
             // Make sure player is in a non blocking status for role turn
-            $this->gamestate->setPlayerNonMultiactive( $active_player, '' );
-            
+            $this->gamestate->setPlayerNonMultiactive($active_player, '');
+
             return;
         }
 
-        throw new feException( "Zombie mode not supported at this game state: ".$statename );
+        throw new feException("Zombie mode not supported at this game state: " . $statename);
     }
-    
-///////////////////////////////////////////////////////////////////////////////////:
-////////// DB upgrade
-//////////
+
+    ///////////////////////////////////////////////////////////////////////////////////:
+    ////////// DB upgrade
+    //////////
 
     /*
         upgradeTableDb:
@@ -671,32 +515,12 @@ class BaoLaKiswahili extends Table
         update the game database and allow the game to continue to run with your new version.
     
     */
-    
-    function upgradeTableDb( $from_version )
+
+    function upgradeTableDb($from_version)
     {
         // $from_version is the current version of this game database, in numerical form.
         // For example, if the game was running with a release of your game named "140430-1345",
         // $from_version is equal to 1404301345
-        
-        // Example:
-//        if( $from_version <= 1404301345 )
-//        {
-//            // ! important ! Use DBPREFIX_<table_name> for all tables
-//
-//            $sql = "ALTER TABLE DBPREFIX_xxxxxxx ....";
-//            self::applyDbUpgradeToAllDB( $sql );
-//        }
-//        if( $from_version <= 1405061421 )
-//        {
-//            // ! important ! Use DBPREFIX_<table_name> for all tables
-//
-//            $sql = "CREATE TABLE DBPREFIX_xxxxxxx ....";
-//            self::applyDbUpgradeToAllDB( $sql );
-//        }
-//        // Please add your future database scheme changes here
-//
-//
 
-
-    }    
+    }
 }
