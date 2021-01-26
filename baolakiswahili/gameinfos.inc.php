@@ -47,7 +47,7 @@ $gameinfos = array(
     'not_recommend_player_number' => null,
 
     // Estimated game duration, in minutes (used only for the launch, afterward the real duration is computed)
-    'estimated_duration' => 15,
+    'estimated_duration' => 20,
 
     // Time in second add to a player when "giveExtraTime" is called (speed profile = fast)
     'fast_additional_time' => 30,
