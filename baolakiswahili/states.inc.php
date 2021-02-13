@@ -31,7 +31,7 @@ $machinestates = array(
         "type" => "activeplayer",
         "args" => "argBowlSelect",
         "possibleactions" => array("selectBowl", "cancel"),
-        "transitions" => array("selectBowl" => 11)
+        "transitions" => array("selectBowl" => 11, "zombiePass" => 20)
     ),
 
     // player selects direction where stones should be moved to;
@@ -45,7 +45,7 @@ $machinestates = array(
         "type" => "activeplayer",
         "args" => "argDirectionSelect",
         "possibleactions" => array("selectDirection", "cancelDirection"),
-        "transitions" => array("selectDirection" => 20, "cancelDirection" => 10,)
+        "transitions" => array("selectDirection" => 20, "cancelDirection" => 10, "zombiePass" => 20)
     ),
 
     // game checks situation if next player is on or if current one wins
