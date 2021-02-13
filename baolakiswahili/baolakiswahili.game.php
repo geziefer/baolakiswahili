@@ -120,7 +120,18 @@ class BaoLaKiswahili extends Table
     */
     function getGameProgression()
     {
-        return 0;
+        // Since usually the game ends by oponent having no stones left in 1st row, we calculate current progression
+        // as inverse procentual ratio of smaller and bigger first row count;
+        // note: since this is not linear, but will go in both directions, the value may rise and fall
+        $board = self::getBoard();
+        $player = self::getActivePlayerId();
+        $playerCount = self::getFirstRowCount($player, $board);
+        $oponent = self::getPlayerAfter($player);
+        $oponentCount = self::getFirstRowCount($oponent, $board);
+        $minCount = min($playerCount, $oponentCount);
+        $maxCount = max($playerCount, $oponentCount);
+        $ratio = $minCount / $maxCount;
+        return (1 - $ratio) * 100;
     }
 
 
@@ -186,6 +197,19 @@ class BaoLaKiswahili extends Table
         $destinationField = ($destinationField == 17) ? 1 : $destinationField;
 
         return $destinationField;
+    }
+
+    // Calculate player's stones in first row
+    function getFirstRowCount($player, $board)
+    {
+        // first check if the player can still move and sum up stones
+        $sum = 0;
+        for ($i = 1; $i <= 8; $i++) {
+            $count = $board[$player][$i]["count"];
+            $sum += $count;
+        }
+
+        return $sum;
     }
 
     // Calculate player's score, which is 0 if lost or sum of fields if not;
