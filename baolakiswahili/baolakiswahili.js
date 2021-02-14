@@ -203,6 +203,7 @@ define([
                 // Check that this action is possible at this moment
                 if (this.checkAction('selectBowl')) {
                     this.ajaxcall("/baolakiswahili/baolakiswahili/selectBowl.html", {
+                        lock: true,
                         player: player,
                         field: field
                     }, this, function (result) { });
@@ -222,6 +223,7 @@ define([
                         // Check that this action is possible at this moment
                         if (this.checkAction('selectDirection')) {
                             this.ajaxcall("/baolakiswahili/baolakiswahili/cancelDirection.html", {
+                                lock: true,
                                 player: player,
                                 field: field
                             }, this, function (result) { });
@@ -235,6 +237,7 @@ define([
                 // Check that this action is possible at this moment
                 if (this.checkAction('selectDirection')) {
                     this.ajaxcall("/baolakiswahili/baolakiswahili/selectDirection.html", {
+                        lock: true,
                         player: player,
                         field: field
                     }, this, function (result) { });

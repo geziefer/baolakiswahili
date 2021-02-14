@@ -25,16 +25,16 @@ $gameinfos = array(
     'year' => 2021,
 
     // Game publisher (use empty string if there is no publisher)
-    'publisher' => '',
+    'publisher' => '(Public Domain)',
 
     // Url of game publisher website
     'publisher_website' => '',
 
     // Board Game Geek ID of the publisher
-    'publisher_bgg_id' => 0,
+    'publisher_bgg_id' => 171,
 
     // Board game geek ID of the game
-    'bgg_id' => 0,
+    'bgg_id' => 14186,
 
 
     // Players configuration that can be played (ex: 2 to 4 players)
@@ -89,7 +89,7 @@ $gameinfos = array(
     'luck' => 0,
 
     // Strategy of the game, from 0 (no strategy can be setup) to 5 (totally based on strategy)
-    'strategy' => 3,
+    'strategy' => 4,
 
     // Diplomacy of the game, from 0 (no interaction in this game) to 5 (totally based on interaction and discussion between players)
     'diplomacy' => 0,
