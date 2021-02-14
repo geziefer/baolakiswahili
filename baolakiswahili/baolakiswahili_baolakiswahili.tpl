@@ -12,13 +12,13 @@
 
 
 <script type="text/javascript">
-    var jstpl_stone = '<div id="stone_${no}" class="stone" style="left: ${left}px; top: ${top}px; transform: rotate(${degree}deg);"></div>';
+    var jstpl_stone = '<div id="stone_${no}" class="blk_stone" style="left: ${left}px; top: ${top}px; transform: rotate(${degree}deg);"></div>';
 </script>
 
-<div id="board">
+<div id="blk_board">
     <!-- BEGIN circle -->
-    <div id="circle_{PLAYER}_{FIELD}" class="circle" style="left: {LEFT}px; top: {TOP}px;">
-        <div id="label_{PLAYER}_{FIELD}" class="label">
+    <div id="circle_{PLAYER}_{FIELD}" class="blk_circle" style="left: {LEFT}px; top: {TOP}px;">
+        <div id="label_{PLAYER}_{FIELD}" class="blk_label">
             <p>2</p>
         </div>
     </div>

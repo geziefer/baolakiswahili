@@ -51,8 +51,8 @@ define([
                 }
 
                 // click handlers for both possible click situations on bowl
-                dojo.query('.circle').connect('onclick', this, 'onSelectBowl');
-                dojo.query('.circle').connect('onclick', this, 'onSelectDirection');
+                dojo.query('.blk_circle').connect('onclick', this, 'onSelectBowl');
+                dojo.query('.blk_circle').connect('onclick', this, 'onSelectDirection');
 
                 // Setup game notifications to handle (see "setupNotifications" method below)
                 this.setupNotifications();
@@ -126,21 +126,21 @@ define([
                 // only display for current player
                 if (this.isCurrentPlayerActive()) {
                     // Remove previously set css markers for possible bowls, stones and directions
-                    dojo.query('.possibleDirection').removeClass('possibleDirection');
-                    dojo.query('.selectedBowl').removeClass('selectedBowl');
-                    dojo.query('.possibleStone').removeClass('possibleStone');
-                    dojo.query('.selectedStone').removeClass('selectedStone');
+                    dojo.query('.blk_possibleDirection').removeClass('blk_possibleDirection');
+                    dojo.query('.blk_selectedBowl').removeClass('blk_selectedBowl');
+                    dojo.query('.blk_possibleStone').removeClass('blk_possibleStone');
+                    dojo.query('.blk_selectedStone').removeClass('blk_selectedStone');
 
                     // only 1 player in array
                     for (var player in possibleBowls) {
                         for (var field in possibleBowls[player]) {
                             // every entry in this array is a possible bowl
-                            dojo.addClass('circle_' + player + '_' + field, 'possibleBowl');
+                            dojo.addClass('circle_' + player + '_' + field, 'blk_possibleBowl');
                         }
                     }
 
                     // highlight all stones in possible bowls
-                    dojo.query(".possibleBowl").query(".stone").addClass("possibleStone");
+                    dojo.query(".blk_possibleBowl").query(".blk_stone").addClass("blk_possibleStone");
                 }
             },
 
@@ -148,8 +148,8 @@ define([
                 // only display for current player
                 if (this.isCurrentPlayerActive()) {
                     // Remove previously set css markers for possible bowls, stones and directions
-                    dojo.query('.possibleBowl').removeClass('possibleBowl');
-                    dojo.query('.possibleStone').removeClass('possibleStone');
+                    dojo.query('.blk_possibleBowl').removeClass('blk_possibleBowl');
+                    dojo.query('.blk_possibleStone').removeClass('blk_possibleStone');
 
                     // only 1 player in array
                     for (var player in possibleDirections) {
@@ -158,18 +158,18 @@ define([
                             // if not possible to select, nothing happens
                             if (possibleDirections[player][field] != null) {
                                 if (possibleDirections[player][field]) {
-                                    dojo.addClass('circle_' + player + '_' + field, 'possibleDirection');
+                                    dojo.addClass('circle_' + player + '_' + field, 'blk_possibleDirection');
                                 }
                                 else {
-                                    dojo.addClass('circle_' + player + '_' + field, 'selectedBowl');
+                                    dojo.addClass('circle_' + player + '_' + field, 'blk_selectedBowl');
                                 }
                             }
                         }
                     }
 
                     // highlight all stones in possible directions and selected bowl
-                    dojo.query(".possibleDirection").query(".stone").addClass("possibleStone");
-                    dojo.query(".selectedBowl").query(".stone").addClass("selectedStone");
+                    dojo.query(".blk_possibleDirection").query(".stone").addClass("blk_possibleStone");
+                    dojo.query(".blk_selectedBowl").query(".stone").addClass("blk_selectedStone");
                 }
             },
 
@@ -195,7 +195,7 @@ define([
                 var player = params[1];
                 var field = params[2];
 
-                if (!dojo.hasClass('circle_' + player + '_' + field, 'possibleBowl')) {
+                if (!dojo.hasClass('circle_' + player + '_' + field, 'blk_possibleBowl')) {
                     // This is not a possible move => the click does nothing
                     return;
                 }
@@ -217,8 +217,8 @@ define([
                 var player = params[1];
                 var field = params[2];
 
-                if (!dojo.hasClass('circle_' + player + '_' + field, 'possibleDirection')) {
-                    if (dojo.hasClass('circle_' + player + '_' + field, 'selectedBowl')) {
+                if (!dojo.hasClass('circle_' + player + '_' + field, 'blk_possibleDirection')) {
+                    if (dojo.hasClass('circle_' + player + '_' + field, 'blk_selectedBowl')) {
                         // Check that this action is possible at this moment
                         if (this.checkAction('selectDirection')) {
                             this.ajaxcall("/baolakiswahili/baolakiswahili/cancelDirection.html", {
@@ -267,10 +267,10 @@ define([
             */
             notif_moveStones: function (notif) {
                 // Remove previously set css markers for possible directions and selected bowl
-                dojo.query('.possibleDirection').removeClass('possibleDirection');
-                dojo.query('.selectedBowl').removeClass('selectedBowl');
-                dojo.query('.possibleStone').removeClass('possibleStone');
-                dojo.query('.selectedStone').removeClass('selectedStone');
+                dojo.query('.blk_possibleDirection').removeClass('blk_possibleDirection');
+                dojo.query('.blk_selectedBowl').removeClass('blk_selectedBowl');
+                dojo.query('.blk_possibleStone').removeClass('blk_possibleStone');
+                dojo.query('.blk_selectedStone').removeClass('blk_selectedStone');
 
                 // get players
                 var player = notif.args.player;
@@ -284,7 +284,7 @@ define([
                     for (p of players) {
                         var id = 'circle_' + p + '_' + i;
                         var circle = dojo.byId(id);
-                        var nodes = dojo.query('#' + id + ' > .stone');
+                        var nodes = dojo.query('#' + id + ' > .blk_stone');
                         var stones = [];
                         for (j = 0; j < nodes.length; j++) {
                             stones.push(nodes[j].id);

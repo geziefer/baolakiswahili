@@ -8,21 +8,21 @@
  * -----
  */
 
-#board {
+#blk_board {
     width: 960px;
     height: 493px;
     background-image: url('img/board.png');
     position: relative;
  }
 
-.circle {
+.blk_circle {
     width: 75px;
     height: 75px;
     border-radius: 50%;
     position: absolute;
 }
 
-.label {
+.blk_label {
     width: 20px;
     height: 20px;
     border-radius: 50%;
@@ -34,30 +34,30 @@
     text-align: center;
 }
 
-.stone { 
+.blk_stone { 
     width: 45px;
     height: 32px;
     position: absolute;
     background-image: url('img/stone.png'); 
 }
 
-.possibleBowl {
+.blk_possibleBowl {
     cursor: pointer;  
 }
 
-.selectedBowl {
+.blk_selectedBowl {
     cursor: pointer;
 }
 
-.possibleDirection {
+.blk_possibleDirection {
     cursor: pointer;  
     border: 2px solid #a97a4c;
 }
 
-.possibleStone {
+.blk_possibleStone {
     filter: brightness(150%);
 }
 
-.selectedStone {
+.blk_selectedStone {
     filter: sepia(100%);
 }
