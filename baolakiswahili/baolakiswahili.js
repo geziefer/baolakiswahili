@@ -123,14 +123,14 @@ define([
             },
 
             updateBowlSelection: function (possibleBowls) {
-                // Remove previously set css markers for possible bowls, stones and directions
-                dojo.query('.possibleDirection').removeClass('possibleDirection');
-                dojo.query('.selectedBowl').removeClass('selectedBowl');
-                dojo.query('.possibleStone').removeClass('possibleStone');
-                dojo.query('.selectedStone').removeClass('selectedStone');
-
                 // only display for current player
                 if (this.isCurrentPlayerActive()) {
+                    // Remove previously set css markers for possible bowls, stones and directions
+                    dojo.query('.possibleDirection').removeClass('possibleDirection');
+                    dojo.query('.selectedBowl').removeClass('selectedBowl');
+                    dojo.query('.possibleStone').removeClass('possibleStone');
+                    dojo.query('.selectedStone').removeClass('selectedStone');
+
                     // only 1 player in array
                     for (var player in possibleBowls) {
                         for (var field in possibleBowls[player]) {
@@ -145,12 +145,12 @@ define([
             },
 
             updateMoveDirection: function (possibleDirections) {
-                // Remove previously set css markers for possible bowls, stones and directions
-                dojo.query('.possibleBowl').removeClass('possibleBowl');
-                dojo.query('.possibleStone').removeClass('possibleStone');
-
                 // only display for current player
                 if (this.isCurrentPlayerActive()) {
+                    // Remove previously set css markers for possible bowls, stones and directions
+                    dojo.query('.possibleBowl').removeClass('possibleBowl');
+                    dojo.query('.possibleStone').removeClass('possibleStone');
+
                     // only 1 player in array
                     for (var player in possibleDirections) {
                         for (var field in possibleDirections[player]) {

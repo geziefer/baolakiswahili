@@ -50,7 +50,7 @@ class BaoLaKiswahili extends Table
         $values = array();
         foreach ($players as $player_id => $player) {
             $color = array_shift($default_colors);
-            $values[] = "('" . $player_id . "','$color','32','" . $player['player_canal'] . "','" . addslashes($player['player_name']) . "','" . addslashes($player['player_avatar']) . "')";
+            $values[] = "('" . $player_id . "','$color','0','" . $player['player_canal'] . "','" . addslashes($player['player_name']) . "','" . addslashes($player['player_avatar']) . "')";
         }
         $sql .= implode($values, ',');
         self::DbQuery($sql);
@@ -59,16 +59,33 @@ class BaoLaKiswahili extends Table
 
         /************ Start the game initialization *****/
 
+        // flag for debugging puposes; defaults to false for regular board, when true place test stones only
+        $testmode = false;
+        
         $sql = "INSERT INTO board (player, field, stones) VALUES ";
         $values = array();
         list($player1, $player2) = array_keys($players);
-        for ($i = 1; $i <= 16; $i++) {
-            $values[] = "('$player1', '$i', '2')";
-            $values[] = "('$player2', '$i', '2')";
+
+        if ($testmode) {
+            $values = $this->placeTestStones($player1, $player2);
         }
-        $i = 1;
+        else {
+            for ($i = 1; $i <= 16; $i++) {
+                $values[] = "('$player1', '$i', '2')";
+                $values[] = "('$player2', '$i', '2')";
+            }
+        }
 
         $sql .= implode(',', $values);
+        self::DbQuery($sql);
+
+        // Init scores
+        $board = self::getBoard();
+        $score = self::getScore($player1, $board);
+        $sql = "UPDATE player SET player_score = $score where player_id = $player1";
+        self::DbQuery($sql);
+        $score = self::getScore($player2, $board);
+        $sql = "UPDATE player SET player_score = $score where player_id = $player2";
         self::DbQuery($sql);
 
         // Init stats
@@ -246,6 +263,49 @@ class BaoLaKiswahili extends Table
         }
     }
 
+    // Place stones for test purposes instead of regular setup
+    function placeTestStones($player1, $player2)
+    {
+        $values = array();
+
+        // place test stones for player1
+        $values[] = "('$player1', '1', '2')";
+        $values[] = "('$player1', '2', '0')";
+        $values[] = "('$player1', '3', '1')";
+        $values[] = "('$player1', '4', '2')";
+        $values[] = "('$player1', '5', '0')";
+        $values[] = "('$player1', '6', '0')";
+        $values[] = "('$player1', '7', '0')";
+        $values[] = "('$player1', '8', '0')";
+        $values[] = "('$player1', '9', '0')";
+        $values[] = "('$player1', '10', '2')";
+        $values[] = "('$player1', '11', '0')";
+        $values[] = "('$player1', '12', '0')";
+        $values[] = "('$player1', '13', '3')";
+        $values[] = "('$player1', '14', '0')";
+        $values[] = "('$player1', '15', '0')";
+        $values[] = "('$player1', '16', '0')";
+
+        // place test stones for player2
+        $values[] = "('$player2', '1', '0')";
+        $values[] = "('$player2', '2', '0')";
+        $values[] = "('$player2', '3', '2')";
+        $values[] = "('$player2', '4', '0')";
+        $values[] = "('$player2', '5', '0')";
+        $values[] = "('$player2', '6', '0')";
+        $values[] = "('$player2', '7', '0')";
+        $values[] = "('$player2', '8', '0')";
+        $values[] = "('$player2', '9', '0')";
+        $values[] = "('$player2', '10', '3')";
+        $values[] = "('$player2', '11', '0')";
+        $values[] = "('$player2', '12', '0')";
+        $values[] = "('$player2', '13', '2')";
+        $values[] = "('$player2', '14', '0')";
+        $values[] = "('$player2', '15', '0')";
+        $values[] = "('$player2', '16', '0')";
+
+        return $values;
+    }
 
     //////////////////////////////////////////////////////////////////////////////
     //////////// Player actions
@@ -456,11 +516,21 @@ class BaoLaKiswahili extends Table
         // get current situation
         $board = self::getBoard();
 
-        // calculate scores and thereby if someone has lost (score = 0)
+        // calculate scores and thereby if someone has lost or is zombie (score = 0)
         $playerLast = self::getActivePlayerId();
-        $scoreLast = self::getScore($playerLast, $board);
+        $sql = "SELECT player_zombie FROM player WHERE player_id = '$playerLast'";
+        $zombie = self::getUniqueValueFromDB($sql);
+        $scoreLast = 0;
+        if (!$zombie) {
+            $scoreLast = self::getScore($playerLast, $board);
+        }
         $playerNext = self::activeNextPlayer();
-        $scoreNext = self::getScore($playerNext, $board);
+        $sql = "SELECT player_zombie FROM player WHERE player_id = '$playerNext'";
+        $zombie = self::getUniqueValueFromDB($sql);
+        $scoreNext = 0;
+        if (!$zombie) {
+            $scoreNext = self::getScore($playerNext, $board);
+        }
 
         // save scores
         $sql = "UPDATE player SET player_score = '$scoreLast' WHERE player_id ='$playerLast'";
@@ -511,13 +581,6 @@ class BaoLaKiswahili extends Table
                     $this->gamestate->nextState("zombiePass");
                     break;
             }
-
-            return;
-        }
-
-        if ($state['type'] === "multipleactiveplayer") {
-            // Make sure player is in a non blocking status for role turn
-            $this->gamestate->setPlayerNonMultiactive($active_player, '');
 
             return;
         }
