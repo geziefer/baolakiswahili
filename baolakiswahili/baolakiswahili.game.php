@@ -13,6 +13,12 @@
 
 require_once(APP_GAMEMODULE_PATH . 'module/table/table.game.php');
 
+// Local constants
+define( "OPTION_VARIANT", 100 );
+define( "VARIANT_KISWAHILI", 1 );
+define( "VARIANT_KUJIFUNZA", 2 );
+define( "VARIANT_HUS", 3 );
+
 class BaoLaKiswahili extends Table
 {
     function __construct()
@@ -71,14 +77,26 @@ class BaoLaKiswahili extends Table
         if ($testmode) {
             $values = $this->placeTestStones($player1, $player2);
         }
-        // // in Kiswahili variant only 3 pits per player are filled
-        // elseif (self::isKiswahili()) {
-        //     for ($i = 1; $i <= 16; $i++) {
-        //         $values[] = "('$player1', '$i', '0')";
-        //         $values[] = "('$player2', '$i', '0')";
-        //     }
-        //     $values[] = "('$player1', '1', '2')";
-        // }
+        // in Kiswahili variant only 3 pits per player are filled
+        elseif ($options[OPTION_VARIANT] == VARIANT_KISWAHILI) {
+            for ($i = 1; $i <= 4; $i++) {
+                $values[] = "('$player1', '$i', '0')";
+            }
+            $values[] = "('$player1', '5', '6')";
+            $values[] = "('$player1', '6', '2')";
+            $values[] = "('$player1', '7', '2')";
+            for ($i = 8; $i <= 16; $i++) {
+                $values[] = "('$player1', '$i', '0')";
+            }
+
+            $values[] = "('$player2', '1', '0')";
+            $values[] = "('$player2', '2', '2')";
+            $values[] = "('$player2', '3', '2')";
+            $values[] = "('$player2', '4', '6')";
+            for ($i = 5; $i <= 16; $i++) {
+                $values[] = "('$player2', '$i', '0')";
+            }
+        }
         else {
             // in other variants all pits contain 2 seeds
             for ($i = 1; $i <= 16; $i++) {
@@ -170,24 +188,6 @@ class BaoLaKiswahili extends Table
     /*
         In this space, you can put any utility methods useful for your game logic
     */
-
-    // Check if Kiswahili variant is selected
-    function isKiswahili()
-    {
-        return $this->getGameStateValue('game_variant') == 1;
-    }
-
-    // Check if Kujifunza variant is selected
-    function isKujifunza()
-    {
-        return $this->getGameStateValue('game_variant') == 2;
-    }
-
-    // Check if Hus variant is selected
-    function isHus()
-    {
-        return $this->getGameStateValue('game_variant') == 3;
-    }
 
     // Get the complete board with a double associative array player/no -> count
     function getBoard()
@@ -316,7 +316,7 @@ class BaoLaKiswahili extends Table
         $values[] = "('$player1', '16', '0')";
 
         // place test stones for player2
-        $values[] = "('$player2', '1', '0')";
+        $values[] = "('$player2', '1', '5')";
         $values[] = "('$player2', '2', '0')";
         $values[] = "('$player2', '3', '2')";
         $values[] = "('$player2', '4', '0')";
