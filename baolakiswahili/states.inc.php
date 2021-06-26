@@ -120,7 +120,7 @@ $machinestates = array(
     ),
 
     // Hus type game checks situation if next player is on, or one player wins
-    21 => array(
+    31 => array(
         "name" => "husMoveExecution",
         "description" => clienttranslate('Move of ${actplayer} gets executed'),
         "descriptionmyturn" => clienttranslate('Your move gets executed'),
