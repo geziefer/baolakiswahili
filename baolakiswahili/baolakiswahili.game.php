@@ -515,6 +515,7 @@ class BaoLaKiswahili extends Table
         game state.
     */
 
+    // TODO: delete
     function argBowlSelect()
     {
         return array(
@@ -522,6 +523,7 @@ class BaoLaKiswahili extends Table
         );
     }
 
+    // TODO: delete
     function argDirectionSelect()
     {
         $field = self::getSelectedField(self::getActivePlayerId());
@@ -529,6 +531,36 @@ class BaoLaKiswahili extends Table
         return array(
             'possibleDirections' => self::getPossibleDirections(self::getActivePlayerId(), $field)
         );
+    }
+
+    function argKunamuaMoveSelection()
+    {
+
+    }
+
+    function argSafariDecision()
+    {
+
+    }
+
+    function argNyumbaTaxSelection()
+    {
+
+    }
+
+    function argMtajiMoveSelection()
+    {
+
+    }
+
+    function argTakasiaMoveSelection()
+    {
+
+    }
+
+    function argHusMoveSelection()
+    {
+
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -545,6 +577,7 @@ class BaoLaKiswahili extends Table
         $this->gamestate->nextState('playKiswahili');
     }
 
+    // TODO: delete
     function stNextPlayer()
     {
         // get current situation
@@ -587,6 +620,22 @@ class BaoLaKiswahili extends Table
             $this->gamestate->nextState('nextPlayer');
         }
     }
+
+    function stKunamuaNextPlayer()
+    {
+    
+    }
+
+    function stMtajiNextPlayer()
+    {
+    
+    }
+
+    function stHusNextPlayer()
+    {
+    
+    }
+
 
     //////////////////////////////////////////////////////////////////////////////
     //////////// Zombie
