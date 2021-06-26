@@ -13,115 +13,62 @@
 
 $machinestates = array(
 
-    // The initial state. One of 3 game types gets selected.
+    // The initial state. Please do not modify.
     1 => array(
         "name" => "gameSetup",
         "description" => "",
         "type" => "manager",
         "action" => "stGameSetup",
-        "transitions" => array("playKiswahili" => 10, "playKujifunza" => 20, "playHus" => 30)
+        "transitions" => array("" => 2)
     ),
 
-    // First phase of kiswahili type. Player selects a bowl, then a direction
+    // game variant selection
+    2 => array(
+        "name" => "variantSelect",
+        "description" => "",
+        "type" => "game",
+        "action" => "stVariantSelect",
+        "transitions" => array("playKiswahili" => 10, "playKujifunza" => 10, "playHus" => 10)
+    ),
+
+    // player selects a bowl, cancels his selection or 
+    // gives up to not having to play a hopeless game til the end
     10 => array(
-        "name" => "kunamuaMoveSelection",
-        "description" => clienttranslate('${actplayer} must place a seed'),
-        "descriptionmyturn" => clienttranslate('${you} must place a seed'),
+        "name" => "bowlSelection",
+        "description" => clienttranslate('${actplayer} must select a bowl'),
+        "descriptionmyturn" => clienttranslate('${you} must select a bowl'),
         "type" => "activeplayer",
-        "args" => "argKunamuaMoveSelection",
-        "possibleactions" => array("selectMove"),
-        "transitions" => array("selectMove" => 11, "zombiePass" => 11)
+        "args" => "argBowlSelect",
+        "possibleactions" => array("selectBowl"),
+        "transitions" => array("selectBowl" => 11, "zombiePass" => 20)
     ),
 
-    // First phase game checks situation if next player is on, a special move oocurs, or one player wins
+    // player selects direction where stones should be moved to;
+    // game moves stones from selected bowl in the selected direction
+    // which is making one move; moves are continued until destination
+    // field is empty
     11 => array(
-        "name" => "kunamuaMoveExecution",
-        "description" => clienttranslate('Move of ${actplayer} gets executed'),
-        "descriptionmyturn" => clienttranslate('Your move gets executed'),
-        "type" => "game",
-        "action" => "stKunamuaNextPlayer",
-        "updateGameProgression" => true,
-        "transitions" => array("nextPlayer" => 10, "decideNyumba" => 12, "selectTax" => 13, "switchPhase" => 20, "endGame" => 99)
-    ),
-    
-    // First phase decision of making safari
-    12 => array(
-        "name" => "safariDecision",
-        "description" => clienttranslate('${actplayer} must decide about safari'),
-        "descriptionmyturn" => clienttranslate('${you} must decide about safari'),
+        "name" => "moveDirection",
+        "description" => clienttranslate('${actplayer} must select a direction'),
+        "descriptionmyturn" => clienttranslate('${you} must select a direction'),
         "type" => "activeplayer",
-        "args" => "argSafariDecision",
-        "possibleactions" => array("continueMove"),
-        "transitions" => array("continueMove" => 11, "zombiePass" => 11)
+        "args" => "argDirectionSelect",
+        "possibleactions" => array("selectDirection", "cancelDirection"),
+        "transitions" => array("selectDirection" => 20, "cancelDirection" => 10, "zombiePass" => 20)
     ),
 
-    // First phase special move tax nyumba
-    13 => array(
-        "name" => "nyumbaTaxSelection",
-        "description" => clienttranslate('${actplayer} must tax the nyumba'),
-        "descriptionmyturn" => clienttranslate('${you} must tax the nyumba'),
-        "type" => "activeplayer",
-        "args" => "argNyumbaTaxSelection",
-        "possibleactions" => array("taxNyumba"),
-        "transitions" => array("taxNyumba" => 11, "zombiePass" => 11)
-    ),
-
-    // Second phase of kiswahili type or kujifunza type. Player selects a bowl, then a direction
+    // game checks situation if next player is on or if current one wins
     20 => array(
-        "name" => "mtajiMoveSelection",
-        "description" => clienttranslate('${actplayer} must make a move'),
-        "descriptionmyturn" => clienttranslate('${you} must make a move'),
-        "type" => "activeplayer",
-        "args" => "argMtajiMoveSelection",
-        "possibleactions" => array("selectMove"),
-        "transitions" => array("selectMove" => 21, "zombiePass" => 21)
-    ),
-
-    // Second phase game checks situation if next player is on, a special move oocurs, or one player wins
-    21 => array(
-        "name" => "mtajiMoveExecution",
-        "description" => clienttranslate('Move of ${actplayer} gets executed'),
-        "descriptionmyturn" => clienttranslate('Your move gets executed'),
+        "name" => "nextPlayer",
+        "description" => "",
         "type" => "game",
-        "action" => "stMtajiNextPlayer",
+        "action" => "stNextPlayer",
         "updateGameProgression" => true,
-        "transitions" => array("nextPlayer" => 20, "declareTakasia" => 22, "endGame" => 99)
+        "transitions" => array("nextPlayer" => 10, "endGame" => 99)
     ),
     
-    // Second phase special move kutakatia
-    22 => array(
-        "name" => "takasiaMoveSelection",
-        "description" => clienttranslate('${actplayer} has a takasiaed pit and must make a move'),
-        "descriptionmyturn" => clienttranslate('${you} have a takasiaed pit and must make a move'),
-        "type" => "activeplayer",
-        "args" => "argTakasiaMoveSelection",
-        "possibleactions" => array("selectMove"),
-        "transitions" => array("selectMove" => 21, "zombiePass" => 21)
-    ),
-
-    // Hus type. Player selects a bowl, then a direction
-    30 => array(
-        "name" => "husMoveSelection",
-        "description" => clienttranslate('${actplayer} must make a move'),
-        "descriptionmyturn" => clienttranslate('${you} must make a move'),
-        "type" => "activeplayer",
-        "args" => "argHusMoveSelection",
-        "possibleactions" => array("selectMove"),
-        "transitions" => array("selectMove" => 31, "zombiePass" => 31)
-    ),
-
-    // Hus type game checks situation if next player is on, or one player wins
-    21 => array(
-        "name" => "husMoveExecution",
-        "description" => clienttranslate('Move of ${actplayer} gets executed'),
-        "descriptionmyturn" => clienttranslate('Your move gets executed'),
-        "type" => "game",
-        "action" => "stHusNextPlayer",
-        "updateGameProgression" => true,
-        "transitions" => array("nextPlayer" => 30, "endGame" => 99)
-    ),
-    
-    // Final state, one player has won
+    // Final state.
+    // Please do not modify (and do not overload action/args methods).
     99 => array(
         "name" => "gameEnd",
         "description" => clienttranslate("End of game"),

@@ -20,6 +20,7 @@ class BaoLaKiswahili extends Table
         parent::__construct();
 
         self::initGameStateLabels(array(
+            "game_variant" => 100
         ));
     }
 
@@ -66,10 +67,20 @@ class BaoLaKiswahili extends Table
         $values = array();
         list($player1, $player2) = array_keys($players);
 
+        // in testmode seeds are explicitely placed according to method
         if ($testmode) {
             $values = $this->placeTestStones($player1, $player2);
         }
+        // // in Kiswahili variant only 3 pits per player are filled
+        // elseif (self::isKiswahili()) {
+        //     for ($i = 1; $i <= 16; $i++) {
+        //         $values[] = "('$player1', '$i', '0')";
+        //         $values[] = "('$player2', '$i', '0')";
+        //     }
+        //     $values[] = "('$player1', '1', '2')";
+        // }
         else {
+            // in other variants all pits contain 2 seeds
             for ($i = 1; $i <= 16; $i++) {
                 $values[] = "('$player1', '$i', '2')";
                 $values[] = "('$player2', '$i', '2')";
@@ -159,6 +170,24 @@ class BaoLaKiswahili extends Table
     /*
         In this space, you can put any utility methods useful for your game logic
     */
+
+    // Check if Kiswahili variant is selected
+    function isKiswahili()
+    {
+        return $this->getGameStateValue('game_variant') == 1;
+    }
+
+    // Check if Kujifunza variant is selected
+    function isKujifunza()
+    {
+        return $this->getGameStateValue('game_variant') == 2;
+    }
+
+    // Check if Hus variant is selected
+    function isHus()
+    {
+        return $this->getGameStateValue('game_variant') == 3;
+    }
 
     // Get the complete board with a double associative array player/no -> count
     function getBoard()
@@ -510,6 +539,11 @@ class BaoLaKiswahili extends Table
         Here, you can create methods defined as "game state actions" (see "action" property in states.inc.php).
         The action method of state X is called everytime the current game state is set to X.
     */
+
+    function stVariantSelect()
+    {
+        $this->gamestate->nextState('playKiswahili');
+    }
 
     function stNextPlayer()
     {
