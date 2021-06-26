@@ -574,7 +574,17 @@ class BaoLaKiswahili extends Table
 
     function stVariantSelect()
     {
-        $this->gamestate->nextState('playKiswahili');
+        // transit to the correct phase, which is separate for the 3 possible game options
+        if ($this->getGameStateValue('game_variant') == VARIANT_KISWAHILI) {
+            $this->gamestate->nextState('playKiswahili');
+        } elseif ($this->getGameStateValue('game_variant') == VARIANT_KUJIFUNZA) {
+            $this->gamestate->nextState('playKujifunza');
+        } elseif ($this->getGameStateValue('game_variant') == VARIANT_HUS) {
+            $this->gamestate->nextState('playHus');
+        } else {
+            // error in options, end game
+            $this->gamestate->nextState('endGame');
+        }
     }
 
     // TODO: delete
