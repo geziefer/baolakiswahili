@@ -111,7 +111,7 @@ $machinestates = array(
     // Hus type. Player selects a bowl, then a direction
     30 => array(
         "name" => "husMoveSelection",
-        "description" => clienttranslate('${actplayer} must make a move'),
+        "description" => clienttranslate('${actplayer} must select a bowl'),
         "descriptionmyturn" => clienttranslate('${you} must make a move'),
         "type" => "activeplayer",
         "args" => "argHusMoveSelection",

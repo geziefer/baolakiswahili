@@ -71,13 +71,10 @@ define([
                 console.log('Entering state: ' + stateName);
 
                 switch (stateName) {
-                    case 'bowlSelection':
-                        this.updateBowlSelection(args.args.possibleBowls);
+                    case 'husMoveSelection':
+                        this.updateBowlSelection(args.args.possibleMoves);
                         break;
 
-                    case 'moveDirection':
-                        this.updateMoveDirection(args.args.possibleDirections);
-                        break;
                 }
 
             },
@@ -100,6 +97,16 @@ define([
 
                 if (this.isCurrentPlayerActive()) {
                     switch (stateName) {
+                        case 'husMoveSelection':
+                            dojo.query(".basket").addClass('active_slot');
+                            dojo.addClass(this.clientStateArgs.token_id, 'selected');
+                            this.addActionButton('button_cancel', _('Cancel'), 'onCancel');
+                            break;
+                        case 'client_husDirectionSelection':
+                            dojo.query(".basket").addClass('active_slot');
+                            dojo.addClass(this.clientStateArgs.token_id, 'selected');
+                            this.addActionButton('button_cancel', _('Cancel'), 'onCancel');
+                            break;
                     }
                 }
             },
@@ -200,14 +207,13 @@ define([
                     return;
                 }
 
-                // Check that this action is possible at this moment
-                if (this.checkAction('selectBowl')) {
-                    this.ajaxcall("/baolakiswahili/baolakiswahili/selectBowl.html", {
-                        lock: true,
-                        player: player,
-                        field: field
-                    }, this, function (result) { });
-                }
+                // remember selected field in client
+                this.clientStateArgs.field = field;
+
+                // set new client state
+                this.setClientState("client_selectDirection", {
+                    descriptionmyturn: _('${you} must select a direction'),
+                });
             },
 
             onSelectDirection: function (evt) {

@@ -203,8 +203,8 @@ class BaoLaKiswahili extends Table
         return self::getUniqueValueFromDB($sql);
     }
 
-    // Possible bowls to select are all of players bowls with at least 2 stones
-    function getPossibleBowls($player_id)
+    // Hus variant: Possible bowls and their direction of all players bowls with at least 2 stones
+    function getHusPossibleMoves($player_id)
     {
         $result = array();
 
@@ -212,25 +212,12 @@ class BaoLaKiswahili extends Table
 
         for ($i = 1; $i <= 16; $i++) {
             if ($board[$player_id][$i]["count"] >= 2) {
-                $result[$player_id][$i] = $board[$player_id][$i];
+                $left = $i == 1 ? 16 : $i - 1;
+                $right = $i == 16 ? 1 : $i + 1;
+                $result[$i] = array($left, $right);
             }
         }
 
-        return $result;
-    }
-
-    // Possible directions to select are always the previous and next bowl to the selected one
-    function getPossibleDirections($player_id, $selected)
-    {
-        $result = array();
-
-        $board = self::getBoard();
-        $left = $selected == 1 ? 16 : $selected - 1;
-        $right = $selected == 16 ? 1 : $selected + 1;
-
-        $result[$player_id][$left] = true;
-        $result[$player_id][$selected] = false;
-        $result[$player_id][$right] = true;
         return $result;
     }
 
@@ -515,24 +502,6 @@ class BaoLaKiswahili extends Table
         game state.
     */
 
-    // TODO: delete
-    function argBowlSelect()
-    {
-        return array(
-            'possibleBowls' => self::getPossibleBowls(self::getActivePlayerId())
-        );
-    }
-
-    // TODO: delete
-    function argDirectionSelect()
-    {
-        $field = self::getSelectedField(self::getActivePlayerId());
-
-        return array(
-            'possibleDirections' => self::getPossibleDirections(self::getActivePlayerId(), $field)
-        );
-    }
-
     function argKunamuaMoveSelection()
     {
 
@@ -560,7 +529,9 @@ class BaoLaKiswahili extends Table
 
     function argHusMoveSelection()
     {
-
+        return array(
+            'possibleMoves' => self::getHusPossibleMoves(self::getActivePlayerId())
+        );
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -702,5 +673,9 @@ class BaoLaKiswahili extends Table
         // For example, if the game was running with a release of your game named "140430-1345",
         // $from_version is equal to 1404301345
 
+        if ( $from_version <= '2103132223') {
+            $sql = "ALTER TABLE `player` DROP COLUMN `selected_field`";
+            self::applyDbUpgradeToAllDB( $sql );
+            }
     }
 }
