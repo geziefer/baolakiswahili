@@ -203,7 +203,7 @@ class BaoLaKiswahili extends Table
         return self::getUniqueValueFromDB($sql);
     }
 
-    // Hus variant: Possible bowls and their direction of all players bowls with at least 2 stones
+    // Hus variant: Possible bowls and their direction of a player's bowls with at least 2 stones
     function getHusPossibleMoves($player_id)
     {
         $result = array();

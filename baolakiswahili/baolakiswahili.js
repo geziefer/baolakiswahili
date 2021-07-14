@@ -50,12 +50,14 @@ define([
 
                 }
 
-                // click handlers for both possible click situations on bowl
-                dojo.query('.blk_circle').connect('onclick', this, 'onSelectBowl');
-                dojo.query('.blk_circle').connect('onclick', this, 'onSelectDirection');
+                // click handler for different click situations on bowl
+                dojo.query('.blk_circle').connect('onclick', this, 'onBowl');
 
                 // Setup game notifications to handle (see "setupNotifications" method below)
                 this.setupNotifications();
+
+                //create empty client args
+                this.clientStateArgs = {};
 
                 console.log("Ending game setup");
             },
@@ -70,10 +72,8 @@ define([
             onEnteringState: function (stateName, args) {
                 console.log('Entering state: ' + stateName);
 
+                // states are distinguished in onUpdateActionButtons due to client states
                 switch (stateName) {
-                    case 'husMoveSelection':
-                        this.updateBowlSelection(args.args.possibleMoves);
-                        break;
 
                 }
 
@@ -98,14 +98,13 @@ define([
                 if (this.isCurrentPlayerActive()) {
                     switch (stateName) {
                         case 'husMoveSelection':
-                            dojo.query(".basket").addClass('active_slot');
-                            dojo.addClass(this.clientStateArgs.token_id, 'selected');
-                            this.addActionButton('button_cancel', _('Cancel'), 'onCancel');
+                            this.updateBowlSelection(args.possibleMoves);
+
                             break;
-                        case 'client_husDirectionSelection':
-                            dojo.query(".basket").addClass('active_slot');
-                            dojo.addClass(this.clientStateArgs.token_id, 'selected');
+                        case 'client_directionSelection':
                             this.addActionButton('button_cancel', _('Cancel'), 'onCancel');
+                            this.updateMoveDirection(args.possibleMoves);
+
                             break;
                     }
                 }
@@ -120,6 +119,8 @@ define([
                 script.
             
             */
+
+            // place one stone in a bowl with a little random position within
             addStoneOnBoard: function (player, field, number) {
                 dojo.place(this.format_block('jstpl_stone', {
                     no: number,
@@ -129,21 +130,23 @@ define([
                 }), 'circle_' + player + '_' + field);
             },
 
-            updateBowlSelection: function (possibleBowls) {
+            // show all bowls which are selectable
+            updateBowlSelection: function (possibleMoves) {
+                console.log("Enter updateBowlSelection");
+
                 // only display for current player
                 if (this.isCurrentPlayerActive()) {
+                    var player = this.getActivePlayerId();
                     // Remove previously set css markers for possible bowls, stones and directions
                     dojo.query('.blk_possibleDirection').removeClass('blk_possibleDirection');
                     dojo.query('.blk_selectedBowl').removeClass('blk_selectedBowl');
                     dojo.query('.blk_possibleStone').removeClass('blk_possibleStone');
                     dojo.query('.blk_selectedStone').removeClass('blk_selectedStone');
 
-                    // only 1 player in array
-                    for (var player in possibleBowls) {
-                        for (var field in possibleBowls[player]) {
-                            // every entry in this array is a possible bowl
-                            dojo.addClass('circle_' + player + '_' + field, 'blk_possibleBowl');
-                        }
+                    // data for active player in array
+                    for (var field in possibleMoves) {
+                        // every entry in this array is a possible bowl
+                        dojo.addClass('circle_' + player + '_' + field, 'blk_possibleBowl');
                     }
 
                     // highlight all stones in possible bowls
@@ -151,32 +154,27 @@ define([
                 }
             },
 
-            updateMoveDirection: function (possibleDirections) {
+            // show selectable directions after selecting bowl
+            updateMoveDirection: function (possibleMoves) {
+                console.log("Enter updateMoveDirection");
                 // only display for current player
                 if (this.isCurrentPlayerActive()) {
+                    var player = this.getActivePlayerId();
                     // Remove previously set css markers for possible bowls, stones and directions
                     dojo.query('.blk_possibleBowl').removeClass('blk_possibleBowl');
                     dojo.query('.blk_possibleStone').removeClass('blk_possibleStone');
 
-                    // only 1 player in array
-                    for (var player in possibleDirections) {
-                        for (var field in possibleDirections[player]) {
-                            // true entries are directions, the false entry is the selected,
-                            // if not possible to select, nothing happens
-                            if (possibleDirections[player][field] != null) {
-                                if (possibleDirections[player][field]) {
-                                    dojo.addClass('circle_' + player + '_' + field, 'blk_possibleDirection');
-                                }
-                                else {
-                                    dojo.addClass('circle_' + player + '_' + field, 'blk_selectedBowl');
-                                }
-                            }
-                        }
+                    // change selected bowl for cacelling
+                    dojo.addClass('circle_' + player + '_' + this.clientStateArgs.field, 'blk_selectedBowl');
+                    // data for active player in array
+                    for (var field of possibleMoves[this.clientStateArgs.field]) {
+                        // selectable directions
+                        dojo.addClass('circle_' + player + '_' + field, 'blk_possibleDirection');
                     }
 
                     // highlight all stones in possible directions and selected bowl
-                    dojo.query(".blk_possibleDirection").query(".stone").addClass("blk_possibleStone");
-                    dojo.query(".blk_selectedBowl").query(".stone").addClass("blk_selectedStone");
+                    dojo.query(".blk_possibleDirection").query(".blk_stone").addClass("blk_possibleStone");
+                    dojo.query(".blk_selectedBowl").query(".blk_stone").addClass("blk_selectedStone");
                 }
             },
 
@@ -194,60 +192,72 @@ define([
             
             */
 
-            onSelectBowl: function (evt) {
-                // Stop event propagation
-                dojo.stopEvent(evt);
-
-                var params = evt.currentTarget.id.split('_');
-                var player = params[1];
-                var field = params[2];
-
-                if (!dojo.hasClass('circle_' + player + '_' + field, 'blk_possibleBowl')) {
-                    // This is not a possible move => the click does nothing
-                    return;
-                }
-
-                // remember selected field in client
-                this.clientStateArgs.field = field;
-
-                // set new client state
-                this.setClientState("client_selectDirection", {
-                    descriptionmyturn: _('${you} must select a direction'),
-                });
-            },
-
-            onSelectDirection: function (evt) {
-                // Stop event propagation
-                dojo.stopEvent(evt);
-
-                var params = evt.currentTarget.id.split('_');
-                var player = params[1];
-                var field = params[2];
-
-                if (!dojo.hasClass('circle_' + player + '_' + field, 'blk_possibleDirection')) {
-                    if (dojo.hasClass('circle_' + player + '_' + field, 'blk_selectedBowl')) {
-                        // Check that this action is possible at this moment
-                        if (this.checkAction('selectDirection')) {
-                            this.ajaxcall("/baolakiswahili/baolakiswahili/cancelDirection.html", {
-                                lock: true,
-                                player: player,
-                                field: field
-                            }, this, function (result) { });
-                        }
-                    }
-
-                    // This is not a possible move => the click does nothing
-                    return;
-                }
+            // player has clicked on a bowl to make an action
+            onBowl: function (evt) {
+                console.log("Enter onBowl");
 
                 // Check that this action is possible at this moment
-                if (this.checkAction('selectDirection')) {
+                if (!this.checkAction('selectMove')) {
+                    return;
+                }
+
+                // Stop event propagation
+                dojo.stopEvent(evt);
+
+                var params = evt.currentTarget.id.split('_');
+                var player = params[1];
+                var field = params[2];
+
+                // action #1: check if a possible bowl has been clicked
+                if (dojo.hasClass('circle_' + player + '_' + field, 'blk_possibleBowl')) {
+                    console.log("Possible bowl clicked: " + field);
+                    // remember selected field in client
+                    this.clientStateArgs.field = field;
+
+                    // set new client state
+                    this.setClientState('client_directionSelection', {
+                        descriptionmyturn: _('${you} must select a direction'),
+                    });
+
+                    return;
+                }
+
+                // action #2: check if a selected bowl has been clicked
+                if (dojo.hasClass('circle_' + player + '_' + field, 'blk_selectedBowl')) {
+                    console.log("Selected bowl clicked: " + field);
+
+                    this.onCancel(evt);
+    
+                    return;
+                }
+                // action #3: check if a direction has been clicked
+                if (dojo.hasClass('circle_' + player + '_' + field, 'blk_possibleDirection')) {
+                    console.log("Direction clicked: " + field);
+
+                    // call server
                     this.ajaxcall("/baolakiswahili/baolakiswahili/selectDirection.html", {
                         lock: true,
                         player: player,
                         field: field
                     }, this, function (result) { });
+
+                    return;
                 }
+            },
+
+            // click on Cancel button       
+            onCancel: function (evt) {
+			    console.log("Enter onCancel");
+
+                // Check that this action is possible at this moment
+                if (!this.checkAction('selectMove')) {
+                    return;
+                }
+
+                // Stop event propagation
+                dojo.stopEvent(evt);
+
+                this.restoreServerGameState();
             },
 
             ///////////////////////////////////////////////////
