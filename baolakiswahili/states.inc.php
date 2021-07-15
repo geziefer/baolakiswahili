@@ -78,7 +78,7 @@ $machinestates = array(
     // Second phase of kiswahili type or kujifunza type. Player selects a bowl, then a direction
     20 => array(
         "name" => "mtajiMoveSelection",
-        "description" => clienttranslate('${actplayer} must make a move'),
+        "description" => clienttranslate('${actplayer} must select a pit'),
         "descriptionmyturn" => clienttranslate('${you} must make a move'),
         "type" => "activeplayer",
         "args" => "argMtajiMoveSelection",
@@ -111,8 +111,8 @@ $machinestates = array(
     // Hus type. Player selects a bowl, then a direction
     30 => array(
         "name" => "husMoveSelection",
-        "description" => clienttranslate('${actplayer} must select a bowl'),
-        "descriptionmyturn" => clienttranslate('${you} must make a move'),
+        "description" => clienttranslate('${actplayer} must make a move'),
+        "descriptionmyturn" => clienttranslate('${you} must select a pit'),
         "type" => "activeplayer",
         "args" => "argHusMoveSelection",
         "possibleactions" => array("selectMove"),

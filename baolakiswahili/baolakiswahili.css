@@ -51,6 +51,7 @@
 
 .blk_possibleDirection {
     cursor: pointer;  
+    border: 2px solid #a97a4c;
 }
 
 .blk_possibleStone {

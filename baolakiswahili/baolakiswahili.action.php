@@ -25,39 +25,14 @@ class action_baolakiswahili extends APP_GameAction
         }
     }
 
-    /*
-    Action after selecting a bowl for move
-    */
-    public function selectBowl()
+    // Action after selecting a move (start field and direction field)
+    public function selectMove()
     {
         self::setAjaxMode();
         $player = self::getArg("player", AT_posint, true);
         $field = self::getArg("field", AT_posint, true);
-        $result = $this->game->selectBowl($player, $field);
-        self::ajaxResponse();
-    }
-
-    /*
-    Action after selecting a direction for move
-    */
-    public function selectDirection()
-    {
-        self::setAjaxMode();
-        $player = self::getArg("player", AT_posint, true);
-        $field = self::getArg("field", AT_posint, true);
-        $result = $this->game->selectDirection($player, $field);
-        self::ajaxResponse();
-    }
-
-    /*
-    Action after canceling bowl selection
-    */
-    public function cancelDirection()
-    {
-        self::setAjaxMode();
-        $player = self::getArg("player", AT_posint, true);
-        $field = self::getArg("field", AT_posint, true);
-        $result = $this->game->cancelDirection($player, $field);
+        $direction = self::getArg("direction", AT_posint, true);
+        $result = $this->game->selectMove($player, $field, $direction);
         self::ajaxResponse();
     }
 }

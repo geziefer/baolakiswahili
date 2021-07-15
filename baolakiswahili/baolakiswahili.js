@@ -97,6 +97,9 @@ define([
 
                 if (this.isCurrentPlayerActive()) {
                     switch (stateName) {
+                        // independent of game mode, it always causes the bowls to be styled accourding to possible moves
+                        case 'kunamuaMoveSelection':
+                        case 'mtajiMoveSelection':
                         case 'husMoveSelection':
                             this.updateBowlSelection(args.possibleMoves);
 
@@ -226,6 +229,7 @@ define([
                 if (dojo.hasClass('circle_' + player + '_' + field, 'blk_selectedBowl')) {
                     console.log("Selected bowl clicked: " + field);
 
+                    // same handling as on cancel button
                     this.onCancel(evt);
     
                     return;
@@ -234,11 +238,12 @@ define([
                 if (dojo.hasClass('circle_' + player + '_' + field, 'blk_possibleDirection')) {
                     console.log("Direction clicked: " + field);
 
-                    // call server
-                    this.ajaxcall("/baolakiswahili/baolakiswahili/selectDirection.html", {
+                    // call server, game mode will be handled there
+                    this.ajaxcall("/baolakiswahili/baolakiswahili/selectMove.html", {
                         lock: true,
                         player: player,
-                        field: field
+                        field: this.clientStateArgs.field,
+                        direction: field
                     }, this, function (result) { });
 
                     return;

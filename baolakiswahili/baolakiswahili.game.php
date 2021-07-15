@@ -10,6 +10,15 @@
  * -----
  */
 
+/**
+ * Code notes:
+ * 
+ * how to log variable / a message:
+ * self::dump('##################### $variable', $variable);
+ * self::debug($('##################### message');
+ */
+
+
 
 require_once(APP_GAMEMODULE_PATH . 'module/table/table.game.php');
 
@@ -332,164 +341,133 @@ class BaoLaKiswahili extends Table
         (note: each method below must match an input method in baolakiswahili.action.php)
     */
 
-    // player has selected a bowl for his move
-    function selectBowl($player, $field)
+    // player has selected a move (start field and direction field)
+    // game modes are distinguished here
+    function selectMove($player, $field, $direction)
     {
         // Check that this player is active and that this action is possible at this moment
-        self::checkAction('selectBowl');
+        self::checkAction('selectMove');
 
-        // Check that selection is possible
-        $possibleBowls = self::getPossibleBowls($player);
-        if ($possibleBowls[$player][$field] >= 2) {
-            // Save selected bowl
-            $sql = "UPDATE player SET selected_field = $field where player_id = $player";
-            self::DbQuery($sql);
-
-            // Then, go to the next state
-            $this->gamestate->nextState('selectBowl');
-        } else {
-            throw new feException("Impossible move");
-        }
-    }
-
-    // player has selected a direction for his move
-    // and move is calculated
-    function selectDirection($player, $field)
-    {
-        // Check that this player is active and that this action is possible at this moment
-        self::checkAction('selectDirection');
-
-        // Check that selection is possible
-        $selectedField = self::getSelectedField($player);
-        $possibleDirection = self::getPossibleDirections($player, $selectedField);
-        if ($possibleDirection[$player][$field]) {
-            // we only want to have -1 or +1, thus correct if overflown
-            $moveDirection = ($field - $selectedField);
-            $moveDirection = (abs($moveDirection) > 1) ? $moveDirection / -15 : $moveDirection;
-
-            // get start situation
-            $oponent = self::getPlayerAfter($player);
-            $players = array($player, $oponent);
-            $sourceField = $selectedField;
-            $board = self::getBoard();
-
-            // initialize result array for later notification of moves to do;
-            // moves are ordered list of pattern "<command>_<field>"
-            // where command is: emptyActive, emptyOponent, moveStone
-            $moves = array();
-
-            // get stones for move and empty the start field
-            $count = $board[$player][$sourceField]["count"];
-            $board[$player][$sourceField]["count"] = 0;
-            array_push($moves, "emptyActive_" . $sourceField);
-            $overallMoved = $count;
-            $overallStolen = 0;
-            $overallEmptied = 0;
-
-            // make moves until last field was empty before putting stone
-            while ($count > 1) {
-                // distribute stones in the next fields in selected direction until last one
-                while ($count > 0) {
-                    // calculate next field to move to and leave 1 stone
-                    $destinationField = self::getNextField($sourceField, $moveDirection);
-                    $board[$player][$destinationField]["count"] += 1;
-                    array_push($moves, "moveStone_" . $destinationField);
-                    $sourceField = $destinationField;
-                    $count -= 1;
-                }
-
-                // source field now points to field of last put stone
-                $count = $board[$player][$sourceField]["count"];
-
-                if ($count > 1) {
-                    // empty oponents oposite bowl in 1st row and add to own stones for move,
-                    // if empty, nothing changes
-                    if ($sourceField <= 8) {
-                        $countOponent = $board[$oponent][$sourceField]["count"];
-                        if ($countOponent > 0) {
-                            // empty and count stones
-                            $overallStolen += $countOponent;
-                            $overallEmptied += 1;
-                            $count += $countOponent;
-                            $board[$oponent][$sourceField]["count"] = 0;
-                            array_push($moves, "emptyOponent_" . $sourceField);
-                            $overallMoved += $count;
-
-                            // check if oponent has lost and stop moves if lost
-                            $scoreOponent = self::getScore($oponent, $board);
-                            if ($scoreOponent == 0) {
-                                break;
-                            }
-                        }
-                    }
-
-                    // empty own bowl for next move
-                    $board[$player][$sourceField]["count"] = 0;
-                    array_push($moves, "emptyActive_" . $sourceField);
-                }
-            }
-
-            // save all changed fields and update score
-            foreach ($players as $player_id) {
-                for ($field = 1; $field <= 16; $field++) {
-                    $count = $board[$player_id][$field]["count"];
-                    $countBackup = $board[$player_id][$field]["countBackup"];
-                    if ($count <> $countBackup) {
-                        $sql = "UPDATE board SET stones = '$count' WHERE player = '$player_id' AND field = '$field'";
-                        self::DbQuery($sql);
-                    }
-                }
-            }
-
-            // clear selections
-            $sql = "UPDATE player SET selected_field = NULL WHERE player_id = '$player'";
-            self::DbQuery($sql);
-
-            // update statistics
-            self::incStat($overallMoved, "overallMoved", $player);
-            self::incStat($overallStolen, "overallStolen", $player);
-            self::incStat($overallEmptied, "overallEmptied", $player);
-
-            // notify players of all moves
-            $messageDirection = ($moveDirection < 0) ? clienttranslate('down') : clienttranslate('up');
-            $message = clienttranslate('${player_name} moved ${messageDirection} from field ${selectedField} to field ${sourceField} emptying ${overallEmptied} bowl(s).');
-            self::notifyAllPlayers("moveStones", $message, array(
-                'player' => $player,
-                'player_name' => self::getActivePlayerName(),
-                'oponent' => $oponent,
-                'messageDirection' => $messageDirection,
-                'selectedField' => $selectedField,
-                'sourceField' => $sourceField,
-                'overallEmptied' => $overallEmptied,
-                'moves' => $moves,
-                'board' => $board
-            ));
+        // Distinguish game mode
+        if ($this->getGameStateValue('game_variant') == VARIANT_KISWAHILI) {
+            // TODO
+        } elseif ($this->getGameStateValue('game_variant') == VARIANT_KUJIFUNZA) {
+            // TODO
+        } elseif ($this->getGameStateValue('game_variant') == VARIANT_HUS) {
+            self::executeHusMove($player, $field, $direction);
 
             // Go to the next state
-            $this->gamestate->nextState('selectDirection');
+            $this->gamestate->nextState('selectMove');
         } else {
-            throw new feException("Impossible move");
+            // error in options
+            throw new feException("Impossible option for move");
         }
     }
 
-    // player has canceled the direction selection
-    function cancelDirection($player, $field)
-    {
-        // Check that this player is active and that this action is possible at this moment
-        self::checkAction('selectDirection');
-
-        // Check that selection is possible
-        $selected = self::getSelectedField($player);
-        if ($selected == $field) {
-            // delete selection
-            $sql = "UPDATE player SET selected_field = NULL where player_id = $player";
-            self::DbQuery($sql);
-
-            // Then go to the next state
-            $this->gamestate->nextState('cancelDirection');
-        } else {
+    function executeHusMove($player, $field, $direction) {
+        // Check that move is possible
+        $possibleMoves = self::getHusPossibleMoves($player);
+        if (!array_key_exists($field, $possibleMoves) || array_search($direction, $possibleMoves[$field]) === false) {
             throw new feException("Impossible move");
         }
+
+        // we only want to have -1 or +1, thus correct if overflown
+        $moveDirection = ($direction -$field);
+        $moveDirection = (abs($moveDirection) > 1) ? $moveDirection / -15 : $moveDirection;
+
+        // get start situation
+        $oponent = self::getPlayerAfter($player);
+        $players = array($player, $oponent);
+        $sourceField = $field;
+        $board = self::getBoard();
+
+        // initialize result array for later notification of moves to do;
+        // moves are ordered list of pattern "<command>_<field>"
+        // where command is: emptyActive, emptyOponent, moveStone
+        $moves = array();
+
+        // get stones for move and empty the start field
+        $count = $board[$player][$sourceField]["count"];
+        $board[$player][$sourceField]["count"] = 0;
+        array_push($moves, "emptyActive_" . $sourceField);
+        $overallMoved = $count;
+        $overallStolen = 0;
+        $overallEmptied = 0;
+
+        // make moves until last field was empty before putting stone
+        while ($count > 1) {
+            // distribute stones in the next fields in selected direction until last one
+            while ($count > 0) {
+                // calculate next field to move to and leave 1 stone
+                $destinationField = self::getNextField($sourceField, $moveDirection);
+                $board[$player][$destinationField]["count"] += 1;
+                array_push($moves, "moveStone_" . $destinationField);
+                $sourceField = $destinationField;
+                $count -= 1;
+            }
+
+            // source field now points to field of last put stone
+            $count = $board[$player][$sourceField]["count"];
+
+            if ($count > 1) {
+                // empty oponents oposite bowl in 1st row and add to own stones for move,
+                // if empty, nothing changes
+                if ($sourceField <= 8) {
+                    $countOponent = $board[$oponent][$sourceField]["count"];
+                    if ($countOponent > 0) {
+                        // empty and count stones
+                        $overallStolen += $countOponent;
+                        $overallEmptied += 1;
+                        $count += $countOponent;
+                        $board[$oponent][$sourceField]["count"] = 0;
+                        array_push($moves, "emptyOponent_" . $sourceField);
+                        $overallMoved += $count;
+
+                        // check if oponent has lost and stop moves if lost
+                        $scoreOponent = self::getScore($oponent, $board);
+                        if ($scoreOponent == 0) {
+                            break;
+                        }
+                    }
+                }
+
+                // empty own bowl for next move
+                $board[$player][$sourceField]["count"] = 0;
+                array_push($moves, "emptyActive_" . $sourceField);
+            }
+        }
+
+        // save all changed fields and update score
+        foreach ($players as $player_id) {
+            for ($field = 1; $field <= 16; $field++) {
+                $count = $board[$player_id][$field]["count"];
+                $countBackup = $board[$player_id][$field]["countBackup"];
+                if ($count <> $countBackup) {
+                    $sql = "UPDATE board SET stones = '$count' WHERE player = '$player_id' AND field = '$field'";
+                    self::DbQuery($sql);
+                }
+            }
+        }
+
+        // update statistics
+        self::incStat($overallMoved, "overallMoved", $player);
+        self::incStat($overallStolen, "overallStolen", $player);
+        self::incStat($overallEmptied, "overallEmptied", $player);
+
+        // notify players of all moves
+        $messageDirection = ($moveDirection < 0) ? clienttranslate('down') : clienttranslate('up');
+        $message = clienttranslate('${player_name} moved ${messageDirection} from field ${selectedField} to field ${sourceField} emptying ${overallEmptied} bowl(s).');
+        self::notifyAllPlayers("moveStones", $message, array(
+            'player' => $player,
+            'player_name' => self::getActivePlayerName(),
+            'oponent' => $oponent,
+            'messageDirection' => $messageDirection,
+            'selectedField' => $field,
+            'sourceField' => $sourceField,
+            'overallEmptied' => $overallEmptied,
+            'moves' => $moves,
+            'board' => $board
+        ));
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -558,8 +536,17 @@ class BaoLaKiswahili extends Table
         }
     }
 
-    // TODO: delete
-    function stNextPlayer()
+    function stKunamuaNextPlayer()
+    {
+    
+    }
+
+    function stMtajiNextPlayer()
+    {
+    
+    }
+
+    function stHusNextPlayer()
     {
         // get current situation
         $board = self::getBoard();
@@ -600,21 +587,6 @@ class BaoLaKiswahili extends Table
             self::giveExtraTime($playerNext);
             $this->gamestate->nextState('nextPlayer');
         }
-    }
-
-    function stKunamuaNextPlayer()
-    {
-    
-    }
-
-    function stMtajiNextPlayer()
-    {
-    
-    }
-
-    function stHusNextPlayer()
-    {
-    
     }
 
 
