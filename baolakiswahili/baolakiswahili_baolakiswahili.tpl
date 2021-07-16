@@ -18,7 +18,7 @@
 <div id="blk_board">
     <!-- BEGIN circle -->
     <div id="circle_{PLAYER}_{FIELD}" class="blk_circle" style="left: {LEFT}px; top: {TOP}px;">
-        <div id="label_{PLAYER}_{FIELD}" class="blk_label">
+        <div id="label_{PLAYER}_{FIELD}" class="blk_label" style="margin-left: {MLEFT}px; margin-top: {MTOP}px;">
             <p>2</p>
         </div>
     </div>

@@ -39,15 +39,15 @@ class view_baolakiswahili_baolakiswahili extends game_view
 
     // create 4 rows with 8 fields, scaling and shifting them according to the board perspective
     if ($isFirst) {
-      self::createLine(1, 100, 100, 92, 28, $player2, 16, -1);
-      self::createLine(2, 104, 100, 76, 30, $player2, 1, +1);
-      self::createLine(3, 108, 100, 62, 49, $player1, 1, +1);
-      self::createLine(4, 112, 100, 46, 68, $player1, 16, -1);
+      self::createLine(1, 100, 100, 85, 22, -3, -1, $player2, 16, -1);
+      self::createLine(2, 104, 100, 70, 22, 0, -5, $player2, 1, +1);
+      self::createLine(3, 107, 98, 58, 49, -1, -8, $player1, 1, +1);
+      self::createLine(4, 111, 98, 45, 66, -5, -10, $player1, 16, -1);
     } else {
-      self::createLine(1, 100, 100, 92, 28, $player1, 9, +1);
-      self::createLine(2, 104, 100, 76, 30, $player1, 8, -1);
-      self::createLine(3, 108, 100, 62, 49, $player2, 8, -1);
-      self::createLine(4, 112, 100, 46, 68, $player2, 9, +1);
+      self::createLine(1, 100, 100, 85, 22, -3, -1, $player1, 9, +1);
+      self::createLine(2, 104, 100, 70, 22, 0, -5, $player1, 8, -1);
+      self::createLine(3, 107, 98, 58, 49, -1, -8, $player2, 8, -1);
+      self::createLine(4, 111, 98, 45, 66, -5, -10, $player2, 9, +1);
     }
 
     /*********** Do not change anything below this line  ************/
@@ -56,7 +56,7 @@ class view_baolakiswahili_baolakiswahili extends game_view
   /*
     Put circle in each field of a line and applies shifts and scale.
     */
-  function createLine($y, $hor_scale, $ver_scale, $hor_shift, $ver_shift, $player, $startField, $increment)
+  function createLine($y, $hor_scale, $ver_scale, $hor_shift, $ver_shift, $hor_margin, $ver_margin, $player, $startField, $increment)
   {
     $field = $startField;
     for ($x = 1; $x <= 8; $x++) {
@@ -65,7 +65,9 @@ class view_baolakiswahili_baolakiswahili extends game_view
         'PLAYER' => $player,
         'FIELD' => $field,
         'LEFT' => round(($x - 1) * $hor_scale + $hor_shift),
-        'TOP' => round(($y - 1) * $ver_scale + $ver_shift)
+        'TOP' => round(($y - 1) * $ver_scale + $ver_shift),
+        'MLEFT' => $hor_margin,
+        'MTOP' => $ver_margin
       ));
 
       $field += $increment;
