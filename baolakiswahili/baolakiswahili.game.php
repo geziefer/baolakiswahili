@@ -230,6 +230,12 @@ class BaoLaKiswahili extends Table
         return $result;
     }
 
+    // Mtaji phase of Kiswahili variant or Kujifunza variant: 
+    function getMtajiPossibleMoves($player_id)
+    {
+
+    }
+
     // Calculate next field from given field in given direction (-1 / +1)
     function getNextField($field, $direction)
     {
@@ -485,6 +491,11 @@ class BaoLaKiswahili extends Table
 
     }
 
+    function argKunamuaCaptureSelection()
+    {
+
+    }
+
     function argSafariDecision()
     {
 
@@ -496,6 +507,13 @@ class BaoLaKiswahili extends Table
     }
 
     function argMtajiMoveSelection()
+    {
+        return array(
+            'possibleMoves' => self::getMtajiPossibleMoves(self::getActivePlayerId())
+        );
+    }
+
+    function argMtajiCaptureSelection()
     {
 
     }

@@ -31,7 +31,7 @@ $machinestates = array(
         "transitions" => array("playKiswahili" => 10, "playKujifunza" => 20, "playHus" => 30)
     ),
 
-    // First phase of kiswahili type. Player selects a bowl, then a direction
+    // First phase of kiswahili type, player selects a bowl, then a direction
     10 => array(
         "name" => "kunamuaMoveSelection",
         "description" => clienttranslate('${actplayer} must place a seed'),
@@ -50,11 +50,22 @@ $machinestates = array(
         "type" => "game",
         "action" => "stKunamuaNextPlayer",
         "updateGameProgression" => true,
-        "transitions" => array("nextPlayer" => 10, "decideNyumba" => 12, "selectTax" => 13, "switchPhase" => 20, "endGame" => 99)
+        "transitions" => array("nextPlayer" => 10, "continueCapture" => 12, "decideSafari" => 13, "selectTax" => 14, "switchPhase" => 20, "endGame" => 99)
     ),
     
     // First phase decision of making safari
     12 => array(
+        "name" => "kunamuaCaptureSelection",
+        "description" => clienttranslate('${actplayer} must select a kichwa'),
+        "descriptionmyturn" => clienttranslate('${you} must select a kichwa'),
+        "type" => "activeplayer",
+        "args" => "argKunamuaCaptureSelection",
+        "possibleactions" => array("selectKichwa"),
+        "transitions" => array("selectKichwa" => 11, "zombiePass" => 11)
+    ),
+
+    // First phase decision of making safari
+    13 => array(
         "name" => "safariDecision",
         "description" => clienttranslate('${actplayer} must decide about safari'),
         "descriptionmyturn" => clienttranslate('${you} must decide about safari'),
@@ -64,8 +75,8 @@ $machinestates = array(
         "transitions" => array("continueMove" => 11, "zombiePass" => 11)
     ),
 
-    // First phase special move tax nyumba
-    13 => array(
+    // First phase player selects a kichwa after capture
+    14 => array(
         "name" => "nyumbaTaxSelection",
         "description" => clienttranslate('${actplayer} must tax the nyumba'),
         "descriptionmyturn" => clienttranslate('${you} must tax the nyumba'),
@@ -75,7 +86,7 @@ $machinestates = array(
         "transitions" => array("taxNyumba" => 11, "zombiePass" => 11)
     ),
 
-    // Second phase of kiswahili type or kujifunza type. Player selects a bowl, then a direction
+    // Second phase or kujifunza type, player selects a pit, then a direction
     20 => array(
         "name" => "mtajiMoveSelection",
         "description" => clienttranslate('${actplayer} must select a pit'),
@@ -94,12 +105,23 @@ $machinestates = array(
         "type" => "game",
         "action" => "stMtajiNextPlayer",
         "updateGameProgression" => true,
-        "transitions" => array("nextPlayer" => 20, "declareTakasia" => 22, "endGame" => 99)
+        "transitions" => array("nextPlayer" => 20, "continueCapture" => 22, "declareKutakatia" => 23, "endGame" => 99)
     ),
     
-    // Second phase special move kutakatia
+    // Second phase or kujifunza type. Player selects a kichwa after capture
     22 => array(
-        "name" => "takasiaMoveSelection",
+        "name" => "mtajiCaptureSelection",
+        "description" => clienttranslate('${actplayer} must select a kichwa pit'),
+        "descriptionmyturn" => clienttranslate('${you} must select a kichwa pit'),
+        "type" => "activeplayer",
+        "args" => "argMtajiCaptureSelection",
+        "possibleactions" => array("selectKichwa"),
+        "transitions" => array("selectKichwa" => 21, "zombiePass" => 21)
+    ),
+
+    // Second phase special move kutakatia
+    23 => array(
+        "name" => "kutakatiaMoveSelection",
         "description" => clienttranslate('${actplayer} has a takasiaed pit and must make a move'),
         "descriptionmyturn" => clienttranslate('${you} have a takasiaed pit and must make a move'),
         "type" => "activeplayer",
@@ -108,7 +130,7 @@ $machinestates = array(
         "transitions" => array("selectMove" => 21, "zombiePass" => 21)
     ),
 
-    // Hus type. Player selects a bowl, then a direction
+    // Hus type, player selects a pit, then a direction
     30 => array(
         "name" => "husMoveSelection",
         "description" => clienttranslate('${actplayer} must make a move'),
