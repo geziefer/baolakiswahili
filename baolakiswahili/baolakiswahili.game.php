@@ -272,7 +272,8 @@ self::dump('##################### $board', $board);
                     $result[$i] = array($left, $right);
                 }
             }
-
+        }
+        if (empty($result)) {
             // 2nd row if none was found in 1st
             for ($i = 9; $i <= 16; $i++) {
                 if ($board[$player_id][$i]["count"] >= 2) {
@@ -360,8 +361,8 @@ self::dump('##################### $board', $board);
     {
         // save test stones for active player
         $player = self::getActivePlayerId();
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 1");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 2");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 1");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 2");
         self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 3");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 4");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 5");
@@ -374,7 +375,7 @@ self::dump('##################### $board', $board);
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 12");
         self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$player' AND field = 13");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 14");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 15");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 15");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 16");
 
         // save test stones for oponent
