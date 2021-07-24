@@ -23,6 +23,7 @@
 require_once(APP_GAMEMODULE_PATH . 'module/table/table.game.php');
 
 // Local constants
+define( "TESTMODE", true );
 define( "OPTION_VARIANT", 100 );
 define( "VARIANT_KISWAHILI", 1 );
 define( "VARIANT_KUJIFUNZA", 2 );
@@ -75,15 +76,12 @@ class BaoLaKiswahili extends Table
 
         /************ Start the game initialization *****/
 
-        // flag for debugging puposes; defaults to false for regular board, when true place test stones only
-        $testmode = false;
-        
         $sql = "INSERT INTO board (player, field, stones) VALUES ";
         $values = array();
         list($player1, $player2) = array_keys($players);
 
         // in testmode seeds are explicitely placed according to method
-        if ($testmode) {
+        if (TESTMODE) {
             $values = $this->placeTestStones($player1, $player2);
         }
         // in Kiswahili variant only 3 pits per player are filled
@@ -233,7 +231,6 @@ class BaoLaKiswahili extends Table
     // Mtaji phase of Kiswahili variant or Kujifunza variant: 
     function getMtajiPossibleMoves($player_id)
     {
-
     }
 
     // Calculate next field from given field in given direction (-1 / +1)
@@ -456,18 +453,20 @@ class BaoLaKiswahili extends Table
         }
 
         // update statistics
+        self::incStat(1, "turnsNumber", $player);
         self::incStat($overallMoved, "overallMoved", $player);
         self::incStat($overallStolen, "overallStolen", $player);
         self::incStat($overallEmptied, "overallEmptied", $player);
 
         // notify players of all moves
-        $messageDirection = ($moveDirection < 0) ? clienttranslate('down') : clienttranslate('up');
-        $message = clienttranslate('${player_name} moved ${messageDirection} from field ${selectedField} to field ${sourceField} emptying ${overallEmptied} bowl(s).');
+        $messageDirection = ($moveDirection < 0) ? 'down' : 'up';
+        $message = clienttranslate('${player_name} moved ${message_direction_translated} from field ${selectedField} to field ${sourceField} emptying ${overallEmptied} bowl(s).');
         self::notifyAllPlayers("moveStones", $message, array(
+            'i18n' => array('message_direction_translated'),
             'player' => $player,
             'player_name' => self::getActivePlayerName(),
             'oponent' => $oponent,
-            'messageDirection' => $messageDirection,
+            'message_direction_translated' => $messageDirection,
             'selectedField' => $field,
             'sourceField' => $sourceField,
             'overallEmptied' => $overallEmptied,
