@@ -231,6 +231,74 @@ class BaoLaKiswahili extends Table
     // Mtaji phase of Kiswahili variant or Kujifunza variant: 
     function getMtajiPossibleMoves($player_id)
     {
+        $result = array();
+
+        $board = self::getBoard();
+        $oponent = self::getPlayerAfter($player_id);
+
+        // step #1: if possible, a capture move has to be played
+        // check if any pit with at least 2 and at most 15 seeds leads to a harvest in initial move
+        for ($i = 1; $i<= 16; $i++) {
+            $count = $board[$player_id][$i]["count"];
+            if ($count >=2 && $count <= 15) {
+                // will take left and/or right move if possible
+                $subResult = array();
+
+                // check if move to the left gets to 1st row and has an adjacent filled pit
+                $destinationField = self::getDestinationField($i, -1, $count);
+                if ($destinationField <= 8 && $board[$oponent][$destinationField]["count"] > 0) {
+                    $left = $i == 1 ? 16 : $i - 1;
+                    array_push($subResult, $left);
+                }
+
+                // check if move to the right gets to 1st row and has an adjacent filled pit
+                $destinationField = self::getDestinationField($i, 1, $count);
+                if ($destinationField <= 8 && $board[$oponent][$destinationField]["count"] > 0) {
+                    $right = $i == 16 ? 1 : $i + 1;
+                    array_push($subResult, $right);
+                }
+
+                // only add to result if a harvest move was found
+                if (!empty($subResult)) {
+                    $result[$i] = $subResult;
+                }
+            }
+        }
+
+        // step #2: if no harvest move was found, check for non-harvest moves
+        // first check if any pit in the 1st row has at least 2 seeds, then in the 2nd row
+        if (empty($result)) {
+            // 1st row
+            for ($i = 1; $i <= 8; $i++) {
+                if ($board[$player_id][$i]["count"] >= 2) {
+                    $left = $i == 1 ? 16 : $i - 1;
+                    $right = $i + 1;
+                    $result[$i] = array($left, $right);
+                }
+            }
+
+            // 2nd row if none was found in 1st
+            for ($i = 9; $i <= 16; $i++) {
+                if ($board[$player_id][$i]["count"] >= 2) {
+                    $left = $i - 1;
+                    $right =  $i == 16 ? 1 : $i + 1;
+                    $result[$i] = array($left, $right);
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    // Determine destination field moving from given field in given direction (-1 / +1) a certain amount of fields
+    function getDestinationField($field, $direction, $count)
+    {
+        $destinationField = $field;
+        for ($i = 1; $i <= $count; $i++) {
+            $destinationField = self::getNextField($destinationField, $direction);
+        }
+
+        return $destinationField;
     }
 
     // Calculate next field from given field in given direction (-1 / +1)
