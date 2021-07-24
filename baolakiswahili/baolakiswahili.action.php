@@ -35,4 +35,13 @@ class action_baolakiswahili extends APP_GameAction
         $result = $this->game->selectMove($player, $field, $direction);
         self::ajaxResponse();
     }
+
+    // Action for TESTMODE (enabled in JS), sets stones on board for test constellations
+    public function testmode()
+    {
+        self::setAjaxMode();
+        $this->game->testmode();
+        self::ajaxResponse();
+    }
+
 }

@@ -8,6 +8,9 @@
  * -----
  */
 
+// flag for TESTMODE in development (default = false), enables button to set stones
+const TESTMODE = true;
+
 define([
     "dojo", "dojo/_base/declare",
     "ebg/core/gamegui",
@@ -35,6 +38,8 @@ define([
             setup: function (gamedatas) {
                 console.log("Starting game setup");
 
+                console.log(TESTMODE);
+
                 // place all stones on board
                 var number = 1;
                 for (var i in gamedatas.board) {
@@ -56,7 +61,7 @@ define([
                 // Setup game notifications to handle (see "setupNotifications" method below)
                 this.setupNotifications();
 
-                //create empty client args
+                // create empty client args
                 this.clientStateArgs = {};
 
                 console.log("Ending game setup");
@@ -94,6 +99,12 @@ define([
             //        
             onUpdateActionButtons: function (stateName, args) {
                 console.log('onUpdateActionButtons: ' + stateName);
+
+                // button only for TESTMODE
+                if (TESTMODE) {
+                    console.log("TESTMODE active");
+                    this.addActionButton('button_testmode', 'TESTMODE', 'onTestmode');
+                }
 
                 if (this.isCurrentPlayerActive()) {
                     switch (stateName) {
@@ -262,7 +273,22 @@ define([
                 // Stop event propagation
                 dojo.stopEvent(evt);
 
+                // force re-init
                 this.restoreServerGameState();
+            },
+
+            // click on Testmode button       
+            onTestmode: function (evt) {
+			    console.log("Enter onTestmode");
+
+                // Stop event propagation
+                dojo.stopEvent(evt);
+
+                // call server, activate testmode action
+                this.ajaxcall("/baolakiswahili/baolakiswahili/testmode.html", {}, this, function (result) { });
+
+                // refresh view (F5)
+                location.reload();
             },
 
             ///////////////////////////////////////////////////

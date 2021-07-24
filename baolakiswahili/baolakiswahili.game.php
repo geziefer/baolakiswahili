@@ -23,7 +23,6 @@
 require_once(APP_GAMEMODULE_PATH . 'module/table/table.game.php');
 
 // Local constants
-define( "TESTMODE", true );
 define( "OPTION_VARIANT", 100 );
 define( "VARIANT_KISWAHILI", 1 );
 define( "VARIANT_KUJIFUNZA", 2 );
@@ -80,12 +79,8 @@ class BaoLaKiswahili extends Table
         $values = array();
         list($player1, $player2) = array_keys($players);
 
-        // in testmode seeds are explicitely placed according to method
-        if (TESTMODE) {
-            $values = $this->placeTestStones($player1, $player2);
-        }
         // in Kiswahili variant only 3 pits per player are filled
-        elseif ($options[OPTION_VARIANT] == VARIANT_KISWAHILI) {
+        if ($options[OPTION_VARIANT] == VARIANT_KISWAHILI) {
             for ($i = 1; $i <= 4; $i++) {
                 $values[] = "('$player1', '$i', '0')";
             }
@@ -216,6 +211,7 @@ class BaoLaKiswahili extends Table
         $result = array();
 
         $board = self::getBoard();
+self::dump('##################### $board', $board);
 
         for ($i = 1; $i <= 16; $i++) {
             if ($board[$player_id][$i]["count"] >= 2) {
@@ -359,48 +355,46 @@ class BaoLaKiswahili extends Table
         }
     }
 
-    // Place stones for test purposes instead of regular setup
-    function placeTestStones($player1, $player2)
+    // TESTMODE only (set by JS): place stones for test purposes and changes database
+    function testmode()
     {
-        $values = array();
+        // save test stones for active player
+        $player = self::getActivePlayerId();
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 1");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 2");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 3");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 4");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 5");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 6");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 7");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 8");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 9");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 10");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 11");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 12");
+        self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$player' AND field = 13");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 14");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 15");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 16");
 
-        // place test stones for player1
-        $values[] = "('$player1', '1', '2')";
-        $values[] = "('$player1', '2', '0')";
-        $values[] = "('$player1', '3', '1')";
-        $values[] = "('$player1', '4', '2')";
-        $values[] = "('$player1', '5', '0')";
-        $values[] = "('$player1', '6', '0')";
-        $values[] = "('$player1', '7', '0')";
-        $values[] = "('$player1', '8', '0')";
-        $values[] = "('$player1', '9', '0')";
-        $values[] = "('$player1', '10', '2')";
-        $values[] = "('$player1', '11', '0')";
-        $values[] = "('$player1', '12', '0')";
-        $values[] = "('$player1', '13', '3')";
-        $values[] = "('$player1', '14', '0')";
-        $values[] = "('$player1', '15', '0')";
-        $values[] = "('$player1', '16', '0')";
-
-        // place test stones for player2
-        $values[] = "('$player2', '1', '5')";
-        $values[] = "('$player2', '2', '0')";
-        $values[] = "('$player2', '3', '2')";
-        $values[] = "('$player2', '4', '0')";
-        $values[] = "('$player2', '5', '0')";
-        $values[] = "('$player2', '6', '0')";
-        $values[] = "('$player2', '7', '0')";
-        $values[] = "('$player2', '8', '0')";
-        $values[] = "('$player2', '9', '0')";
-        $values[] = "('$player2', '10', '3')";
-        $values[] = "('$player2', '11', '0')";
-        $values[] = "('$player2', '12', '0')";
-        $values[] = "('$player2', '13', '2')";
-        $values[] = "('$player2', '14', '0')";
-        $values[] = "('$player2', '15', '0')";
-        $values[] = "('$player2', '16', '0')";
-
-        return $values;
+        // save test stones for oponent
+        $oponent = self::getPlayerAfter($player);
+        self::DbQuery("UPDATE board SET stones = 5 WHERE player = '$oponent' AND field = 1");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 2");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 3");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 4");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 5");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 6");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 7");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 8");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 9");
+        self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$oponent' AND field = 10");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 11");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 12");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 13");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 14");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 15");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 16");
     }
 
     //////////////////////////////////////////////////////////////////////////////
