@@ -14,3 +14,11 @@ CREATE TABLE IF NOT EXISTS `board` (
     `stones` TINYINT UNSIGNED NOT NULL, 
     PRIMARY KEY (`player`, `field`)
 ) ENGINE = InnoDB;
+
+-- create table for storing arbitrary data with key and wither string or numeric value
+CREATE TABLE IF NOT EXISTS `kvstore` (
+    `key` VARCHAR(20) NOT NULL, 
+    `value_text` VARCHAR(100),
+    `value_number` INT,
+    PRIMARY KEY (`key`)
+) ENGINE = InnoDB;

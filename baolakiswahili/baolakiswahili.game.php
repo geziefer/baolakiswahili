@@ -124,6 +124,10 @@ class BaoLaKiswahili extends Table
         self::initStat('player', 'overallStolen', 0);
         self::initStat('player', 'overallEmptied', 0);
 
+        // Init key value store
+        $sql = "INSERT INTO `kvstore`(`key`, `value_text`, `value_number`) VALUES ('stateAfterMove', 'nextPlayer', null)";
+        self::DbQuery($sql);
+
         // Activate first player (which is in general a good idea :) )
         $this->activeNextPlayer();
 
@@ -427,6 +431,10 @@ class BaoLaKiswahili extends Table
         $sourceField = $field;
         $board = self::getBoard();
 
+        // some game situation, such as capturing, are clear after move execution, but state will be set in stNextPlayer,
+        // so set nextPlayer as default state after move, which might be overwritten by special state (e.g. continueCapture)
+        $stateAfterMove = 'nextPlayer';
+
         // initialize result array for later notification of moves to do;
         // moves are ordered list of pattern "<command>_<field>"
         // where possible commands are: emptyActive, emptyOponent, moveStone
@@ -459,6 +467,7 @@ class BaoLaKiswahili extends Table
                     $sourceField = $destinationField;
                     $count -= 1;
                 }
+                $stateAfterMove = 'continueCapture';
             } else {
                 // this is a non-capture move, no further captures are allowed, move only continues in own two rows
                 // make moves until last field was empty before putting stone
@@ -568,6 +577,10 @@ class BaoLaKiswahili extends Table
             'board' => $board
         ));
 
+        // persist planned state after move in database for using in stNextPlayer
+        $sql = "UPDATE kvstore SET value_text = '$stateAfterMove' WHERE `key` = 'stateAfterMove'";
+        self::DbQuery($sql);
+
         // Go to the next state
         $this->gamestate->nextState('executeMove');
     }
@@ -612,7 +625,7 @@ class BaoLaKiswahili extends Table
 
     function argMtajiCaptureSelection()
     {
-
+self::debug('##################### argMtajiCaptureSelection');
     }
 
     function argTakasiaMoveSelection()
@@ -688,9 +701,13 @@ class BaoLaKiswahili extends Table
         if ($scoreLast == 0 || $scoreNext == 0) {
             $this->gamestate->nextState('endGame');
         } else {
+            // check for saved state to use
+            $sql = "SELECT value_text FROM kvstore WHERE `key` = 'stateAfterMove'";
+            $stateAfterMove = self::getUniqueValueFromDB($sql);
+
             // Next player can play and gets extra time
             self::giveExtraTime($playerNext);
-            $this->gamestate->nextState('nextPlayer');
+            $this->gamestate->nextState($stateAfterMove);
         }
     }
 
@@ -751,9 +768,14 @@ class BaoLaKiswahili extends Table
         // $from_version is equal to 1404301345
 
         if ( $from_version <= '2103132223') {
+            // move was split in 2 states and selected field was selected, does not longer exist
             $sql = "ALTER TABLE `player` DROP COLUMN `selected_field`";
             self::applyDbUpgradeToAllDB( $sql );
-            }
+
+            // new table for storing arbitrary key value pairs
+            $sql = "CREATE TABLE IF NOT EXISTS `kvstore` (`key` VARCHAR(20) NOT NULL, `value_text` VARCHAR(100), `value_number` INT, PRIMARY KEY (`key`)) ENGINE = InnoDB";
+            self::applyDbUpgradeToAllDB( $sql );
+        }
     }
 
 
@@ -785,8 +807,8 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$oponent' AND field = 10");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 9");
 
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 1");
-        self::DbQuery("UPDATE board SET stones = 5 WHERE player = '$oponent' AND field = 2");
+        self::DbQuery("UPDATE board SET stones = 5 WHERE player = '$oponent' AND field = 1");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 2");
         self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 3");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 4");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 5");
