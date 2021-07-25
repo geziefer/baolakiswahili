@@ -450,7 +450,15 @@ class BaoLaKiswahili extends Table
             // distinguish capture and non-capture move
             if (!empty($possibleCaptures)) {
                 // this is a capture move, further captures are allowed and captured seeds require player action
-
+                // distribute stones in the next fields in selected direction until last one which has to be a capture
+                while ($count > 0) {
+                    // calculate next field to move to and leave 1 stone
+                    $destinationField = self::getNextField($sourceField, $moveDirection);
+                    $board[$player][$destinationField]["count"] += 1;
+                    array_push($moves, "moveStone_" . $destinationField);
+                    $sourceField = $destinationField;
+                    $count -= 1;
+                }
             } else {
                 // this is a non-capture move, no further captures are allowed, move only continues in own two rows
                 // make moves until last field was empty before putting stone
@@ -787,9 +795,9 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 8");
 
         // save test stones for active player
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 1");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 1");
         self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 2");
-        self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$player' AND field = 3");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 3");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 4");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 5");
         self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 6");
