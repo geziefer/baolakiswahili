@@ -34,7 +34,7 @@ $machinestates = array(
     // First phase of kiswahili type, player selects a bowl, then a direction
     10 => array(
         "name" => "kunamuaMoveSelection",
-        "description" => clienttranslate('${actplayer} must place a seed'),
+        "description" => clienttranslate('${actplayer} must place a seed and move'),
         "descriptionmyturn" => clienttranslate('${you} must place a seed'),
         "type" => "activeplayer",
         "args" => "argKunamuaMoveSelection",
@@ -48,7 +48,7 @@ $machinestates = array(
         "description" => clienttranslate('Move of ${actplayer} gets executed'),
         "descriptionmyturn" => clienttranslate('Your move gets executed'),
         "type" => "game",
-        "action" => "stKunamuaNextPlayer",
+        "action" => "stNextPlayer",
         "updateGameProgression" => true,
         "transitions" => array("nextPlayer" => 10, "continueCapture" => 12, "decideSafari" => 13, "selectTax" => 14, "switchPhase" => 20, "endGame" => 99)
     ),
@@ -89,8 +89,8 @@ $machinestates = array(
     // Second phase or kujifunza type, player selects a pit, then a direction
     20 => array(
         "name" => "mtajiMoveSelection",
-        "description" => clienttranslate('${actplayer} must select a pit'),
-        "descriptionmyturn" => clienttranslate('${you} must make a move'),
+        "description" => clienttranslate('${actplayer} must make a move'),
+        "descriptionmyturn" => clienttranslate('${you} must select a pit'),
         "type" => "activeplayer",
         "args" => "argMtajiMoveSelection",
         "possibleactions" => array("selectMove"),
@@ -103,7 +103,7 @@ $machinestates = array(
         "description" => clienttranslate('Move of ${actplayer} gets executed'),
         "descriptionmyturn" => clienttranslate('Your move gets executed'),
         "type" => "game",
-        "action" => "stMtajiNextPlayer",
+        "action" => "stNextPlayer",
         "updateGameProgression" => true,
         "transitions" => array("nextPlayer" => 20, "continueCapture" => 22, "declareKutakatia" => 23, "endGame" => 99)
     ),
@@ -147,7 +147,7 @@ $machinestates = array(
         "description" => clienttranslate('Move of ${actplayer} gets executed'),
         "descriptionmyturn" => clienttranslate('Your move gets executed'),
         "type" => "game",
-        "action" => "stHusNextPlayer",
+        "action" => "stNextPlayer",
         "updateGameProgression" => true,
         "transitions" => array("nextPlayer" => 30, "endGame" => 99)
     ),

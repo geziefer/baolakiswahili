@@ -15,7 +15,7 @@
  * 
  * how to log variable / a message:
  * self::dump('##################### $variable', $variable);
- * self::debug($('##################### message');
+ * self::debug('##################### message');
  */
 
 
@@ -211,7 +211,6 @@ class BaoLaKiswahili extends Table
         $result = array();
 
         $board = self::getBoard();
-self::dump('##################### $board', $board);
 
         for ($i = 1; $i <= 16; $i++) {
             if ($board[$player_id][$i]["count"] >= 2) {
@@ -227,12 +226,23 @@ self::dump('##################### $board', $board);
     // Mtaji phase of Kiswahili variant or Kujifunza variant: 
     function getMtajiPossibleMoves($player_id)
     {
+        $result = self::getMtjaiPossibleCaptures($player_id);
+
+        if (empty($result)) {
+            $result = self::getMtjaiPossibleNonCaptures($player_id);
+        }
+
+        return $result;
+    }
+
+    // step #1: if possible, a capture move has to be played
+    function getMtjaiPossibleCaptures($player_id)
+    {
         $result = array();
 
         $board = self::getBoard();
         $oponent = self::getPlayerAfter($player_id);
 
-        // step #1: if possible, a capture move has to be played
         // check if any pit with at least 2 and at most 15 seeds leads to a harvest in initial move
         for ($i = 1; $i<= 16; $i++) {
             $count = $board[$player_id][$i]["count"];
@@ -240,16 +250,18 @@ self::dump('##################### $board', $board);
                 // will take left and/or right move if possible
                 $subResult = array();
 
-                // check if move to the left gets to 1st row and has an adjacent filled pit
+                // check if move to the left gets to 1st row, lands in non-empty pit and has an adjacent filled pit
                 $destinationField = self::getDestinationField($i, -1, $count);
-                if ($destinationField <= 8 && $board[$oponent][$destinationField]["count"] > 0) {
+                if ($destinationField <= 8 && $board[$player_id][$destinationField]["count"] > 0 &&
+                    $board[$oponent][$destinationField]["count"] > 0) {
                     $left = $i == 1 ? 16 : $i - 1;
                     array_push($subResult, $left);
                 }
 
-                // check if move to the right gets to 1st row and has an adjacent filled pit
+                // check if move to the right gets to 1st, lands in non-empty pit row and has an adjacent filled pit
                 $destinationField = self::getDestinationField($i, 1, $count);
-                if ($destinationField <= 8 && $board[$oponent][$destinationField]["count"] > 0) {
+                if ($destinationField <= 8 && $board[$player_id][$destinationField]["count"] > 0 &&
+                    $board[$oponent][$destinationField]["count"] > 0) {
                     $right = $i == 16 ? 1 : $i + 1;
                     array_push($subResult, $right);
                 }
@@ -261,20 +273,26 @@ self::dump('##################### $board', $board);
             }
         }
 
-        // step #2: if no harvest move was found, check for non-harvest moves
+        return $result;
+    }
+
+    // step #2: if no harvest move was found, check for non-harvest moves
+    function getMtjaiPossibleNonCaptures($player_id)
+    {
+        $result = array();
+
+        $board = self::getBoard();
+        $oponent = self::getPlayerAfter($player_id);
+
         // first check if any pit in the 1st row has at least 2 seeds, then in the 2nd row
-        if (empty($result)) {
-            // 1st row
-            for ($i = 1; $i <= 8; $i++) {
-                if ($board[$player_id][$i]["count"] >= 2) {
-                    $left = $i == 1 ? 16 : $i - 1;
-                    $right = $i + 1;
-                    $result[$i] = array($left, $right);
-                }
+        for ($i = 1; $i <= 8; $i++) {
+            if ($board[$player_id][$i]["count"] >= 2) {
+                $left = $i == 1 ? 16 : $i - 1;
+                $right = $i + 1;
+                $result[$i] = array($left, $right);
             }
         }
         if (empty($result)) {
-            // 2nd row if none was found in 1st
             for ($i = 9; $i <= 16; $i++) {
                 if ($board[$player_id][$i]["count"] >= 2) {
                     $left = $i - 1;
@@ -356,48 +374,6 @@ self::dump('##################### $board', $board);
         }
     }
 
-    // TESTMODE only (set by JS): place stones for test purposes and changes database
-    function testmode()
-    {
-        // save test stones for active player
-        $player = self::getActivePlayerId();
-        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 1");
-        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 2");
-        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 3");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 4");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 5");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 6");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 7");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 8");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 9");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 10");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 11");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 12");
-        self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$player' AND field = 13");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 14");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 15");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 16");
-
-        // save test stones for oponent
-        $oponent = self::getPlayerAfter($player);
-        self::DbQuery("UPDATE board SET stones = 5 WHERE player = '$oponent' AND field = 1");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 2");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 3");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 4");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 5");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 6");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 7");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 8");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 9");
-        self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$oponent' AND field = 10");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 11");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 12");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 13");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 14");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 15");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 16");
-    }
-
     //////////////////////////////////////////////////////////////////////////////
     //////////// Player actions
     //////////// 
@@ -418,16 +394,16 @@ self::dump('##################### $board', $board);
         if ($this->getGameStateValue('game_variant') == VARIANT_KISWAHILI) {
             // TODO
         } elseif ($this->getGameStateValue('game_variant') == VARIANT_KUJIFUNZA) {
-            // TODO
+            self::executeMtajiMove($player, $field, $direction);
         } elseif ($this->getGameStateValue('game_variant') == VARIANT_HUS) {
             self::executeHusMove($player, $field, $direction);
-
-            // Go to the next state
-            $this->gamestate->nextState('selectMove');
         } else {
             // error in options
             throw new feException("Impossible option for move");
         }
+
+        // Go to the next state
+        $this->gamestate->nextState('selectMove');
     }
 
     function executeHusMove($player, $field, $direction) {
@@ -438,12 +414,13 @@ self::dump('##################### $board', $board);
         }
 
         // we only want to have -1 or +1, thus correct if overflown
-        $moveDirection = ($direction -$field);
+        $moveDirection = $direction - $field;
         $moveDirection = (abs($moveDirection) > 1) ? $moveDirection / -15 : $moveDirection;
 
         // get start situation
         $oponent = self::getPlayerAfter($player);
         $players = array($player, $oponent);
+        $selectedField = $field;
         $sourceField = $field;
         $board = self::getBoard();
 
@@ -522,7 +499,7 @@ self::dump('##################### $board', $board);
         self::incStat($overallEmptied, "overallEmptied", $player);
 
         // notify players of all moves
-        $messageDirection = ($moveDirection < 0) ? 'down' : 'up';
+        $messageDirection = ($moveDirection < 0) ? 'clockwise' : 'anti-clockwise';
         $message = clienttranslate('${player_name} moved ${message_direction_translated} from field ${selectedField} to field ${sourceField} emptying ${overallEmptied} bowl(s).');
         self::notifyAllPlayers("moveStones", $message, array(
             'i18n' => array('message_direction_translated'),
@@ -530,12 +507,112 @@ self::dump('##################### $board', $board);
             'player_name' => self::getActivePlayerName(),
             'oponent' => $oponent,
             'message_direction_translated' => $messageDirection,
-            'selectedField' => $field,
+            'selectedField' => $selectedField,
             'sourceField' => $sourceField,
             'overallEmptied' => $overallEmptied,
             'moves' => $moves,
             'board' => $board
         ));
+    }
+
+    function executeMtajiMove($player, $field, $direction) {
+        // Check that move is possible
+        $possibleCaptures = self::getMtjaiPossibleCaptures($player);
+        $possibleNonCaptures = array();
+        if (empty($possibleCaptures)) {
+            $possibleNonCaptures = self::getMtjaiPossibleNonCaptures($player);
+        }
+        if ((!array_key_exists($field, $possibleCaptures) || array_search($direction, $possibleCaptures[$field]) === false) &&
+            (!array_key_exists($field, $possibleNonCaptures) || array_search($direction, $possibleNonCaptures[$field]) === false)) {
+            throw new feException("Impossible move");
+        }
+
+        // distinguish capture and non-capture move
+        if (!empty($possibleCaptures)) {
+            // this is a capture move, further captures are allowed and captured seeds require player action
+self::debug('##################### capture move');
+        } else {
+self::debug('##################### non-capture move');
+            // this is a non-capture move, no further captures are allowed, move only continues in own two rows
+
+            // we only want to have -1 or +1, thus correct if overflown
+            $moveDirection = $direction - $field;
+            $moveDirection = (abs($moveDirection) > 1) ? $moveDirection / -15 : $moveDirection;
+
+            // get start situation
+            $oponent = self::getPlayerAfter($player);
+            $players = array($player, $oponent);
+            $selectedField = $field;
+            $sourceField = $field;
+            $board = self::getBoard();
+
+            // initialize result array for later notification of moves to do;
+            // moves are ordered list of pattern "<command>_<field>"
+            // where command is: emptyActive, moveStone
+            $moves = array();
+
+            // get stones for move and empty the start field
+            $count = $board[$player][$sourceField]["count"];
+            $board[$player][$sourceField]["count"] = 0;
+            array_push($moves, "emptyActive_" . $sourceField);
+            $overallMoved = $count;
+            $overallStolen = 0;
+            $overallEmptied = 0;
+
+            // make moves until last field was empty before putting stone
+            while ($count > 1) {
+                // distribute stones in the next fields in selected direction until last one
+                while ($count > 0) {
+                    // calculate next field to move to and leave 1 stone
+                    $destinationField = self::getNextField($sourceField, $moveDirection);
+                    $board[$player][$destinationField]["count"] += 1;
+                    array_push($moves, "moveStone_" . $destinationField);
+                    $sourceField = $destinationField;
+                    $count -= 1;
+                }
+
+                // source field now points to field of last put stone
+                $count = $board[$player][$sourceField]["count"];
+
+                // empty own bowl for next move
+                $board[$player][$sourceField]["count"] = 0;
+                array_push($moves, "emptyActive_" . $sourceField);
+            }
+
+            // save all changed fields and update score
+            foreach ($players as $player_id) {
+                for ($field = 1; $field <= 16; $field++) {
+                    $count = $board[$player_id][$field]["count"];
+                    $countBackup = $board[$player_id][$field]["countBackup"];
+                    if ($count <> $countBackup) {
+                        $sql = "UPDATE board SET stones = '$count' WHERE player = '$player_id' AND field = '$field'";
+                        self::DbQuery($sql);
+                    }
+                }
+            }
+
+            // update statistics
+            self::incStat(1, "turnsNumber", $player);
+            self::incStat($overallMoved, "overallMoved", $player);
+            self::incStat($overallEmptied, "overallEmptied", $player);
+
+            // notify players of all moves
+            $messageDirection = ($moveDirection < 0) ? 'clockwise' : 'anti-clockwise';
+            $message = clienttranslate('${player_name} moved ${message_direction_translated} from field ${selectedField} to field ${sourceField} emptying ${overallEmptied} bowl(s).');
+            self::notifyAllPlayers("moveStones", $message, array(
+                'i18n' => array('message_direction_translated'),
+                'player' => $player,
+                'player_name' => self::getActivePlayerName(),
+                'oponent' => $oponent,
+                'message_direction_translated' => $messageDirection,
+                'selectedField' => $selectedField,
+                'sourceField' => $sourceField,
+                'overallEmptied' => $overallEmptied,
+                'moves' => $moves,
+                'board' => $board
+            ));
+        }
+
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -616,17 +693,7 @@ self::dump('##################### $board', $board);
         }
     }
 
-    function stKunamuaNextPlayer()
-    {
-    
-    }
-
-    function stMtajiNextPlayer()
-    {
-    
-    }
-
-    function stHusNextPlayer()
+    function stNextPlayer()
     {
         // get current situation
         $board = self::getBoard();
@@ -730,4 +797,63 @@ self::dump('##################### $board', $board);
             self::applyDbUpgradeToAllDB( $sql );
             }
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////:
+    ////////// Test code for development
+    //////////
+
+    // TESTMODE only (set by JS): place stones for test purposes and changes database
+    function testmode()
+    {
+        $player = self::getActivePlayerId();
+        $oponent = self::getPlayerAfter($player);
+
+        // board layout from perspective of start player
+        // 16 15 14 13 12 11 10 09 (oponent's 2nd row)
+        // 01 02 03 04 05 06 07 08 (oponent's 1st row)
+        // -----------------------
+        // 01 02 03 04 05 06 07 08 (player's 1st row)
+        // 16 15 14 13 12 11 10 09 (player's 2nd row)
+
+        // save test stones for oponent
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 16");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 15");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 14");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 13");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 12");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 11");
+        self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$oponent' AND field = 10");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 9");
+
+        self::DbQuery("UPDATE board SET stones = 5 WHERE player = '$oponent' AND field = 1");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 2");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 3");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 4");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 5");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 6");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 7");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 8");
+
+        // save test stones for active player
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 1");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 2");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 3");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 4");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 5");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 6");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 7");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 8");
+
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 16");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 15");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 14");
+        self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$player' AND field = 13");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 12");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 11");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 10");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 9");
+
+    }
+
 }
