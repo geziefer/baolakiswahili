@@ -495,12 +495,12 @@ class BaoLaKiswahili extends Table
         // update statistics
         self::incStat(1, "turnsNumber", $player);
         self::incStat($overallMoved, "overallMoved", $player);
-        self::incStat($overallStolen, "overallStolen", $player);
         self::incStat($overallEmptied, "overallEmptied", $player);
+        self::incStat($overallStolen, "overallStolen", $player);
 
         // notify players of all moves
         $messageDirection = ($moveDirection < 0) ? 'clockwise' : 'anti-clockwise';
-        $message = clienttranslate('${player_name} moved ${message_direction_translated} from field ${selectedField} to field ${sourceField} emptying ${overallEmptied} bowl(s).');
+        $message = clienttranslate('${player_name} moved ${message_direction_translated} from field ${selectedField} to field ${sourceField} in total {$overallMoved} seeds, emptying ${overallEmptied} pit(s) and having stolen {$overallStolen} seeds.');
         self::notifyAllPlayers("moveStones", $message, array(
             'i18n' => array('message_direction_translated'),
             'player' => $player,
@@ -509,7 +509,9 @@ class BaoLaKiswahili extends Table
             'message_direction_translated' => $messageDirection,
             'selectedField' => $selectedField,
             'sourceField' => $sourceField,
+            'overallMoved' => $overallMoved,
             'overallEmptied' => $overallEmptied,
+            'overallStolen' => $overallStolen,
             'moves' => $moves,
             'board' => $board
         ));
@@ -530,9 +532,9 @@ class BaoLaKiswahili extends Table
         // distinguish capture and non-capture move
         if (!empty($possibleCaptures)) {
             // this is a capture move, further captures are allowed and captured seeds require player action
-self::debug('##################### capture move');
+
+
         } else {
-self::debug('##################### non-capture move');
             // this is a non-capture move, no further captures are allowed, move only continues in own two rows
 
             // we only want to have -1 or +1, thus correct if overflown
@@ -595,10 +597,11 @@ self::debug('##################### non-capture move');
             self::incStat(1, "turnsNumber", $player);
             self::incStat($overallMoved, "overallMoved", $player);
             self::incStat($overallEmptied, "overallEmptied", $player);
+            self::incStat($overallStolen, "overallStolen", $player);
 
             // notify players of all moves
             $messageDirection = ($moveDirection < 0) ? 'clockwise' : 'anti-clockwise';
-            $message = clienttranslate('${player_name} moved ${message_direction_translated} from field ${selectedField} to field ${sourceField} emptying ${overallEmptied} bowl(s).');
+            $message = clienttranslate('${player_name} moved ${message_direction_translated} from field ${selectedField} to field ${sourceField} in total {$overallMoved} seeds, emptying ${overallEmptied} pit(s) and having stolen {$overallStolen} seeds.');
             self::notifyAllPlayers("moveStones", $message, array(
                 'i18n' => array('message_direction_translated'),
                 'player' => $player,
@@ -607,7 +610,9 @@ self::debug('##################### non-capture move');
                 'message_direction_translated' => $messageDirection,
                 'selectedField' => $selectedField,
                 'sourceField' => $sourceField,
+                'overallMoved' => $overallMoved,
                 'overallEmptied' => $overallEmptied,
+                'overallStolen' => $overallStolen,
                 'moves' => $moves,
                 'board' => $board
             ));
@@ -810,6 +815,7 @@ self::debug('##################### non-capture move');
         $oponent = self::getPlayerAfter($player);
 
         // board layout from perspective of start player
+        // (for 2nd player field is turned 180°, so that 1st field is on the right)
         // 16 15 14 13 12 11 10 09 (oponent's 2nd row)
         // 01 02 03 04 05 06 07 08 (oponent's 1st row)
         // -----------------------
@@ -838,7 +844,7 @@ self::debug('##################### non-capture move');
         // save test stones for active player
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 1");
         self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 2");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 3");
+        self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$player' AND field = 3");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 4");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 5");
         self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 6");
