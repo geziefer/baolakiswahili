@@ -38,8 +38,8 @@ $machinestates = array(
         "descriptionmyturn" => clienttranslate('${you} must place a seed'),
         "type" => "activeplayer",
         "args" => "argKunamuaMoveSelection",
-        "possibleactions" => array("selectMove"),
-        "transitions" => array("selectMove" => 11, "zombiePass" => 11)
+        "possibleactions" => array("executeMove"),
+        "transitions" => array("executeMove" => 11, "zombiePass" => 11)
     ),
 
     // First phase game checks situation if next player is on, a special move oocurs, or one player wins
@@ -93,8 +93,8 @@ $machinestates = array(
         "descriptionmyturn" => clienttranslate('${you} must select a pit'),
         "type" => "activeplayer",
         "args" => "argMtajiMoveSelection",
-        "possibleactions" => array("selectMove"),
-        "transitions" => array("selectMove" => 21, "zombiePass" => 21)
+        "possibleactions" => array("executeMove"),
+        "transitions" => array("executeMove" => 21, "zombiePass" => 21)
     ),
 
     // Second phase game checks situation if next player is on, a special move oocurs, or one player wins
@@ -126,8 +126,8 @@ $machinestates = array(
         "descriptionmyturn" => clienttranslate('${you} have a takasiaed pit and must make a move'),
         "type" => "activeplayer",
         "args" => "argTakasiaMoveSelection",
-        "possibleactions" => array("selectMove"),
-        "transitions" => array("selectMove" => 21, "zombiePass" => 21)
+        "possibleactions" => array("executeMove"),
+        "transitions" => array("executeMove" => 21, "zombiePass" => 21)
     ),
 
     // Hus type, player selects a pit, then a direction
@@ -137,8 +137,8 @@ $machinestates = array(
         "descriptionmyturn" => clienttranslate('${you} must select a pit'),
         "type" => "activeplayer",
         "args" => "argHusMoveSelection",
-        "possibleactions" => array("selectMove"),
-        "transitions" => array("selectMove" => 31, "zombiePass" => 31)
+        "possibleactions" => array("executeMove"),
+        "transitions" => array("executeMove" => 31, "zombiePass" => 31)
     ),
 
     // Hus type game checks situation if next player is on, or one player wins

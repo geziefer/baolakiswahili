@@ -38,8 +38,6 @@ define([
             setup: function (gamedatas) {
                 console.log("Starting game setup");
 
-                console.log(TESTMODE);
-
                 // place all stones on board
                 var number = 1;
                 for (var i in gamedatas.board) {
@@ -211,7 +209,7 @@ define([
                 console.log("Enter onBowl");
 
                 // Check that this action is possible at this moment
-                if (!this.checkAction('selectMove')) {
+                if (!this.checkAction('executeMove')) {
                     return;
                 }
 
@@ -250,7 +248,7 @@ define([
                     console.log("Direction clicked: " + field);
 
                     // call server, game mode will be handled there
-                    this.ajaxcall("/baolakiswahili/baolakiswahili/selectMove.html", {
+                    this.ajaxcall("/baolakiswahili/baolakiswahili/executeMove.html", {
                         lock: true,
                         player: player,
                         field: this.clientStateArgs.field,
@@ -266,7 +264,7 @@ define([
 			    console.log("Enter onCancel");
 
                 // Check that this action is possible at this moment
-                if (!this.checkAction('selectMove')) {
+                if (!this.checkAction('executeMove')) {
                     return;
                 }
 

@@ -384,11 +384,11 @@ class BaoLaKiswahili extends Table
     */
 
     // player has selected a move (start field and direction field)
-    // game modes are distinguished here
-    function selectMove($player, $field, $direction)
+    // game modes are distinguished here to exeute it
+    function executeMove($player, $field, $direction)
     {
         // Check that this player is active and that this action is possible at this moment
-        self::checkAction('selectMove');
+        self::checkAction('executeMove');
 
         // Distinguish game mode for move check
         if ($this->getGameStateValue('game_variant') == VARIANT_KISWAHILI) {
@@ -569,7 +569,7 @@ class BaoLaKiswahili extends Table
         ));
 
         // Go to the next state
-        $this->gamestate->nextState('selectMove');
+        $this->gamestate->nextState('executeMove');
     }
 
 
@@ -785,8 +785,8 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$oponent' AND field = 10");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 9");
 
-        self::DbQuery("UPDATE board SET stones = 5 WHERE player = '$oponent' AND field = 1");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 2");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 1");
+        self::DbQuery("UPDATE board SET stones = 5 WHERE player = '$oponent' AND field = 2");
         self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 3");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 4");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 5");

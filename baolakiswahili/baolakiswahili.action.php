@@ -26,13 +26,13 @@ class action_baolakiswahili extends APP_GameAction
     }
 
     // Action after selecting a move (start field and direction field)
-    public function selectMove()
+    public function executeMove()
     {
         self::setAjaxMode();
         $player = self::getArg("player", AT_posint, true);
         $field = self::getArg("field", AT_posint, true);
         $direction = self::getArg("direction", AT_posint, true);
-        $result = $this->game->selectMove($player, $field, $direction);
+        $result = $this->game->executeMove($player, $field, $direction);
         self::ajaxResponse();
     }
 
