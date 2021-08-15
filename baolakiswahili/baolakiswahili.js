@@ -410,8 +410,8 @@ console.log(nl);
                     }
                 }
 
-                // play all animations in order 
-                var anim = dojo.fx.chain(animations).play();
+                // chain all animations to one in order 
+                var anim = dojo.fx.chain(animations);
                 // will be called after all animations are done
                 dojo.connect(anim, "onEnd", () => {
                     // attach all stones to correct circles after move is done
@@ -433,9 +433,11 @@ console.log(nl);
                         }
                     }
                 });
-
+                // execute animation
+                anim.play();
                 // synchronize duration so that game waits until finished 
-                this.notifqueue.setSynchronousDuration(anim.duration);
+                // add a bit of time to let onEnd callback function be executed before continuing
+                this.notifqueue.setSynchronousDuration(anim.duration + 500);
 
                 console.log('leaving notif_moveStones');
             },
