@@ -111,8 +111,8 @@ $machinestates = array(
     // Second phase or kujifunza type. Player selects a kichwa after capture
     22 => array(
         "name" => "mtajiCaptureSelection",
-        "description" => clienttranslate('${actplayer} must select a kichwa pit'),
-        "descriptionmyturn" => clienttranslate('${you} must select a kichwa pit'),
+        "description" => clienttranslate('${actplayer} must select a kichwa'),
+        "descriptionmyturn" => clienttranslate('${you} must select a kichwa'),
         "type" => "activeplayer",
         "args" => "argMtajiCaptureSelection",
         "possibleactions" => array("selectKichwa"),

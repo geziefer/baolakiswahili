@@ -109,6 +109,7 @@ define([
                         // independent of game mode, it always causes the bowls to be styled accourding to possible moves
                         case 'kunamuaMoveSelection':
                         case 'mtajiMoveSelection':
+                        case 'mtajiCaptureSelection':
                         case 'husMoveSelection':
                             this.updateBowlSelection(args.possibleMoves);
 
@@ -161,6 +162,13 @@ define([
                         dojo.addClass('circle_' + player + '_' + field, 'blk_possibleBowl');
                     }
 
+var nl =  dojo.query(".blk_possibleBowl");
+console.log("#################");
+console.log(nl);
+nl = nl.query(".blk_stone");
+console.log("#################");
+console.log(nl);
+
                     // highlight all stones in possible bowls
                     dojo.query(".blk_possibleBowl").query(".blk_stone").addClass("blk_possibleStone");
                 }
@@ -209,7 +217,7 @@ define([
                 console.log("Enter onBowl");
 
                 // Check that this action is possible at this moment
-                if (!this.checkAction('executeMove')) {
+                if (!this.checkAction('executeMove') && !this.checkAction('selectKichwa')) {
                     return;
                 }
 
@@ -264,7 +272,7 @@ define([
 			    console.log("Enter onCancel");
 
                 // Check that this action is possible at this moment
-                if (!this.checkAction('executeMove')) {
+                if (!this.checkAction('executeMove') && !this.checkAction('selectKichwa')) {
                     return;
                 }
 
@@ -314,6 +322,8 @@ define([
             Notification when stones should move.
             */
             notif_moveStones: function (notif) {
+                console.log('enter notif_moveStones');
+
                 // Remove previously set css markers for possible directions and selected bowl
                 dojo.query('.blk_possibleDirection').removeClass('blk_possibleDirection');
                 dojo.query('.blk_selectedBowl').removeClass('blk_selectedBowl');
@@ -427,6 +437,7 @@ define([
                 // synchronize duration so that game waits until finished 
                 this.notifqueue.setSynchronousDuration(anim.duration);
 
+                console.log('leaving notif_moveStones');
             },
 
             notif_newScores: function (notif) {

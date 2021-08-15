@@ -32,8 +32,6 @@ class BaoLaKiswahili extends Table
 {
     function __construct()
     {
-        parent::__construct();
-
         self::initGameStateLabels(array(
             "game_variant" => 100
         ));
@@ -68,7 +66,7 @@ class BaoLaKiswahili extends Table
             $color = array_shift($default_colors);
             $values[] = "('" . $player_id . "','$color','0','" . $player['player_canal'] . "','" . addslashes($player['player_name']) . "','" . addslashes($player['player_avatar']) . "')";
         }
-        $sql .= implode($values, ',');
+        $sql .= implode(',', $values);
         self::DbQuery($sql);
         self::reattributeColorsBasedOnPreferences($players, $gameinfos['player_colors']);
         self::reloadPlayersBasicInfos();
@@ -111,11 +109,11 @@ class BaoLaKiswahili extends Table
         self::DbQuery($sql);
 
         // Init scores
-        $board = self::getBoard();
-        $score = self::getScore($player1, $board);
+        $board = $this->getBoard();
+        $score = $this->getScore($player1, $board);
         $sql = "UPDATE player SET player_score = $score where player_id = $player1";
         self::DbQuery($sql);
-        $score = self::getScore($player2, $board);
+        $score = $this->getScore($player2, $board);
         $sql = "UPDATE player SET player_score = $score where player_id = $player2";
         self::DbQuery($sql);
 
@@ -125,7 +123,9 @@ class BaoLaKiswahili extends Table
         self::initStat('player', 'overallEmptied', 0);
 
         // Init key value store
-        $sql = "INSERT INTO `kvstore`(`key`, `value_text`, `value_number`) VALUES ('stateAfterMove', 'nextPlayer', null)";
+        $sql = "INSERT INTO kvstore(`key`, value_text, value_number) VALUES ('stateAfterMove', 'nextPlayer', null)";
+        self::DbQuery($sql);
+        $sql = "INSERT INTO kvstore(`key`, value_text, value_number) VALUES ('captureField', null, 0)";
         self::DbQuery($sql);
 
         // Activate first player (which is in general a good idea :) )
@@ -175,11 +175,11 @@ class BaoLaKiswahili extends Table
         // Since usually the game ends by oponent having no stones left in 1st row, we calculate current progression
         // as inverse procentual ratio of smaller and bigger first row count;
         // note: since this is not linear, but will go in both directions, the value may rise and fall
-        $board = self::getBoard();
+        $board = $this->getBoard();
         $player = self::getActivePlayerId();
-        $playerCount = self::getFirstRowCount($player, $board);
+        $playerCount = $this->getFirstRowCount($player, $board);
         $oponent = self::getPlayerAfter($player);
-        $oponentCount = self::getFirstRowCount($oponent, $board);
+        $oponentCount = $this->getFirstRowCount($oponent, $board);
         $minCount = min($playerCount, $oponentCount);
         $maxCount = max($playerCount, $oponentCount);
         $ratio = $minCount / $maxCount;
@@ -214,7 +214,7 @@ class BaoLaKiswahili extends Table
     {
         $result = array();
 
-        $board = self::getBoard();
+        $board = $this->getBoard();
 
         for ($i = 1; $i <= 16; $i++) {
             if ($board[$player_id][$i]["count"] >= 2) {
@@ -230,21 +230,21 @@ class BaoLaKiswahili extends Table
     // Mtaji phase of Kiswahili variant or Kujifunza variant: 
     function getMtajiPossibleMoves($player_id)
     {
-        $result = self::getMtjaiPossibleCaptures($player_id);
+        $result = $this->getMtajiPossibleCaptures($player_id);
 
         if (empty($result)) {
-            $result = self::getMtjaiPossibleNonCaptures($player_id);
+            $result = $this->getMtajiPossibleNonCaptures($player_id);
         }
 
         return $result;
     }
 
     // step #1: if possible, a capture move has to be played
-    function getMtjaiPossibleCaptures($player_id)
+    function getMtajiPossibleCaptures($player_id)
     {
         $result = array();
 
-        $board = self::getBoard();
+        $board = $this->getBoard();
         $oponent = self::getPlayerAfter($player_id);
 
         // check if any pit with at least 2 and at most 15 seeds leads to a harvest in initial move
@@ -255,7 +255,7 @@ class BaoLaKiswahili extends Table
                 $subResult = array();
 
                 // check if move to the left gets to 1st row, lands in non-empty pit and has an adjacent filled pit
-                $destinationField = self::getDestinationField($i, -1, $count);
+                $destinationField = $this->getDestinationField($i, -1, $count);
                 if ($destinationField <= 8 && $board[$player_id][$destinationField]["count"] > 0 &&
                     $board[$oponent][$destinationField]["count"] > 0) {
                     $left = $i == 1 ? 16 : $i - 1;
@@ -263,7 +263,7 @@ class BaoLaKiswahili extends Table
                 }
 
                 // check if move to the right gets to 1st, lands in non-empty pit row and has an adjacent filled pit
-                $destinationField = self::getDestinationField($i, 1, $count);
+                $destinationField = $this->getDestinationField($i, 1, $count);
                 if ($destinationField <= 8 && $board[$player_id][$destinationField]["count"] > 0 &&
                     $board[$oponent][$destinationField]["count"] > 0) {
                     $right = $i == 16 ? 1 : $i + 1;
@@ -281,12 +281,12 @@ class BaoLaKiswahili extends Table
     }
 
     // step #2: if no harvest move was found, check for non-harvest moves
-    function getMtjaiPossibleNonCaptures($player_id)
+    function getMtajiPossibleNonCaptures($player_id)
     {
         $result = array();
 
-        $board = self::getBoard();
-        $oponent = self::getPlayerAfter($player_id);
+        $board = $this->getBoard();
+        $oponent = $this->getPlayerAfter($player_id);
 
         // first check if any pit in the 1st row has at least 2 seeds, then in the 2nd row
         for ($i = 1; $i <= 8; $i++) {
@@ -309,12 +309,39 @@ class BaoLaKiswahili extends Table
         return $result;
     }
 
+    // move from kichwa after capture
+    function getMtajiPossibleKichwa($player_id)
+    {
+        $result = array();
+
+        // get stored capture field from last move execution
+        $sql = "SELECT value_number FROM kvstore WHERE `key` = 'captureField'";
+        $captureField = $this->getUniqueValueFromDB($sql);
+
+        // be sure that it is a valid pit from front row
+        if($captureField < 1 && $captureField > 8) {
+            throw new feException("Impossible move");  
+        }
+
+        // left kichwa can (or has to be) chosen if capture pit is lower than 7
+        if($captureField < 7) {
+            $result[1] = array(2);
+        }
+
+        // right kichwa can (or has to be) chosen if capture pit is higher than 2
+        if($captureField > 2) {
+            $result[8] = array(7);
+        }
+
+        return $result;
+    }
+  
     // Determine destination field moving from given field in given direction (-1 / +1) a certain amount of fields
     function getDestinationField($field, $direction, $count)
     {
         $destinationField = $field;
         for ($i = 1; $i <= $count; $i++) {
-            $destinationField = self::getNextField($destinationField, $direction);
+            $destinationField = $this->getNextField($destinationField, $direction);
         }
 
         return $destinationField;
@@ -392,17 +419,17 @@ class BaoLaKiswahili extends Table
     function executeMove($player, $field, $direction)
     {
         // Check that this player is active and that this action is possible at this moment
-        self::checkAction('executeMove');
+        $this->checkAction('executeMove');
 
         // Distinguish game mode for move check
         if ($this->getGameStateValue('game_variant') == VARIANT_KISWAHILI) {
             // TODO
         } elseif ($this->getGameStateValue('game_variant') == VARIANT_KUJIFUNZA) {
             // Check that move is possible
-            $possibleCaptures = self::getMtjaiPossibleCaptures($player);
+            $possibleCaptures = $this->getMtajiPossibleCaptures($player);
             $possibleNonCaptures = array();
             if (empty($possibleCaptures)) {
-                $possibleNonCaptures = self::getMtjaiPossibleNonCaptures($player);
+                $possibleNonCaptures = $this->getMtajiPossibleNonCaptures($player);
             }
             if ((!array_key_exists($field, $possibleCaptures) || array_search($direction, $possibleCaptures[$field]) === false) &&
                 (!array_key_exists($field, $possibleNonCaptures) || array_search($direction, $possibleNonCaptures[$field]) === false)) {
@@ -410,7 +437,7 @@ class BaoLaKiswahili extends Table
             }
         } elseif ($this->getGameStateValue('game_variant') == VARIANT_HUS) {
             // Check that move is possible
-            $possibleMoves = self::getHusPossibleMoves($player);
+            $possibleMoves = $this->getHusPossibleMoves($player);
             if (!array_key_exists($field, $possibleMoves) || array_search($direction, $possibleMoves[$field]) === false) {
                 throw new feException("Impossible move");
             }
@@ -425,15 +452,18 @@ class BaoLaKiswahili extends Table
         $moveDirection = (abs($moveDirection) > 1) ? $moveDirection / -15 : $moveDirection;
 
         // get start situation
-        $oponent = self::getPlayerAfter($player);
+        $oponent = $this->getPlayerAfter($player);
         $players = array($player, $oponent);
         $selectedField = $field;
         $sourceField = $field;
-        $board = self::getBoard();
+        $board = $this->getBoard();
 
         // some game situation, such as capturing, are clear after move execution, but state will be set in stNextPlayer,
         // so set nextPlayer as default state after move, which might be overwritten by special state (e.g. continueCapture)
         $stateAfterMove = 'nextPlayer';
+        // also the field from which a capture occurs has to be stored for using in stNextPlayer to allow for correct selection,
+        // default value is 0 (no caputure), can be overwritten with 1 - 8
+        $captureField = 0;
 
         // initialize result array for later notification of moves to do;
         // moves are ordered list of pattern "<command>_<field>"
@@ -461,13 +491,14 @@ class BaoLaKiswahili extends Table
                 // distribute stones in the next fields in selected direction until last one which has to be a capture
                 while ($count > 0) {
                     // calculate next field to move to and leave 1 stone
-                    $destinationField = self::getNextField($sourceField, $moveDirection);
+                    $destinationField = $this->getNextField($sourceField, $moveDirection);
                     $board[$player][$destinationField]["count"] += 1;
                     array_push($moves, "moveStone_" . $destinationField);
                     $sourceField = $destinationField;
                     $count -= 1;
                 }
                 $stateAfterMove = 'continueCapture';
+                $captureField = $destinationField;
             } else {
                 // this is a non-capture move, no further captures are allowed, move only continues in own two rows
                 // make moves until last field was empty before putting stone
@@ -475,7 +506,7 @@ class BaoLaKiswahili extends Table
                     // distribute stones in the next fields in selected direction until last one
                     while ($count > 0) {
                         // calculate next field to move to and leave 1 stone
-                        $destinationField = self::getNextField($sourceField, $moveDirection);
+                        $destinationField = $this->getNextField($sourceField, $moveDirection);
                         $board[$player][$destinationField]["count"] += 1;
                         array_push($moves, "moveStone_" . $destinationField);
                         $sourceField = $destinationField;
@@ -501,7 +532,7 @@ class BaoLaKiswahili extends Table
                 // distribute stones in the next fields in selected direction until last one
                 while ($count > 0) {
                     // calculate next field to move to and leave 1 stone
-                    $destinationField = self::getNextField($sourceField, $moveDirection);
+                    $destinationField = $this->getNextField($sourceField, $moveDirection);
                     $board[$player][$destinationField]["count"] += 1;
                     array_push($moves, "moveStone_" . $destinationField);
                     $sourceField = $destinationField;
@@ -526,7 +557,7 @@ class BaoLaKiswahili extends Table
                             $overallMoved += $count;
 
                             // check if oponent has lost and stop moves if lost
-                            $scoreOponent = self::getScore($oponent, $board);
+                            $scoreOponent = $this->getScore($oponent, $board);
                             if ($scoreOponent == 0) {
                                 break;
                             }
@@ -577,8 +608,10 @@ class BaoLaKiswahili extends Table
             'board' => $board
         ));
 
-        // persist planned state after move in database for using in stNextPlayer
+        // persist planned state after move and possible caputre filed in database for using in stNextPlayer
         $sql = "UPDATE kvstore SET value_text = '$stateAfterMove' WHERE `key` = 'stateAfterMove'";
+        self::DbQuery($sql);
+        $sql = "UPDATE kvstore SET value_number = '$captureField' WHERE `key` = 'captureField'";
         self::DbQuery($sql);
 
         // Go to the next state
@@ -619,13 +652,15 @@ class BaoLaKiswahili extends Table
     function argMtajiMoveSelection()
     {
         return array(
-            'possibleMoves' => self::getMtajiPossibleMoves(self::getActivePlayerId())
+            'possibleMoves' => $this->getMtajiPossibleMoves(self::getActivePlayerId())
         );
     }
 
     function argMtajiCaptureSelection()
     {
-self::debug('##################### argMtajiCaptureSelection');
+        return array(
+            'possibleMoves' => $this->getMtajiPossibleKichwa(self::getActivePlayerId())
+        );
     }
 
     function argTakasiaMoveSelection()
@@ -636,7 +671,7 @@ self::debug('##################### argMtajiCaptureSelection');
     function argHusMoveSelection()
     {
         return array(
-            'possibleMoves' => self::getHusPossibleMoves(self::getActivePlayerId())
+            'possibleMoves' => $this->getHusPossibleMoves(self::getActivePlayerId())
         );
     }
 
@@ -667,7 +702,7 @@ self::debug('##################### argMtajiCaptureSelection');
     function stNextPlayer()
     {
         // get current situation
-        $board = self::getBoard();
+        $board = $this->getBoard();
 
         // calculate scores and thereby if someone has lost or is zombie (score = 0)
         $playerLast = self::getActivePlayerId();
@@ -675,14 +710,14 @@ self::debug('##################### argMtajiCaptureSelection');
         $zombie = self::getUniqueValueFromDB($sql);
         $scoreLast = 0;
         if (!$zombie) {
-            $scoreLast = self::getScore($playerLast, $board);
+            $scoreLast = $this->getScore($playerLast, $board);
         }
-        $playerNext = self::activeNextPlayer();
+        $playerNext = self::getPlayerAfter($playerLast);
         $sql = "SELECT player_zombie FROM player WHERE player_id = '$playerNext'";
         $zombie = self::getUniqueValueFromDB($sql);
         $scoreNext = 0;
         if (!$zombie) {
-            $scoreNext = self::getScore($playerNext, $board);
+            $scoreNext = $this->getScore($playerNext, $board);
         }
 
         // save scores
@@ -705,8 +740,11 @@ self::debug('##################### argMtajiCaptureSelection');
             $sql = "SELECT value_text FROM kvstore WHERE `key` = 'stateAfterMove'";
             $stateAfterMove = self::getUniqueValueFromDB($sql);
 
-            // Next player can play and gets extra time
-            self::giveExtraTime($playerNext);
+            if ($stateAfterMove === "nextPlayer") {
+                // Next player can play and gets extra time
+                self::giveExtraTime($playerNext);
+                $this->activeNextPlayer();
+            }
             $this->gamestate->nextState($stateAfterMove);
         }
     }
