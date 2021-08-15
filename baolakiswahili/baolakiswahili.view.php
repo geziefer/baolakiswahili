@@ -39,15 +39,15 @@ class view_baolakiswahili_baolakiswahili extends game_view
 
     // create 4 rows with 8 fields, scaling and shifting them according to the board perspective
     if ($isFirst) {
-      self::createLine(1, 100, 100, 85, 22, -3, -1, $player2, 16, -1);
-      self::createLine(2, 104, 100, 70, 22, 0, -5, $player2, 1, +1);
-      self::createLine(3, 107, 98, 58, 49, -1, -8, $player1, 1, +1);
-      self::createLine(4, 111, 98, 45, 66, -5, -10, $player1, 16, -1);
+      $this->createLine(1, 100, 100, 85, 22, -3, -1, $player2, 16, -1);
+      $this->createLine(2, 104, 100, 70, 22, 0, -5, $player2, 1, +1);
+      $this->createLine(3, 107, 98, 58, 49, -1, -8, $player1, 1, +1);
+      $this->createLine(4, 111, 98, 45, 66, -5, -10, $player1, 16, -1);
     } else {
-      self::createLine(1, 100, 100, 85, 22, -3, -1, $player1, 9, +1);
-      self::createLine(2, 104, 100, 70, 22, 0, -5, $player1, 8, -1);
-      self::createLine(3, 107, 98, 58, 49, -1, -8, $player2, 8, -1);
-      self::createLine(4, 111, 98, 45, 66, -5, -10, $player2, 9, +1);
+      $this->createLine(1, 100, 100, 85, 22, -3, -1, $player1, 9, +1);
+      $this->createLine(2, 104, 100, 70, 22, 0, -5, $player1, 8, -1);
+      $this->createLine(3, 107, 98, 58, 49, -1, -8, $player2, 8, -1);
+      $this->createLine(4, 111, 98, 45, 66, -5, -10, $player2, 9, +1);
     }
 
     /*********** Do not change anything below this line  ************/
