@@ -163,12 +163,19 @@ define([
                     for (var field in possibleMoves) {
                         // every entry in this array is a possible bowl
                         dojo.addClass('circle_' + player + '_' + field, 'blk_possibleBowl');
+
+                        // check if entry contains captured field
+                        for (var capturefield of possibleMoves[field]) {
+                            if (typeof capturefield === 'string') {
+                                // capturefield has format '<playerid>_<field>'
+                                // mark oponent's bowl
+                                dojo.addClass('circle_' + capturefield, 'blk_capturedBowl');
+                            }
+                        }
                     }
 
                     // highlight all stones in possible bowls
                     dojo.query('.blk_possibleBowl').query('.blk_stone').addClass('blk_possibleStone');
-
-                    // mark captured bowl in case of capture move
                 }
             },
 
@@ -185,14 +192,10 @@ define([
 
                     // change selected bowl for cancelling
                     dojo.addClass('circle_' + player + '_' + this.clientStateArgs.field, 'blk_selectedBowl');
-                    // data for active player in array
+                    // data for active player in array, check for non-capture field
                     for (var field of possibleMoves[this.clientStateArgs.field]) {
-                        if (typeof field === 'string') {
-                            // field has format '<playerid>_<field>'
-                            // oponent's bowl
-                            dojo.addClass('circle_' + field, 'blk_capturedBowl');
-                        } else {
-                            // field has format <field>
+                        if (typeof field !== 'string') {
+                            // non-capture field has format <field>
                             // selectable directions
                             dojo.addClass('circle_' + player + '_' + field, 'blk_possibleDirection');
                         }
