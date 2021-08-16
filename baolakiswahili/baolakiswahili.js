@@ -149,7 +149,6 @@ define([
             // show all bowls which are selectable
             updateBowlSelection: function (possibleMoves) {
                 console.log("Enter updateBowlSelection");
-console.log(possibleMoves);
 
                 // only display for current player
                 if (this.isCurrentPlayerActive()) {
@@ -176,6 +175,7 @@ console.log(possibleMoves);
             // show selectable directions after selecting bowl
             updateMoveDirection: function (possibleMoves) {
                 console.log("Enter updateMoveDirection");
+
                 // only display for current player
                 if (this.isCurrentPlayerActive()) {
                     var player = this.getActivePlayerId();
@@ -187,8 +187,15 @@ console.log(possibleMoves);
                     dojo.addClass('circle_' + player + '_' + this.clientStateArgs.field, 'blk_selectedBowl');
                     // data for active player in array
                     for (var field of possibleMoves[this.clientStateArgs.field]) {
-                        // selectable directions
-                        dojo.addClass('circle_' + player + '_' + field, 'blk_possibleDirection');
+                        if (typeof field === 'string') {
+                            // field has format '<playerid>_<field>'
+                            // oponent's bowl
+                            dojo.addClass('circle_' + field, 'blk_capturedBowl');
+                        } else {
+                            // field has format <field>
+                            // selectable directions
+                            dojo.addClass('circle_' + player + '_' + field, 'blk_possibleDirection');
+                        }
                     }
 
                     // highlight all stones in possible directions and selected bowl

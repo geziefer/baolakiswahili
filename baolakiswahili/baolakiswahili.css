@@ -48,6 +48,10 @@
     cursor: pointer;
 }
 
+.blk_capturedBowl {
+    background: radial-gradient( rgb(231, 139, 139), rgba(255, 255, 255, 0) 75%);    
+}
+
 .blk_possibleDirection {
     cursor: pointer;  
     background: radial-gradient( white, rgba(255, 255, 255, 0) 75%);    

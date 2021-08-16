@@ -286,7 +286,6 @@ class BaoLaKiswahili extends Table
         $result = array();
 
         $board = $this->getBoard();
-        $oponent = $this->getPlayerAfter($player_id);
 
         // first check if any pit in the 1st row has at least 2 seeds, then in the 2nd row
         for ($i = 1; $i <= 8; $i++) {
@@ -314,6 +313,8 @@ class BaoLaKiswahili extends Table
     {
         $result = array();
 
+        $oponent = $this->getPlayerAfter($player_id);
+
         // get stored capture field from last move execution
         $sql = "SELECT value_number FROM kvstore WHERE `key` = 'captureField'";
         $captureField = $this->getUniqueValueFromDB($sql);
@@ -323,14 +324,16 @@ class BaoLaKiswahili extends Table
             throw new feException("Impossible move");  
         }
 
-        // left kichwa can (or has to be) chosen if capture pit is lower than 7
+        // left kichwa can (or has to be) chosen if capture pit is lower than 7,
+        // add oponent's id for field as in circle ids
         if($captureField < 7) {
-            $result[1] = array(2);
+            $result[1] = array(2, $oponent.'_'.$captureField);
         }
 
         // right kichwa can (or has to be) chosen if capture pit is higher than 2
+        // add oponent's id for field as in circle ids
         if($captureField > 2) {
-            $result[8] = array(7);
+            $result[8] = array(7, $oponent.'_'.$captureField);
         }
 
         return $result;
@@ -421,7 +424,7 @@ class BaoLaKiswahili extends Table
         // Check that this player is active and that this action is possible at this moment,
         // do exception manually due to check of 2 possible actions
         if (!($this->checkAction('executeMove', false) || $this->checkAction('selectKichwa', false))) {
-            throw new feException("This +++++++++game action is impossible right now");
+            throw new feException("This game action is impossible right now");
         }
 
         // Distinguish game mode for move check
