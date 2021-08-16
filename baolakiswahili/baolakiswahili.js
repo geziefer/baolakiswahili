@@ -115,7 +115,10 @@ define([
 
                             break;
                         case 'client_directionSelection':
+                            // add cancel button to go back to previous state
                             this.addActionButton('button_cancel', _('Cancel'), 'onCancel');
+
+                            // show possible directions
                             this.updateMoveDirection(args.possibleMoves);
 
                             break;
@@ -146,6 +149,7 @@ define([
             // show all bowls which are selectable
             updateBowlSelection: function (possibleMoves) {
                 console.log("Enter updateBowlSelection");
+console.log(possibleMoves);
 
                 // only display for current player
                 if (this.isCurrentPlayerActive()) {
@@ -163,7 +167,9 @@ define([
                     }
 
                     // highlight all stones in possible bowls
-                    dojo.query(".blk_possibleBowl").query(".blk_stone").addClass("blk_possibleStone");
+                    dojo.query('.blk_possibleBowl').query('.blk_stone').addClass('blk_possibleStone');
+
+                    // mark captured bowl in case of capture move
                 }
             },
 
@@ -186,8 +192,8 @@ define([
                     }
 
                     // highlight all stones in possible directions and selected bowl
-                    dojo.query(".blk_possibleDirection").query(".blk_stone").addClass("blk_possibleStone");
-                    dojo.query(".blk_selectedBowl").query(".blk_stone").addClass("blk_selectedStone");
+                    dojo.query('.blk_possibleDirection').query('.blk_stone').addClass('blk_possibleStone');
+                    dojo.query('.blk_selectedBowl').query('.blk_stone').addClass('blk_selectedStone');
                 }
             },
 

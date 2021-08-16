@@ -418,8 +418,11 @@ class BaoLaKiswahili extends Table
     // game modes are distinguished here to exeute it
     function executeMove($player, $field, $direction)
     {
-        // Check that this player is active and that this action is possible at this moment
-        $this->checkAction('executeMove');
+        // Check that this player is active and that this action is possible at this moment,
+        // do exception manually due to check of 2 possible actions
+        if (!($this->checkAction('executeMove', false) || $this->checkAction('selectKichwa', false))) {
+            throw new feException("This +++++++++game action is impossible right now");
+        }
 
         // Distinguish game mode for move check
         if ($this->getGameStateValue('game_variant') == VARIANT_KISWAHILI) {
