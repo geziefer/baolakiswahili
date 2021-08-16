@@ -162,13 +162,6 @@ define([
                         dojo.addClass('circle_' + player + '_' + field, 'blk_possibleBowl');
                     }
 
-var nl =  dojo.query(".blk_possibleBowl");
-console.log("#################");
-console.log(nl);
-nl = nl.query(".blk_stone");
-console.log("#################");
-console.log(nl);
-
                     // highlight all stones in possible bowls
                     dojo.query(".blk_possibleBowl").query(".blk_stone").addClass("blk_possibleStone");
                 }
@@ -184,7 +177,7 @@ console.log(nl);
                     dojo.query('.blk_possibleBowl').removeClass('blk_possibleBowl');
                     dojo.query('.blk_possibleStone').removeClass('blk_possibleStone');
 
-                    // change selected bowl for cacelling
+                    // change selected bowl for cancelling
                     dojo.addClass('circle_' + player + '_' + this.clientStateArgs.field, 'blk_selectedBowl');
                     // data for active player in array
                     for (var field of possibleMoves[this.clientStateArgs.field]) {
@@ -216,8 +209,8 @@ console.log(nl);
             onBowl: function (evt) {
                 console.log("Enter onBowl");
 
-                // Check that this action is possible at this moment
-                if (!this.checkAction('executeMove') && !this.checkAction('selectKichwa')) {
+                // Check that this action is possible at this moment, don't show message for 1st check
+                if (!(this.checkAction('executeMove', true) || this.checkAction('selectKichwa'))) {
                     return;
                 }
 
@@ -271,8 +264,8 @@ console.log(nl);
             onCancel: function (evt) {
 			    console.log("Enter onCancel");
 
-                // Check that this action is possible at this moment
-                if (!this.checkAction('executeMove') && !this.checkAction('selectKichwa')) {
+                // Check that this action is possible at this moment, don't show message for 1st check
+                if (!(this.checkAction('executeMove', true) || this.checkAction('selectKichwa'))) {
                     return;
                 }
 
