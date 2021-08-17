@@ -116,7 +116,7 @@ $machinestates = array(
         "type" => "activeplayer",
         "args" => "argMtajiCaptureSelection",
         "possibleactions" => array("selectKichwa"),
-        "transitions" => array("selectKichwa" => 21, "zombiePass" => 21)
+        "transitions" => array("executeMove" => 21, "zombiePass" => 21)
     ),
 
     // Second phase special move kutakatia

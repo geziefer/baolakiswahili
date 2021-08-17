@@ -25,7 +25,8 @@ class action_baolakiswahili extends APP_GameAction
         }
     }
 
-    // Action after selecting a move (start field and direction field)
+    // Action after selecting a move (start field and direction field),
+    // also applies for special moves with other states
     public function executeMove()
     {
         self::setAjaxMode();

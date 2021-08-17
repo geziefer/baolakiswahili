@@ -42,14 +42,16 @@
 
 .blk_possibleBowl {
     cursor: pointer;  
+    background: radial-gradient( white, rgba(255, 255, 255, 0) 75%);    
 }
 
 .blk_selectedBowl {
     cursor: pointer;
+    background: radial-gradient( rgb(250, 223, 104), rgba(255, 255, 255, 0) 75%);    
 }
 
 .blk_capturedBowl {
-    background: radial-gradient( rgb(231, 139, 139), rgba(255, 255, 255, 0) 75%);    
+    background: radial-gradient( rgb(240, 172, 172), rgba(255, 255, 255, 0) 75%);    
 }
 
 .blk_possibleDirection {

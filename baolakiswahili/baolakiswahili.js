@@ -153,11 +153,12 @@ define([
                 // only display for current player
                 if (this.isCurrentPlayerActive()) {
                     var player = this.getActivePlayerId();
-                    // Remove previously set css markers for possible bowls, stones and directions
+                    // Remove previously set css markers for possible and captured bowls, stones and directions
                     dojo.query('.blk_possibleDirection').removeClass('blk_possibleDirection');
                     dojo.query('.blk_selectedBowl').removeClass('blk_selectedBowl');
                     dojo.query('.blk_possibleStone').removeClass('blk_possibleStone');
                     dojo.query('.blk_selectedStone').removeClass('blk_selectedStone');
+                    dojo.query('.blk_capturedBowl').removeClass('blk_capturedBowl');
 
                     // data for active player in array
                     for (var field in possibleMoves) {
@@ -332,12 +333,14 @@ define([
             */
             notif_moveStones: function (notif) {
                 console.log('enter notif_moveStones');
+console.log(notif.args.moves);
 
-                // Remove previously set css markers for possible directions and selected bowl
+                // Remove previously set css markers for possible and captured bowls, stones and directions
                 dojo.query('.blk_possibleDirection').removeClass('blk_possibleDirection');
                 dojo.query('.blk_selectedBowl').removeClass('blk_selectedBowl');
                 dojo.query('.blk_possibleStone').removeClass('blk_possibleStone');
                 dojo.query('.blk_selectedStone').removeClass('blk_selectedStone');
+                dojo.query('.blk_capturedBowl').removeClass('blk_capturedBowl');
 
                 // get players
                 var player = notif.args.player;
@@ -387,17 +390,8 @@ define([
                                 movingStones.push(stones[id]);
                             }
                             circles.set('circle_' + oponent + '_' + field, []);
-
-                            // move all emptied stones to new field
-                            var combinedAnimation = [];
-                            for (var id = 0; id < stones.length; id++) {
-                                var stone = stones[id];
-                                combinedAnimation.push(this.slideToObject(stone, 'circle_' + player + '_' + field, 333));
-                            }
-                            // combine all animations to one
-                            animations.push(dojo.fx.combine(combinedAnimation));
                             break;
-                        case "moveStone":
+                        case "moveActive":
                             // move all remaining stones to new field
                             var combinedAnimation = [];
                             for (var id = 0; id < movingStones.length; id++) {
@@ -416,7 +410,26 @@ define([
                             var stones = circles.get('circle_' + player + '_' + field);
                             stones.push(stone);
                             break;
-                    }
+                        case "moveOponent":
+                            // move all emtied stones of captured field to own field (adjacent or selected kichwa)
+                            var combinedAnimation = [];
+                            for (var id = 0; id < movingStones.length; id++) {
+                                var stone = movingStones[id];
+                                // change constructed animation to have positional offset
+                                var currentAnimation = this.slideToObject(stone, 'circle_' + player + '_' + field, 333);
+                                currentAnimation.properties.left += Math.floor((Math.random() * 11) - 5) * 2;
+                                currentAnimation.properties.top += Math.floor((Math.random() * 11) - 5) * 2;
+                                combinedAnimation.push(currentAnimation);
+                            }
+                            // combine all animations to one
+                            animations.push(dojo.fx.combine(combinedAnimation));
+
+                            // leave one stone in current field
+                            var stone = movingStones.splice(0, 1)[0];
+                            var stones = circles.get('circle_' + player + '_' + field);
+                            stones.push(stone);
+                            break;
+                        }
                 }
 
                 // chain all animations to one in order 
