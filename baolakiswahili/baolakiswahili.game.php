@@ -522,9 +522,11 @@ class BaoLaKiswahili extends Table
                     // source field now points to field of last put stone
                     $count = $board[$player][$sourceField]["count"];
 
-                    // empty own bowl for next move
-                    $board[$player][$sourceField]["count"] = 0;
-                    array_push($moves, "emptyActive_" . $sourceField);
+                    // empty own bowl for next move if it ends in non-empty bowl
+                    if ($count > 1) {
+                        $board[$player][$sourceField]["count"] = 0;
+                        array_push($moves, "emptyActive_" . $sourceField);
+                    }
                 }
             }
         } elseif ($this->getGameStateValue('game_variant') == VARIANT_HUS) {
@@ -851,8 +853,8 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$oponent' AND field = 10");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 9");
 
-        self::DbQuery("UPDATE board SET stones = 5 WHERE player = '$oponent' AND field = 1");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 2");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 1");
+        self::DbQuery("UPDATE board SET stones = 5 WHERE player = '$oponent' AND field = 2");
         self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 3");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 4");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 5");
