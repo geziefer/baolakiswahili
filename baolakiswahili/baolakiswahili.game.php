@@ -574,6 +574,7 @@ class BaoLaKiswahili extends Table
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// Kujifunza variant - kichwa selection
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // TODO: consider auto-select option as user preference when only 1 kichwa selection is possible
                 // kichwa after capture is selected, first get capture field from previous move and its content
                 $sql = "SELECT value_number FROM kvstore WHERE `key` = 'captureField'";
                 $captureField = $this->getUniqueValueFromDB($sql);
@@ -583,67 +584,55 @@ class BaoLaKiswahili extends Table
                 $activeKichwaCount = $board[$player][$sourceField]["count"];
                 $oponentKichwaCount = $board[$oponent][$sourceField]["count"];
 
-                // start with emptying oponent's bowl and move into selected kichwa
+                // start with emptying oponent's bowl
                 array_push($moves, "emptyOponent_" . $captureField);
                 $overallMoved += $count;
                 $overallStolen += $count;
                 $overallEmptied += 1;
                 $board[$oponent][$captureField]["count"] = 0;
-                array_push($moves, "moveOponent_" . $sourceField);
-                $board[$player][$sourceField]["count"] += $captureCount;
 
-                // move continues, if selected kichwa contains stones
-                if ($activeKichwaCount > 0) {
-                    // check if adjacent kichwa can be emptied too
-                    if ($oponentKichwaCount > 0) {
-                        array_push($moves, "emptyOponent_" . $sourceField);
-                        $overallMoved += $count;
-                        $overallStolen += $count;
-                        $overallEmptied += 1;
-                        $board[$oponent][$sourceField]["count"] = 0;
-                        array_push($moves, "moveOponent_" . $sourceField);
-                        $board[$player][$sourceField]["count"] += $oponentKichwaCount;
-                    }
+                // the move takes captured stones and starts with kichwa,
+                // as every move always goes to next field, we go back one field (inverted direction) 
+                // for start of move (sourceField) in order to have same behaviour later as for regular moves
+                $count = $captureCount;
+                $sourceField = $this->getNextField($sourceField, $moveDirection * (-1));
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// Kujifunza variant - move after kichwa selection
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                    // kichwa is done, so empty it
+                // move on until next capture or empty bowl,
+                // condition is checked at the end, since here it is possible to move only 1 stone from capture
+                do {
+                    // distribute stones in the next fields in selected direction until last one
+                    while ($count > 0) {
+                        // calculate next field to move to and leave 1 stone
+                        $destinationField = $this->getNextField($sourceField, $moveDirection);
+                        $board[$player][$destinationField]["count"] += 1;
+                        array_push($moves, "moveActive_" . $destinationField);
+                        $sourceField = $destinationField;
+                        $count -= 1;
+                    }
+
+                    // source field now points to field of last put stone
                     $count = $board[$player][$sourceField]["count"];
-                    array_push($moves, "emptyActive_" . $sourceField);
-                    $overallMoved += $count;
 
-                    // move on until next capture or empty bowl
-                    while ($count > 1) {
-                        // distribute stones in the next fields in selected direction until last one
-                        while ($count > 0) {
-                            // calculate next field to move to and leave 1 stone
-                            $destinationField = $this->getNextField($sourceField, $moveDirection);
-                            $board[$player][$destinationField]["count"] += 1;
-                            array_push($moves, "moveActive_" . $destinationField);
-                            $sourceField = $destinationField;
-                            $count -= 1;
-                        }
-
-                        // source field now points to field of last put stone
-                        $count = $board[$player][$sourceField]["count"];
-
-                        // if move ends in a non-empty bowl, move continues
-                        if ($count > 1) {
-                            // check if move has another capture
-                            if ($sourceField <= 8 && $board[$oponent][$sourceField]["count"] > 0) {
-                                // prepare for next part of move in different state, since player has to select kichwa
-                                $stateAfterMove = 'continueCapture';
-                                $captureField = $sourceField;
-                            } else {
-                                // empty own bowl for next move
-                                $board[$player][$sourceField]["count"] = 0;
-                                array_push($moves, "emptyActive_" . $sourceField);
-                                $overallMoved += $count;
-                            }
+                    // if move ends in a non-empty bowl, move continues
+                    if ($count > 1) {
+                        // check if move has another capture
+                        if ($sourceField <= 8 && $board[$oponent][$sourceField]["count"] > 0) {
+                            // prepare for next part of move in different state, since player has to select kichwa
+                            $stateAfterMove = 'continueCapture';
+                            $captureField = $sourceField;
+                            // clear count to leave loop
+                            $count = 0;
+                        } else {
+                            // empty own bowl for next move
+                            $board[$player][$sourceField]["count"] = 0;
+                            array_push($moves, "emptyActive_" . $sourceField);
+                            $overallMoved += $count;
                         }
                     }
-                }
+                } while ($count > 1);
             }
         } elseif ($this->getGameStateValue('game_variant') == VARIANT_HUS) {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -972,38 +961,38 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 16");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 15");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 14");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 13");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 13");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 12");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 11");
-        self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$oponent' AND field = 10");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 10");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 9");
 
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 1");
-        self::DbQuery("UPDATE board SET stones = 5 WHERE player = '$oponent' AND field = 2");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 3");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 1");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$oponent' AND field = 2");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 3");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 4");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 5");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 5");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 6");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 7");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 8");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 8");
 
         // save test stones for active player
         self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 1");
         self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 2");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 3");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 4");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 5");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 6");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 3");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 4");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 5");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 6");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 7");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 8");
 
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 16");
-        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 15");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 15");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 14");
-        self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$player' AND field = 13");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 13");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 12");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 11");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 10");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 10");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 9");
     }
 }
