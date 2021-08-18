@@ -42,27 +42,27 @@
 
 .blk_possibleBowl {
     cursor: pointer;  
-    background: radial-gradient( white, rgba(255, 255, 255, 0) 75%);    
+    background: radial-gradient( rgb(230, 214, 214), rgba(255, 255, 255, 0) 75%);    
 }
 
 .blk_selectedBowl {
     cursor: pointer;
-    background: radial-gradient( rgb(250, 223, 104), rgba(255, 255, 255, 0) 75%);    
+    background: radial-gradient( rgb(132, 246, 67), rgba(255, 255, 255, 0) 75%);    
 }
 
 .blk_capturedBowl {
-    background: radial-gradient( rgb(240, 172, 172), rgba(255, 255, 255, 0) 75%);    
+    background: radial-gradient( rgb(235, 98, 98), rgba(255, 255, 255, 0) 75%);    
 }
 
 .blk_possibleDirection {
     cursor: pointer;  
-    background: radial-gradient( white, rgba(255, 255, 255, 0) 75%);    
+    background: radial-gradient( rgb(230, 214, 214), rgba(255, 255, 255, 0) 75%);    
 }
 
+/** intentionally empty, just used as a marker */
 .blk_possibleStone {
-    filter: brightness(150%);
 }
 
+/** intentionally empty, just used as a marker */
 .blk_selectedStone {
-    filter: sepia(100%);
 }
