@@ -459,7 +459,7 @@ console.log(notif.args.moves);
                 anim.play();
                 // synchronize duration so that game waits until finished 
                 // add a bit of time to let onEnd callback function be executed before continuing
-                this.notifqueue.setSynchronousDuration(anim.duration + 500);
+                this.notifqueue.setSynchronousDuration(anim.duration + 333);
 
                 console.log('leaving notif_moveStones');
             },
