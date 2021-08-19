@@ -127,6 +127,8 @@ class BaoLaKiswahili extends Table
         self::DbQuery($sql);
         $sql = "INSERT INTO kvstore(`key`, value_text, value_number) VALUES ('captureField', null, 0)";
         self::DbQuery($sql);
+        $sql = "INSERT INTO kvstore(`key`, value_text, value_number) VALUES ('moveDirection', null, 0)";
+        self::DbQuery($sql);
 
         // Activate first player (which is in general a good idea :) )
         $this->activeNextPlayer();
@@ -315,25 +317,30 @@ class BaoLaKiswahili extends Table
 
         $oponent = $this->getPlayerAfter($player_id);
 
-        // get stored capture field from last move execution
+        // get stored capture field and move direction from last move execution
         $sql = "SELECT value_number FROM kvstore WHERE `key` = 'captureField'";
         $captureField = $this->getUniqueValueFromDB($sql);
+        $sql = "SELECT value_number FROM kvstore WHERE `key` = 'moveDirection'";
+        $moveDirection = $this->getUniqueValueFromDB($sql);
 
-        // be sure that it is a valid bowl from front row
-        if($captureField < 1 && $captureField > 8) {
+        // be sure that it is a valid bowl from front row and a valid direction
+        if($captureField < 1 || $captureField > 8 || abs($moveDirection) != 1) {
             throw new feException("Impossible move");  
         }
 
-        // left kichwa can (or has to be) chosen if capture bowl is lower than 7,
-        // add oponent's id for field as in circle ids
-        if($captureField < 7) {
+        // left kichwa has to be chosen if capture happens in left kichwa or kimbi
+        // or direction from previous move was already clockwise without capture in right kichwa or kimbi
+        if ($captureField <= 2 || ($moveDirection == 1 && $captureField < 7)) {
             $result[1] = array(2, $oponent.'_'.$captureField);
-        }
-
-        // right kichwa can (or has to be) chosen if capture bowl is higher than 2
-        // add oponent's id for field as in circle ids
-        if($captureField > 2) {
+        } 
+        // right kichwa has to be chosen if capture happens in right kichwa or kimbi
+        // or direction from previous move was already counterclockwise without capture in left kichwa or kimbi
+        elseif ($captureField >= 7 || ($moveDirection == -1 && $captureField > 2)) {
             $result[8] = array(7, $oponent.'_'.$captureField);
+        }
+        // invalid combination
+        else {
+            throw new feException("Impossible move");  
         }
 
         return $result;
@@ -713,7 +720,7 @@ class BaoLaKiswahili extends Table
         self::incStat($overallStolen, "overallStolen", $player);
 
         // notify players of all moves
-        $messageDirection = ($moveDirection < 0) ? 'clockwise' : 'anti-clockwise';
+        $messageDirection = ($moveDirection < 0) ? 'clockwise' : 'counterclockwise';
         $message = clienttranslate('${player_name} moved ${message_direction_translated} from field ${selected_field} to field ${source_field} in total ${overall_moved} stone(s), emptying ${overall_emptied} bowl(s) and having stolen ${overall_stolen} stone(s).');
         self::notifyAllPlayers("moveStones", $message, array(
             'i18n' => array('message_direction_translated'),
@@ -730,10 +737,13 @@ class BaoLaKiswahili extends Table
             'board' => $board
         ));
 
-        // persist planned state after move and possible caputre filed in database for using in stNextPlayer
+        // persist planned state after move and possible caputre field in database for using in stNextPlayer
         $sql = "UPDATE kvstore SET value_text = '$stateAfterMove' WHERE `key` = 'stateAfterMove'";
         self::DbQuery($sql);
-        $sql = "UPDATE kvstore SET value_number = '$captureField' WHERE `key` = 'captureField'";
+        $sql = "UPDATE kvstore SET value_number = $captureField WHERE `key` = 'captureField'";
+        self::DbQuery($sql);
+        // persist last move direction to keep it in next move if possible
+        $sql = "UPDATE kvstore SET value_number = $moveDirection WHERE `key` = 'moveDirection'";
         self::DbQuery($sql);
 
         // Go to the next state depending on 
