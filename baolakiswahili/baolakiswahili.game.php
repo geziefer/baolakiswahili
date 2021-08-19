@@ -381,8 +381,7 @@ class BaoLaKiswahili extends Table
         return $sum;
     }
 
-    // Calculate player's score, which is 0 if lost or sum of fields if not,
-    // board can be given or null
+    // Calculate player's score, which is 0 if lost or sum of fields if not
     function getScore($player, $board)
     {
         // first check if the player can still move and sum up stones
@@ -587,10 +586,6 @@ class BaoLaKiswahili extends Table
                 $captureField = $this->getUniqueValueFromDB($sql);
                 $captureCount = $board[$oponent][$captureField]["count"];
 
-                // before move starts, check kichwa's content for deciding on further actions
-                $activeKichwaCount = $board[$player][$sourceField]["count"];
-                $oponentKichwaCount = $board[$oponent][$sourceField]["count"];
-
                 // start with emptying oponent's bowl
                 array_push($moves, "emptyOponent_" . $captureField);
                 $overallMoved += $count;
@@ -603,7 +598,6 @@ class BaoLaKiswahili extends Table
                 // for start of move (sourceField) in order to have same behaviour later as for regular moves
                 $count = $captureCount;
                 $sourceField = $this->getNextField($sourceField, $moveDirection * (-1));
-
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// Kujifunza variant - move after kichwa selection
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -620,6 +614,12 @@ class BaoLaKiswahili extends Table
                         $count -= 1;
                     }
 
+                    // check if oponent has lost and stop moves if lost
+                    $scoreOponent = $this->getScore($oponent, $board);
+                    if ($scoreOponent == 0) {
+                        break;
+                    }
+                    
                     // source field now points to field of last put stone
                     $count = $board[$player][$sourceField]["count"];
 
@@ -981,10 +981,10 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$oponent' AND field = 2");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 3");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 4");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 5");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 5");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 6");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 7");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 8");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 8");
 
         // save test stones for active player
         self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 1");
