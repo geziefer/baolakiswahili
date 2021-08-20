@@ -35,3 +35,22 @@ $game_options = array(
         'default' => 1
     )
 );
+
+$game_preferences = array(
+    100 => array(
+        'name' => totranslate('Kichwa selection mode if unambiguous'),
+        'needReload' => false,
+        'values' => array(
+            // when a kichwa has to be selected after capture, let user click, even if unambigious
+            1 => array( 
+                'name' => totranslate( 'Manual kichwa selection')
+            ),
+
+            // when a kichwa has to be selected after capture, automatically select it, if unabigious
+            2 => array( 
+                'name' => totranslate( 'Autmatic kichwa selection')
+            )
+        ),
+        'default' => 1
+    )
+);

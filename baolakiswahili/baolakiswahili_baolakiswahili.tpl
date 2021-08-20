@@ -25,4 +25,11 @@
     <!-- END circle -->
 </div>
 
+<div id="blk_preferences">
+    <div class="blk_auto_preference_box">
+        <h3><span>{LBL_PREF_TITLE}</span></h3>
+        <p><input type="checkbox" id="blk_checkbox_kichwa_mode">&nbsp; <span>{LBL_PREF_AUTO_KICHWA}</span></p>
+    </div>
+</div>
+
 {OVERALL_GAME_FOOTER}

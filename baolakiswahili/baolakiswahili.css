@@ -59,10 +59,26 @@
     background: radial-gradient( rgb(230, 214, 214), rgba(255, 255, 255, 0) 75%);    
 }
 
-/** intentionally empty, just used as a marker */
+/** intentionally empty, just show here that it is used as a marker */
 .blk_possibleStone {
 }
 
-/** intentionally empty, just used as a marker */
+/** intentionally empty, just show here that it is used as a marker */
 .blk_selectedStone {
+}
+
+#blk_preferences {
+    grid-column: 2/4;
+    grid-row: 9;
+}
+
+.blk_auto_preference_box {
+    display: block;
+    margin: 10px 10px 10px 0;
+    background-color: #191970;
+    color: #fff;
+    font-weight: 400;
+    font-size: 1em;
+    padding: 10px;
+    float: left;
 }

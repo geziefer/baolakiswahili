@@ -50,6 +50,10 @@ class view_baolakiswahili_baolakiswahili extends game_view
       $this->createLine(4, 111, 98, 45, 66, -5, -10, $player2, 9, +1);
     }
 
+    // translate labels
+    $this->tpl['LBL_PREF_TITLE'] = self::_("Automatic actions");
+    $this->tpl['LBL_PREF_AUTO_KICHWA'] = self::_("Automatic Kichwa selection");
+
     /*********** Do not change anything below this line  ************/
   }
 

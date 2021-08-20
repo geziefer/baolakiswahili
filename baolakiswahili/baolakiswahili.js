@@ -11,6 +11,11 @@
 // flag for TESTMODE in development (default = false), enables button to set stones
 const TESTMODE = true;
 
+// preference values
+const PREF_KICHWA_MODE = 100;
+const PREF_KICHWA_MODE_MANUAL = 1;
+const PREF_KICHWA_MODE_AUTOMATIC = 2;
+
 define([
     "dojo", "dojo/_base/declare",
     "ebg/core/gamegui",
@@ -56,11 +61,18 @@ define([
                 // click handler for different click situations on bowl
                 dojo.query('.blk_circle').connect('onclick', this, 'onBowl');
 
+                // click handler for preference change by checkbox
+                dojo.query('#blk_checkbox_kichwa_mode').connect('onclick', this, 'onPrefCheckbox');
+
                 // Setup game notifications to handle (see "setupNotifications" method below)
                 this.setupNotifications();
 
                 // create empty client args
                 this.clientStateArgs = {};
+
+                // set pref checkbox from user preference and connect with change handler
+                document.getElementById("blk_checkbox_kichwa_mode").checked = (this.prefs[100].value == PREF_KICHWA_MODE_AUTOMATIC) ? true : false;
+                this.setupPreference();
 
                 console.log("Ending game setup");
             },
@@ -208,6 +220,51 @@ define([
                 }
             },
 
+            // taken from https://boardgamearena.com/doc/Game_options_and_preferences:_gameoptions.inc.php
+            setupPreference: function () {
+                // Extract the ID and value from the UI control
+                var _this = this;
+                function onchange(e) {
+                    var match = e.target.id.match(/^preference_[cf]ontrol_(\d+)$/);
+                    if (!match) {
+                        return;
+                    }
+                    var prefId = +match[1];
+                    var prefValue = +e.target.value;
+                    _this.prefs[prefId].value = prefValue;
+                    _this.onPreferenceChange(prefId, prefValue);
+                }
+                
+                // Call onPreferenceChange() when any value changes
+                dojo.query(".preference_control").connect("onchange", onchange);
+                
+                // Call onPreferenceChange() now
+                dojo.forEach(
+                    dojo.query("#ingame_menu_content .preference_control"),
+                    function (el) {
+                        onchange({ target: el });
+                    }
+                );
+              },
+            onPreferenceChange: function (prefId, prefValue) {
+                // only consider game preferences
+                if (prefId >= 100 && prefId <= 199) {
+                    console.log("Preference changed", prefId, prefValue);
+                    document.getElementById("blk_checkbox_kichwa_mode").checked = (this.prefs[100].value == PREF_KICHWA_MODE_AUTOMATIC) ? true : false;
+                }   
+            },
+            updatePreference: function(prefId, newValue) {
+                // Select preference value in control:
+                dojo.query('#preference_control_' + prefId + ' > option[value="' + newValue
+                // Also select fontrol to fix a BGA framework bug:
+                    + '"], #preference_fontrol_' + prefId + ' > option[value="' + newValue
+                    + '"]').forEach((value) => dojo.attr(value, 'selected', true));
+                // Generate change event on control to trigger callbacks:
+                const newEvt = document.createEvent('HTMLEvents');
+                newEvt.initEvent('change', false, true);
+                $('preference_control_' + prefId).dispatchEvent(newEvt);
+            },
+
             ///////////////////////////////////////////////////
             //// Player's action
 
@@ -293,7 +350,20 @@ define([
                 this.restoreServerGameState();
             },
 
-            // click on Testmode button       
+            // player has selected a preference from the preference box under the board
+            onPrefCheckbox: function (evt) {
+                // get selected preference
+                 var prefId = evt.currentTarget.id;
+                 var value = document.getElementById(prefId).checked;
+                 console.log("Preference " + prefId + " set to " + value);
+
+                 // update user preference
+                 if (prefId == "blk_checkbox_kichwa_mode") {
+                     this.updatePreference(PREF_KICHWA_MODE, value ? PREF_KICHWA_MODE_AUTOMATIC : PREF_KICHWA_MODE_MANUAL);
+                 }
+            },
+
+                // click on Testmode button       
             onTestmode: function (evt) {
 			    console.log("Enter onTestmode");
 
@@ -333,7 +403,6 @@ define([
             */
             notif_moveStones: function (notif) {
                 console.log('enter notif_moveStones');
-console.log(notif.args.moves);
 
                 // Remove previously set css markers for possible and captured bowls, stones and directions
                 dojo.query('.blk_possibleDirection').removeClass('blk_possibleDirection');
