@@ -71,7 +71,7 @@ define([
                 this.clientStateArgs = {};
 
                 // set pref checkbox from user preference and connect with change handler
-                document.getElementById("blk_checkbox_kichwa_mode").checked = (this.prefs[100].value == PREF_KICHWA_MODE_AUTOMATIC) ? true : false;
+                document.getElementById("blk_checkbox_kichwa_mode").checked = (this.prefs[PREF_KICHWA_MODE].value == PREF_KICHWA_MODE_AUTOMATIC) ? true : false;
                 this.setupPreference();
 
                 console.log("Ending game setup");
@@ -118,10 +118,9 @@ define([
 
                 if (this.isCurrentPlayerActive()) {
                     switch (stateName) {
-                        // independent of game mode, it always causes the bowls to be styled accourding to possible moves
+                        // independent of game mode, it always causes the bowls to be styled according to possible moves
                         case 'kunamuaMoveSelection':
                         case 'mtajiMoveSelection':
-                        case 'mtajiCaptureSelection':
                         case 'husMoveSelection':
                             this.updateBowlSelection(args.possibleMoves);
 
@@ -132,6 +131,28 @@ define([
 
                             // show possible directions
                             this.updateMoveDirection(args.possibleMoves);
+
+                            break;
+                        case 'mtajiCaptureSelection':
+                            var count = Object.keys(args.possibleMoves).length;
+                            if (count == 1 && this.prefs[PREF_KICHWA_MODE].value == PREF_KICHWA_MODE_AUTOMATIC) {
+                                // automatically select the kichwa field and direction
+                                var field = Object.keys(args.possibleMoves)[0];
+                                var direction = Object.values(args.possibleMoves)[0][0];
+                                console.log("Automatic kichwa selection from field " + field + " in direction " + direction);
+
+                                // call server, game mode will be handled there
+                                var player = this.getActivePlayerId();
+                                this.ajaxcall("/baolakiswahili/baolakiswahili/executeMove.html", {
+                                    lock: true,
+                                    player: player,
+                                    field: field,
+                                    direction: direction
+                                }, this, function (result) { });
+                            } else {
+                                // let the user select the kichwa
+                                this.updateBowlSelection(args.possibleMoves);
+                            }
 
                             break;
                     }
@@ -250,7 +271,7 @@ define([
                 // only consider game preferences
                 if (prefId >= 100 && prefId <= 199) {
                     console.log("Preference changed", prefId, prefValue);
-                    document.getElementById("blk_checkbox_kichwa_mode").checked = (this.prefs[100].value == PREF_KICHWA_MODE_AUTOMATIC) ? true : false;
+                    document.getElementById("blk_checkbox_kichwa_mode").checked = (this.prefs[PREF_KICHWA_MODE].value == PREF_KICHWA_MODE_AUTOMATIC) ? true : false;
                 }   
             },
             updatePreference: function(prefId, newValue) {
