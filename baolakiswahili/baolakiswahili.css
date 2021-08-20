@@ -59,12 +59,12 @@
     background: radial-gradient( rgb(230, 214, 214), rgba(255, 255, 255, 0) 75%);    
 }
 
-/** intentionally empty, just show here that it is used as a marker */
 .blk_possibleStone {
+    filter: brightness(125%);
 }
 
-/** intentionally empty, just show here that it is used as a marker */
 .blk_selectedStone {
+    filter: brightness(125%);
 }
 
 #blk_preferences {
