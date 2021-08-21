@@ -11,6 +11,11 @@
 // flag for TESTMODE in development (default = false), enables button to set stones
 const TESTMODE = true;
 
+// game variants
+const VARIANT_KISWAHILI = 1;
+const VARIANT_KUJIFUNZA = 2;
+const VARIANT_HUS = 3;
+
 // preference values
 const PREF_KICHWA_MODE = 100;
 const PREF_KICHWA_MODE_MANUAL = 1;
@@ -70,9 +75,22 @@ define([
                 // create empty client args
                 this.clientStateArgs = {};
 
-                // set pref checkbox from user preference and connect with change handler
-                document.getElementById("blk_checkbox_kichwa_mode").checked = (this.prefs[PREF_KICHWA_MODE].value == PREF_KICHWA_MODE_AUTOMATIC) ? true : false;
-                this.setupPreference();
+                // hide preference box if HUS variant
+                if (gamedatas.variant == VARIANT_HUS) {
+                    document.getElementById("blk_preferences").style.display = 'none';
+                } else {
+                    // set pref checkbox from user preference and connect with change handler for other variants
+                    document.getElementById("blk_checkbox_kichwa_mode").checked = (this.prefs[PREF_KICHWA_MODE].value == PREF_KICHWA_MODE_AUTOMATIC) ? true : false;
+                    this.setupPreference();
+                }
+
+                // hide seed area and nyumbas if not KISWAHILI variant
+                if  (gamedatas.variant != VARIANT_KISWAHILI) {
+                    document.getElementById("blk_seed_area_player").style.display = 'none';
+                    document.getElementById("blk_seed_area_oponent").style.display = 'none';
+                    document.getElementById("blk_nyumba_player").style.display = 'none';
+                    document.getElementById("blk_nyumba_oponent").style.display = 'none';
+                }
 
                 console.log("Ending game setup");
             },
@@ -89,7 +107,6 @@ define([
 
                 // states are distinguished in onUpdateActionButtons due to client states
                 switch (stateName) {
-
                 }
 
             },

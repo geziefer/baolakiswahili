@@ -159,6 +159,8 @@ class BaoLaKiswahili extends Table
         $sql = "SELECT player player, field no, stones count FROM board ";
         $result['board'] = self::getObjectListFromDB($sql);
 
+        $result['variant'] = $this->getGameStateValue('game_variant');
+
         return $result;
     }
 

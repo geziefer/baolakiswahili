@@ -15,7 +15,15 @@
     var jstpl_stone = '<div id="stone_${no}" class="blk_stone" style="left: ${left}px; top: ${top}px; transform: rotate(${degree}deg);"></div>';
 </script>
 
+<div id="blk_seed_area_oponent" class="blk_seed_area" >
+        <div id="label_{PLAYER}_0" class="blk_label" style="margin-left: {MLEFT}px; margin-top: {MTOP}px;">
+            <p>2</p>
+        </div>
+</div>
+
 <div id="blk_board">
+    <div id="blk_nyumba_oponent" style="left: 379px; top: 119px;"></div>
+    <div id="blk_nyumba_player" style="left: 482px; top: 237px;"></div>
     <!-- BEGIN circle -->
     <div id="circle_{PLAYER}_{FIELD}" class="blk_circle" style="left: {LEFT}px; top: {TOP}px;">
         <div id="label_{PLAYER}_{FIELD}" class="blk_label" style="margin-left: {MLEFT}px; margin-top: {MTOP}px;">
@@ -23,6 +31,12 @@
         </div>
     </div>
     <!-- END circle -->
+</div>
+
+<div id="blk_seed_area_player" class="blk_seed_area" >
+        <div id="label_{PLAYER}_0" class="blk_label" style="margin-left: {MLEFT}px; margin-top: {MTOP}px;">
+            <p>2</p>
+        </div>
 </div>
 
 <div id="blk_preferences">
