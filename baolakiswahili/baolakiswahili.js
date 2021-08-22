@@ -76,7 +76,7 @@ define([
 
                 // hide preference box if HUS variant
                 if (gamedatas.variant == VARIANT_HUS) {
-                    document.getElementById("blk_preferences").style.display = 'none';
+                    dojo.query('#blk_preferences').style('display', 'none');
                 } else {
                     // set pref checkbox from user preference and connect with change handler for other variants
                     document.getElementById("blk_checkbox_kichwa_mode").checked = (this.prefs[PREF_KICHWA_MODE].value == PREF_KICHWA_MODE_AUTOMATIC) ? true : false;
@@ -85,10 +85,9 @@ define([
 
                 // hide seed area and nyumbas if not KISWAHILI variant
                 if  (gamedatas.variant != VARIANT_KISWAHILI) {
-                    document.getElementById("blk_seed_area_player").style.display = 'none';
-                    document.getElementById("blk_seed_area_oponent").style.display = 'none';
-                    document.getElementById("blk_nyumba_player").style.display = 'none';
-                    document.getElementById("blk_nyumba_oponent").style.display = 'none';
+                    dojo.query('.blk_seed_area').style('display', 'none');
+                    dojo.query('#blk_nyumba_player').style('display', 'none');
+                    dojo.query('#blk_nyumba_oponent').style('display', 'none');
                 }
 
                 console.log("Ending game setup");
@@ -136,7 +135,15 @@ define([
                     switch (stateName) {
                         // independent of game mode, it always causes the bowls to be styled according to possible moves
                         case 'kunamuaMoveSelection':
+                            break;
                         case 'mtajiMoveSelection':
+                            this.updateBowlSelection(args.possibleMoves);
+
+                            if(args.capture) {
+                                
+                            }
+
+                            break;
                         case 'husMoveSelection':
                             this.updateBowlSelection(args.possibleMoves);
 
