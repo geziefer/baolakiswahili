@@ -15,10 +15,10 @@
     var jstpl_stone = '<div id="stone_${no}" class="blk_stone" style="left: ${left}px; top: ${top}px; transform: rotate(${degree}deg);"></div>';
 </script>
 
-<div id="blk_seed_area_oponent" class="blk_seed_area" >
-        <div id="label_{PLAYER}_0" class="blk_label" style="margin-left: {MLEFT}px; margin-top: {MTOP}px;">
-            <p>2</p>
-        </div>
+<div id="blk_seed_area_{PLAYER2}" class="blk_seed_area" >
+    <div id="label_{PLAYER2}_0" class="blk_label">
+        <p>2</p>
+    </div>
 </div>
 
 <div id="blk_board">
@@ -33,10 +33,10 @@
     <!-- END circle -->
 </div>
 
-<div id="blk_seed_area_player" class="blk_seed_area" >
-        <div id="label_{PLAYER}_0" class="blk_label" style="margin-left: {MLEFT}px; margin-top: {MTOP}px;">
-            <p>2</p>
-        </div>
+<div id="blk_seed_area_{PLAYER1}" class="blk_seed_area" >
+    <div id="label_{PLAYER1}_0" class="blk_label">
+        <p>2</p>
+    </div>
 </div>
 
 <div id="blk_preferences">

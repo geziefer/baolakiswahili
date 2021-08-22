@@ -60,7 +60,6 @@ define([
 
                     // update label to display stone count
                     dojo.byId('label_' + bowl.player + '_' + bowl.no).innerHTML = "<p>" + bowl.count + "</p>";
-
                 }
 
                 // click handler for different click situations on bowl
@@ -186,14 +185,25 @@ define([
             
             */
 
-            // place one stone in a bowl with a little random position within
+            // place one stone in a bowl with a little random position within,
+            // or put it in storage area if field 0
             addStoneOnBoard: function (player, field, number) {
-                dojo.place(this.format_block('jstpl_stone', {
-                    no: number,
-                    left: Math.floor(((Math.random() * 5) - 2) * 5) + 20,
-                    top: Math.floor(((Math.random() * 5) - 1) * 5) + 25,
-                    degree: Math.floor((Math.random() * 73) * 5)
-                }), 'circle_' + player + '_' + field);
+                // distinguish between storage area and regular bowl to place them in different divs
+                if (field == 0) {
+                    dojo.place(this.format_block('jstpl_stone', {
+                        no: number,
+                        left: Math.floor(((Math.random() * 45) - 2) * 5) + 40,
+                        top: Math.floor(((Math.random() * 5) - 1) * 5) + 15,
+                        degree: Math.floor((Math.random() * 73) * 5)
+                    }), 'blk_seed_area_' + player);
+                } else {
+                    dojo.place(this.format_block('jstpl_stone', {
+                        no: number,
+                        left: Math.floor(((Math.random() * 5) - 2) * 5) + 20,
+                        top: Math.floor(((Math.random() * 5) - 1) * 5) + 25,
+                        degree: Math.floor((Math.random() * 73) * 5)
+                    }), 'circle_' + player + '_' + field);
+                }
             },
 
             // show all bowls which are selectable

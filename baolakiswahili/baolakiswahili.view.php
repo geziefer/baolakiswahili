@@ -37,17 +37,24 @@ class view_baolakiswahili_baolakiswahili extends game_view
     global $g_user;
     $isFirst = (array_keys($players)[0] == $g_user->get_id());
 
-    // create 4 rows with 8 fields, scaling and shifting them according to the board perspective
+    // create 4 rows with 8 fields, scaling and shifting them according to the board perspective,
+    // and add blocks for storage areas
     if ($isFirst) {
       $this->createLine(1, 100, 100, 85, 22, -3, -1, $player2, 16, -1);
       $this->createLine(2, 104, 100, 70, 22, 0, -5, $player2, 1, +1);
       $this->createLine(3, 107, 98, 58, 49, -1, -8, $player1, 1, +1);
       $this->createLine(4, 111, 98, 45, 66, -5, -10, $player1, 16, -1);
+
+      $this->tpl['PLAYER1'] = $player1;
+      $this->tpl['PLAYER2'] = $player2;
     } else {
       $this->createLine(1, 100, 100, 85, 22, -3, -1, $player1, 9, +1);
       $this->createLine(2, 104, 100, 70, 22, 0, -5, $player1, 8, -1);
       $this->createLine(3, 107, 98, 58, 49, -1, -8, $player2, 8, -1);
       $this->createLine(4, 111, 98, 45, 66, -5, -10, $player2, 9, +1);
+
+      $this->tpl['PLAYER1'] = $player2;
+      $this->tpl['PLAYER2'] = $player1;
     }
 
     // translate labels

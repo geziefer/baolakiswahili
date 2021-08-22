@@ -96,6 +96,10 @@ class BaoLaKiswahili extends Table
             for ($i = 5; $i <= 16; $i++) {
                 $values[] = "('$player2', '$i', '0')";
             }
+
+            // all other stones are placed in front of board (represented by field 0)
+            $values[] = "('$player1', '0', '22')";
+            $values[] = "('$player2', '0', '22')";
         }
         else {
             // in other variants all bowls contain 2 stones

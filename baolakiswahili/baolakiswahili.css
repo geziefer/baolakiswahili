@@ -99,9 +99,10 @@
 
 .blk_seed_area {
     height: 75px;
-    width: 500px;
+    width: 300px;
     border-radius: 25px;
     border-color: black;
     border-style:dotted;
-    margin-left: 225px;
+    margin-left: 330px;
+    position: relative;
 }
