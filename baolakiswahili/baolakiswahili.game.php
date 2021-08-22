@@ -217,6 +217,17 @@ class BaoLaKiswahili extends Table
         return self::getUniqueValueFromDB($sql);
     }
 
+    // Gets the bowl number of the player's nyumba
+    function getNyumba($player_id)
+    {
+        // due to the way, the board is persisted in database, the position of the nyumba is 
+        // either 6 (for 1st player) or 4 (for 2nd player)
+        $sql = "SELECT player_no FROM player WHERE player_id = '$player_id'";
+        $playerNo = self::getUniqueValueFromDB($sql);
+
+        return $playerNo == 1 ? 5 : 4;
+    }
+
     // Hus variant: Possible bowls and their direction of a player's bowls with at least 2 stones
     function getHusPossibleMoves($player_id)
     {
@@ -235,7 +246,7 @@ class BaoLaKiswahili extends Table
         return $result;
     }
 
-    // step #1: if possible, a capture move has to be played
+    // mtaji phase step #1: if possible, a capture move has to be played
     function getMtajiPossibleCaptures($player_id)
     {
         $result = array();
@@ -276,7 +287,8 @@ class BaoLaKiswahili extends Table
         return $result;
     }
 
-    // step #2: if no harvest move was found, check for non-harvest moves
+    // mtaji phase step #2: if no harvest move was found, check for non-harvest moves,
+    // assumes that before the caputure step was checked
     function getMtajiPossibleNonCaptures($player_id)
     {
         $result = array();
@@ -340,6 +352,69 @@ class BaoLaKiswahili extends Table
         return $result;
     }
   
+    // kunamua phase step #1: if possible, a capture move has to be played
+    function getKunamuaPossibleCaptures($player_id)
+    {
+        $result = array();
+
+        $board = $this->getBoard();
+        $oponent = self::getPlayerAfter($player_id);
+
+        // check if any non-empty bowl in the 1st row has oposite stones
+        for ($i = 1; $i<= 8; $i++) {
+            $countPlayer = $board[$player_id][$i]["count"];
+            $countOponent = $board[$oponent][$i]["count"];
+
+            $subResult = array();
+            if ($countPlayer >= 1 && $countOponent >= 1) {
+                // left kichwa can or has to be chosen if capture happens lower than right kimbi
+                if ($i < 7 ) {
+                    $left = $i == 1 ? 16 : $i - 1;
+                    array_push($subResult, $left);
+                }
+                // right kichwa can or has to be chosen if capture happens higher than left kimbi
+                elseif ($i > 2) {
+                    $right = $i == 16 ? 1 : $i + 1;
+                    array_push($subResult, $right);
+                }
+
+                // only add to result if a harvest move was found
+                if (!empty($subResult)) {
+                    $result[$i] = $subResult;
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    // kunamua phase step #2: if no harvest move was found, check for non-harvest moves,
+    // assumes that before the caputure step was checked
+    function getKunamuaPossibleNonCaptures($player_id)
+    {
+        $result = array();
+
+        $board = $this->getBoard();
+        $nyumba = $this->getNyumba($player_id);
+        // check all bowl in the 1st row for stones
+        for ($i = 1; $i <= 8; $i++) {
+            // skip nyumba for now
+            if ($i != $nyumba && $board[$player_id][$i]["count"] >= 1) {
+                $left = $i == 1 ? 16 : $i - 1;
+                $right = $i + 1;
+                $result[$i] = array($left, $right);
+            }
+        }
+        // only add nyumba now if no other was found
+        if (empty($result) && $board[$player_id][$nyumba]["count"] >= 1) {
+            $left = $nyumba - 1;
+            $right = $nyumba + 1;
+            $result[$i] = array($left, $right);
+        }
+
+        return $result;
+    }
+
     // Determine destination field moving from given field in given direction (-1 / +1) a certain amount of fields
     function getDestinationField($field, $direction, $count)
     {
@@ -574,7 +649,6 @@ class BaoLaKiswahili extends Table
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// Kujifunza variant - kichwa selection
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // TODO: consider auto-select option as user preference when only 1 kichwa selection is possible
                 // kichwa after capture is selected, first get capture field from previous move and its content
                 $sql = "SELECT value_number FROM kvstore WHERE `key` = 'captureField'";
                 $captureField = $this->getUniqueValueFromDB($sql);
@@ -757,7 +831,20 @@ class BaoLaKiswahili extends Table
 
     function argKunamuaMoveSelection()
     {
+        // assume capture move
+        $capture = true;
+        $result = $this->getKunamuaPossibleCaptures(self::getActivePlayerId());
 
+        // if not possible do non-capture move
+        if (empty($result)) {
+            $capture = false;
+            $result = $this->getKunamuaPossibleNonCaptures(self::getActivePlayerId());
+        }
+
+        return array(
+            'possibleMoves' => $result,
+            'type' => $capture ? "capture" : "non-capture"
+        );
     }
 
     function argKunamuaCaptureSelection()

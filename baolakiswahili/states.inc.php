@@ -34,8 +34,8 @@ $machinestates = array(
     // First phase of kiswahili type, player selects a bowl, then a direction
     10 => array(
         "name" => "kunamuaMoveSelection",
-        "description" => clienttranslate('${actplayer} must place a seed and move'),
-        "descriptionmyturn" => clienttranslate('${you} must place a seed'),
+        "description" => clienttranslate('${actplayer} must place seed and make ${type} move'),
+        "descriptionmyturn" => clienttranslate('${you} must place seed for ${type} move'),
         "type" => "activeplayer",
         "args" => "argKunamuaMoveSelection",
         "possibleactions" => array("executeMove"),
@@ -56,8 +56,8 @@ $machinestates = array(
     // First phase decision of making safari
     12 => array(
         "name" => "kunamuaCaptureSelection",
-        "description" => clienttranslate('${actplayer} must select a kichwa'),
-        "descriptionmyturn" => clienttranslate('${you} must select a kichwa'),
+        "description" => clienttranslate('${actplayer} must select kichwa'),
+        "descriptionmyturn" => clienttranslate('${you} must select kichwa'),
         "type" => "activeplayer",
         "args" => "argKunamuaCaptureSelection",
         "possibleactions" => array("selectKichwa"),
@@ -78,8 +78,8 @@ $machinestates = array(
     // First phase player selects a kichwa after capture
     14 => array(
         "name" => "nyumbaTaxSelection",
-        "description" => clienttranslate('${actplayer} must tax the nyumba'),
-        "descriptionmyturn" => clienttranslate('${you} must tax the nyumba'),
+        "description" => clienttranslate('${actplayer} must tax nyumba'),
+        "descriptionmyturn" => clienttranslate('${you} must tax nyumba'),
         "type" => "activeplayer",
         "args" => "argNyumbaTaxSelection",
         "possibleactions" => array("taxNyumba"),
@@ -89,8 +89,8 @@ $machinestates = array(
     // Second phase or kujifunza type, player selects a pit, then a direction
     20 => array(
         "name" => "mtajiMoveSelection",
-        "description" => clienttranslate('${actplayer} must make a ${type} move'),
-        "descriptionmyturn" => clienttranslate('${you} must select a pit for ${type}'),
+        "description" => clienttranslate('${actplayer} must make ${type} move'),
+        "descriptionmyturn" => clienttranslate('${you} must select pit for ${type}'),
         "type" => "activeplayer",
         "args" => "argMtajiMoveSelection",
         "possibleactions" => array("executeMove"),
@@ -111,8 +111,8 @@ $machinestates = array(
     // Second phase or kujifunza type. Player selects a kichwa after capture
     22 => array(
         "name" => "mtajiCaptureSelection",
-        "description" => clienttranslate('${actplayer} must select a kichwa'),
-        "descriptionmyturn" => clienttranslate('${you} must select a kichwa'),
+        "description" => clienttranslate('${actplayer} must select kichwa'),
+        "descriptionmyturn" => clienttranslate('${you} must select kichwa'),
         "type" => "activeplayer",
         "args" => "argMtajiCaptureSelection",
         "possibleactions" => array("selectKichwa"),
@@ -122,8 +122,8 @@ $machinestates = array(
     // Second phase special move kutakatia
     23 => array(
         "name" => "kutakatiaMoveSelection",
-        "description" => clienttranslate('${actplayer} has a takasiaed pit and must make a move'),
-        "descriptionmyturn" => clienttranslate('${you} have a takasiaed pit and must make a move'),
+        "description" => clienttranslate('${actplayer} has takasiaed pit and must make a move'),
+        "descriptionmyturn" => clienttranslate('${you} have takasiaed pit and must make a move'),
         "type" => "activeplayer",
         "args" => "argTakasiaMoveSelection",
         "possibleactions" => array("executeMove"),

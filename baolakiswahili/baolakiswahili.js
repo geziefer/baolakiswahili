@@ -135,15 +135,7 @@ define([
                     switch (stateName) {
                         // independent of game mode, it always causes the bowls to be styled according to possible moves
                         case 'kunamuaMoveSelection':
-                            break;
                         case 'mtajiMoveSelection':
-                            this.updateBowlSelection(args.possibleMoves);
-
-                            if(args.capture) {
-                                
-                            }
-
-                            break;
                         case 'husMoveSelection':
                             this.updateBowlSelection(args.possibleMoves);
 
@@ -358,7 +350,7 @@ define([
 
                     // set new client state
                     this.setClientState('client_directionSelection', {
-                        descriptionmyturn: _('${you} must select a direction'),
+                        descriptionmyturn: _('${you} must select direction for ${type} move'),
                     });
 
                     return;
