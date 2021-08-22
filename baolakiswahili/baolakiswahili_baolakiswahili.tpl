@@ -16,7 +16,7 @@
 </script>
 
 <div id="blk_seed_area_{PLAYER2}" class="blk_seed_area" >
-    <div id="label_{PLAYER2}_0" class="blk_label">
+    <div id="label_{PLAYER2}_0" class="blk_label" style="margin-left:5px;">
         <p>2</p>
     </div>
 </div>
@@ -34,7 +34,7 @@
 </div>
 
 <div id="blk_seed_area_{PLAYER1}" class="blk_seed_area" >
-    <div id="label_{PLAYER1}_0" class="blk_label">
+    <div id="label_{PLAYER1}_0" class="blk_label" style="margin-left:5px;">
         <p>2</p>
     </div>
 </div>
