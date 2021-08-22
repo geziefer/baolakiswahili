@@ -56,21 +56,21 @@
 
 .blk_possibleBowl {
     cursor: pointer;  
-    background: radial-gradient( rgb(230, 214, 214), rgba(255, 255, 255, 0) 75%);    
+    background: radial-gradient( rgb(255, 255, 255), rgba(255, 255, 255, 0) 75%);    
 }
 
 .blk_selectedBowl {
     cursor: pointer;
-    background: radial-gradient( rgb(132, 246, 67), rgba(255, 255, 255, 0) 75%);    
+    background: radial-gradient( rgb(127, 128, 126), rgba(255, 255, 255, 0) 75%);    
 }
 
-.blk_capturedBowl {
-    background: radial-gradient( rgb(235, 98, 98), rgba(255, 255, 255, 0) 75%);    
+.blk_capturedBowl .blk_stone {
+    filter: brightness(125%);    
 }
 
 .blk_possibleDirection {
     cursor: pointer;  
-    background: radial-gradient( rgb(230, 214, 214), rgba(255, 255, 255, 0) 75%);    
+    background: radial-gradient( rgb(255, 255, 255), rgba(255, 255, 255, 0) 75%);    
 }
 
 .blk_possibleStone {
