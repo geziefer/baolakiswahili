@@ -369,13 +369,13 @@ class BaoLaKiswahili extends Table
             if ($countPlayer >= 1 && $countOponent >= 1) {
                 // left kichwa can or has to be chosen if capture happens lower than right kimbi
                 if ($i < 7 ) {
-                    $left = $i == 1 ? 16 : $i - 1;
-                    array_push($subResult, $left);
-                }
-                // right kichwa can or has to be chosen if capture happens higher than left kimbi
-                elseif ($i > 2) {
                     $right = $i == 16 ? 1 : $i + 1;
                     array_push($subResult, $right);
+                }
+                // right kichwa can or has to be chosen if capture happens higher than left kimbi
+                if ($i > 2) {
+                    $left = $i == 1 ? 16 : $i - 1;
+                    array_push($subResult, $left);
                 }
 
                 // only add to result if a harvest move was found
@@ -409,7 +409,7 @@ class BaoLaKiswahili extends Table
         if (empty($result) && $board[$player_id][$nyumba]["count"] >= 1) {
             $left = $nyumba - 1;
             $right = $nyumba + 1;
-            $result[$i] = array($left, $right);
+            $result[$nyumba] = array($left, $right);
         }
 
         return $result;
@@ -1069,24 +1069,24 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 10");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 9");
 
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 1");
-        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$oponent' AND field = 2");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 3");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 4");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$oponent' AND field = 1");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 2");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 3");
+        self::DbQuery("UPDATE board SET stones = 6 WHERE player = '$oponent' AND field = 4");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 5");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 6");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 7");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 8");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$oponent' AND field = 7");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$oponent' AND field = 8");
 
         // save test stones for active player
         self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 1");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 2");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 2");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 3");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 4");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 5");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 4");
+        self::DbQuery("UPDATE board SET stones = 6 WHERE player = '$player' AND field = 5");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 6");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 7");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 8");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 7");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 8");
 
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 16");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 15");
