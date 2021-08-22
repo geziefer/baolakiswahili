@@ -369,13 +369,11 @@ class BaoLaKiswahili extends Table
             if ($countPlayer >= 1 && $countOponent >= 1) {
                 // left kichwa can or has to be chosen if capture happens lower than right kimbi
                 if ($i < 7 ) {
-                    $right = $i == 16 ? 1 : $i + 1;
-                    array_push($subResult, $right);
+                    array_push($subResult, 1);
                 }
                 // right kichwa can or has to be chosen if capture happens higher than left kimbi
                 if ($i > 2) {
-                    $left = $i == 1 ? 16 : $i - 1;
-                    array_push($subResult, $left);
+                    array_push($subResult, 8);
                 }
 
                 // only add to result if a harvest move was found
@@ -511,7 +509,23 @@ class BaoLaKiswahili extends Table
 
         // Distinguish game mode for move check
         if ($this->getGameStateValue('game_variant') == VARIANT_KISWAHILI) {
-            // TODO
+            // Check that move is possible, distinguish action
+            if ($currentAction == 'executeMove') {
+                $possibleCaptures = $this->getKunamuaPossibleCaptures($player);
+                $possibleNonCaptures = array();
+                if (empty($possibleCaptures)) {
+                    $possibleNonCaptures = $this->getKunamuaPossibleNonCaptures($player);
+                }
+                if ((!array_key_exists($field, $possibleCaptures) || array_search($direction, $possibleCaptures[$field]) === false) &&
+                    (!array_key_exists($field, $possibleNonCaptures) || array_search($direction, $possibleNonCaptures[$field]) === false)) {
+                    throw new feException("Impossible move");
+                }
+            } elseif ($currentAction == 'selectKichwa') {
+                $possibleKichwas = $this->getMtajiPossibleKichwas($player);
+                if (!array_key_exists($field, $possibleKichwas) || array_search($direction, $possibleKichwas[$field]) === false) {
+                    throw new feException("Impossible move");
+                }
+            }
         } elseif ($this->getGameStateValue('game_variant') == VARIANT_KUJIFUNZA) {
             // Check that move is possible, distinguish action
             if ($currentAction == 'executeMove') {
