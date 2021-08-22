@@ -89,8 +89,8 @@ $machinestates = array(
     // Second phase or kujifunza type, player selects a pit, then a direction
     20 => array(
         "name" => "mtajiMoveSelection",
-        "description" => clienttranslate('${actplayer} must make a move'),
-        "descriptionmyturn" => clienttranslate('${you} must select a pit'),
+        "description" => clienttranslate('${actplayer} must make a ${type} move'),
+        "descriptionmyturn" => clienttranslate('${you} must select a pit for ${type}'),
         "type" => "activeplayer",
         "args" => "argMtajiMoveSelection",
         "possibleactions" => array("executeMove"),

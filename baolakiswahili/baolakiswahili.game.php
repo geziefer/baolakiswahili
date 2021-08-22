@@ -235,18 +235,6 @@ class BaoLaKiswahili extends Table
         return $result;
     }
 
-    // Mtaji phase of Kiswahili variant or Kujifunza variant
-    function getMtajiPossibleMoves($player_id)
-    {
-        $result = $this->getMtajiPossibleCaptures($player_id);
-
-        if (empty($result)) {
-            $result = $this->getMtajiPossibleNonCaptures($player_id);
-        }
-
-        return $result;
-    }
-
     // step #1: if possible, a capture move has to be played
     function getMtajiPossibleCaptures($player_id)
     {
@@ -789,8 +777,19 @@ class BaoLaKiswahili extends Table
 
     function argMtajiMoveSelection()
     {
+        // assume capture move
+        $capture = true;
+        $result = $this->getMtajiPossibleCaptures(self::getActivePlayerId());
+
+        // if not possible do non-capture move
+        if (empty($result)) {
+            $capture = false;
+            $result = $this->getMtajiPossibleNonCaptures(self::getActivePlayerId());
+        }
+
         return array(
-            'possibleMoves' => $this->getMtajiPossibleMoves(self::getActivePlayerId())
+            'possibleMoves' => $result,
+            'type' => $capture ? "capture" : "non-capture"
         );
     }
 
@@ -994,7 +993,7 @@ class BaoLaKiswahili extends Table
 
         // save test stones for active player
         self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 1");
-        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 2");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 2");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 3");
         self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 4");
         self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 5");
