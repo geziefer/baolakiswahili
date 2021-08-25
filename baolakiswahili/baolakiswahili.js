@@ -134,11 +134,6 @@ define([
                     switch (stateName) {
                         // independent of game mode, it always causes the bowls to be styled according to possible moves
                         case 'kunamuaMoveSelection':
-                            // store move type (capture or non-capture) in order to react differently later
-                            this.clientStateArgs.type = args.type;
-                            this.updateBowlSelection(args.possibleMoves);
-
-                            break;
                         case 'mtajiMoveSelection':
                         case 'husMoveSelection':
                             this.updateBowlSelection(args.possibleMoves);
@@ -374,17 +369,9 @@ define([
                         }, this, function (result) { });
                     } else {
                         // set new client state
-                        // distinguish move type if exists (which is set for kiswahili variant only)
-                        var type = this.clientStateArgs.type;
-                        if (typeof type !== 'undefined') {
-                            this.setClientState('client_directionSelection', {
-                                descriptionmyturn: _('${you} must select direction for ${type} move'),
-                            });
-                        } else {
-                            this.setClientState('client_directionSelection', {
-                                descriptionmyturn: _('${you} must select a kichwa for capture move'),
-                            });
-                        }
+                        this.setClientState('client_directionSelection', {
+                            descriptionmyturn: _('${you} must select direction for ${type} move'),
+                        });
                     }
 
                     return;

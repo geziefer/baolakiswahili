@@ -947,7 +947,8 @@ class BaoLaKiswahili extends Table
     function argCaptureSelection()
     {
         return array(
-            'possibleMoves' => $this->getPossibleKichwas(self::getActivePlayerId())
+            'possibleMoves' => $this->getPossibleKichwas(self::getActivePlayerId()),
+            'type' => ""
         );
     }
 
