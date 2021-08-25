@@ -376,7 +376,6 @@ define([
                         // set new client state
                         // distinguish move type if exists (which is set for kiswahili variant only)
                         var type = this.clientStateArgs.type;
-console.log(type);
                         if (typeof type !== 'undefined') {
                             this.setClientState('client_directionSelection', {
                                 descriptionmyturn: _('${you} must select direction for ${type} move'),
@@ -485,7 +484,7 @@ console.log(type);
             */
             notif_moveStones: function (notif) {
                 console.log('enter notif_moveStones');
-
+                
                 // Remove previously set css markers for possible and captured bowls, stones and directions
                 dojo.query('.blk_possibleDirection').removeClass('blk_possibleDirection');
                 dojo.query('.blk_selectedBowl').removeClass('blk_selectedBowl');
@@ -497,7 +496,6 @@ console.log(type);
                 var player = notif.args.player;
                 var oponent = notif.args.oponent;
                 var players = [player, oponent];
-console.log(players);
 
                 // get all stones in all circles and their stones to have them ready for the moves
                 // and avoid problems during animations and reattachement of html elements
@@ -584,7 +582,7 @@ console.log(players);
                         case "placeActive":
                             var id = 'circle_' + player + '_0';
                             var nodes = dojo.query('#' + id + ' > .blk_stone');
-                            var stone = nodes[0];
+                            var stone = nodes[0].id;
                             // change constructed animation to have positional offset
                             var currentAnimation = this.slideToObject(stone, 'circle_' + player + '_' + field, 333);
                             currentAnimation.properties.left += Math.floor((Math.random() * 11) - 5) * 2;

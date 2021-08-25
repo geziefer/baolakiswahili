@@ -13,6 +13,8 @@
     height: 493px;
     background-image: url('img/board.png');
     position: relative;
+    margin-top: 90px;
+    margin-bottom: 90px;
  }
 
 .blk_nyumba {
