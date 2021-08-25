@@ -334,8 +334,8 @@ class BaoLaKiswahili extends Table
         $moveDirection = $this->getUniqueValueFromDB($sql);
 
         // be sure that it is a valid bowl from front row and a valid direction
-        if($captureField < 1 || $captureField > 8 || abs($moveDirection) >= 1) {
-            throw new feException("Impossible move");  
+        if($captureField < 1 || $captureField > 8 || abs($moveDirection) > 1) {
+            throw new feException("Impossible move: capture field should be between 1 and 8 and direction between -1 and 1 when selecting possible kichwa");  
         }
 
         // left kichwa has to be chosen if capture happens in left kichwa or kimbi
@@ -355,7 +355,7 @@ class BaoLaKiswahili extends Table
         }
         // invalid combination
         else {
-            throw new feException("Impossible move");  
+            throw new feException("Impossible move: invalid combination for capture field and move direction when selecting possible kichwa");  
         }
 
         return $result;
@@ -502,7 +502,7 @@ class BaoLaKiswahili extends Table
         } elseif ($this->checkAction('selectKichwa', false)) {
             $currentAction = 'selectKichwa';
         } else {
-            throw new feException("This game action is impossible right now");
+            throw new feException("Impossible move: action is not executeMove or selectKichwa");
         }
 
         // Distinguish game mode for move check
@@ -516,12 +516,12 @@ class BaoLaKiswahili extends Table
                 }
                 if ((!array_key_exists($field, $possibleCaptures) || array_search($direction, $possibleCaptures[$field]) === false) &&
                     (!array_key_exists($field, $possibleNonCaptures) || array_search($direction, $possibleNonCaptures[$field]) === false)) {
-                    throw new feException("Impossible move");
+                    throw new feException("Impossible move: move to execute is not in possible caputures or possible non-captures");
                 }
             } elseif ($currentAction == 'selectKichwa') {
                 $possibleKichwas = $this->getPossibleKichwas($player);
                 if (!array_key_exists($field, $possibleKichwas) || array_search($direction, $possibleKichwas[$field]) === false) {
-                    throw new feException("Impossible move");
+                    throw new feException("Impossible move: move to execute is not in possible kichwas");
                 }
             }
         } elseif ($this->getGameStateValue('game_variant') == VARIANT_KUJIFUNZA) {
@@ -534,23 +534,23 @@ class BaoLaKiswahili extends Table
                 }
                 if ((!array_key_exists($field, $possibleCaptures) || array_search($direction, $possibleCaptures[$field]) === false) &&
                     (!array_key_exists($field, $possibleNonCaptures) || array_search($direction, $possibleNonCaptures[$field]) === false)) {
-                    throw new feException("Impossible move");
+                    throw new feException("Impossible move: move to execute is not in possible caputures or possible non-captures");
                 }
             } elseif ($currentAction == 'selectKichwa') {
                 $possibleKichwas = $this->getPossibleKichwas($player);
                 if (!array_key_exists($field, $possibleKichwas) || array_search($direction, $possibleKichwas[$field]) === false) {
-                    throw new feException("Impossible move");
+                    throw new feException("Impossible move: move to execute is not in possible kichwas");
                 }
             }
         } elseif ($this->getGameStateValue('game_variant') == VARIANT_HUS) {
             // Check that move is possible
             $possibleMoves = $this->getHusPossibleMoves($player);
             if (!array_key_exists($field, $possibleMoves) || array_search($direction, $possibleMoves[$field]) === false) {
-                throw new feException("Impossible move");
+                throw new feException("Impossible move: move to execute is not in possible moves");
             }
         } else {
             // error in options
-            throw new feException("Impossible option for move");
+            throw new feException("Impossible move: games option does not exist");
         }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
