@@ -59,9 +59,9 @@ $machinestates = array(
         "description" => clienttranslate('${actplayer} must select kichwa'),
         "descriptionmyturn" => clienttranslate('${you} must select kichwa'),
         "type" => "activeplayer",
-        "args" => "argKunamuaCaptureSelection",
+        "args" => "argCaptureSelection",
         "possibleactions" => array("selectKichwa"),
-        "transitions" => array("selectKichwa" => 11, "zombiePass" => 11)
+        "transitions" => array("executeMove" => 11, "zombiePass" => 11)
     ),
 
     // First phase decision of making safari
@@ -114,7 +114,7 @@ $machinestates = array(
         "description" => clienttranslate('${actplayer} must select kichwa'),
         "descriptionmyturn" => clienttranslate('${you} must select kichwa'),
         "type" => "activeplayer",
-        "args" => "argMtajiCaptureSelection",
+        "args" => "argCaptureSelection",
         "possibleactions" => array("selectKichwa"),
         "transitions" => array("executeMove" => 21, "zombiePass" => 21)
     ),

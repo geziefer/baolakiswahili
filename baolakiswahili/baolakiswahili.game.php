@@ -107,6 +107,10 @@ class BaoLaKiswahili extends Table
                 $values[] = "('$player1', '$i', '2')";
                 $values[] = "('$player2', '$i', '2')";
             }
+
+            // no stones in storage area
+            $values[] = "('$player1', '0', '0')";
+            $values[] = "('$player2', '0', '0')";
         }
 
         $sql .= implode(',', $values);
@@ -316,8 +320,8 @@ class BaoLaKiswahili extends Table
         return $result;
     }
 
-    // move from kichwa after capture
-    function getMtajiPossibleKichwas($player_id)
+    // move from kichwa after capture in Kiswahili or Kujifunza variant
+    function getPossibleKichwas($player_id)
     {
         $result = array();
 
@@ -330,7 +334,7 @@ class BaoLaKiswahili extends Table
         $moveDirection = $this->getUniqueValueFromDB($sql);
 
         // be sure that it is a valid bowl from front row and a valid direction
-        if($captureField < 1 || $captureField > 8 || abs($moveDirection) != 1) {
+        if($captureField < 1 || $captureField > 8 || abs($moveDirection) >= 1) {
             throw new feException("Impossible move");  
         }
 
@@ -342,6 +346,11 @@ class BaoLaKiswahili extends Table
         // right kichwa has to be chosen if capture happens in right kichwa or kimbi
         // or direction from previous move was already counterclockwise without capture in left kichwa or kimbi
         elseif ($captureField >= 7 || ($moveDirection == -1 && $captureField > 2)) {
+            $result[8] = array(7, $oponent.'_'.$captureField);
+        }
+        // both kichwas may be chosen if capture happens in middle and direction is not yet set
+        elseif ($moveDirection == 0 && $captureField > 2 && $captureField < 7) {
+            $result[1] = array(2, $oponent.'_'.$captureField);
             $result[8] = array(7, $oponent.'_'.$captureField);
         }
         // invalid combination
@@ -365,21 +374,9 @@ class BaoLaKiswahili extends Table
             $countPlayer = $board[$player_id][$i]["count"];
             $countOponent = $board[$oponent][$i]["count"];
 
-            $subResult = array();
+            //  add to result if a harvest move was found, direction is not yet set
             if ($countPlayer >= 1 && $countOponent >= 1) {
-                // left kichwa can or has to be chosen if capture happens lower than right kimbi
-                if ($i < 7 ) {
-                    array_push($subResult, 1);
-                }
-                // right kichwa can or has to be chosen if capture happens higher than left kimbi
-                if ($i > 2) {
-                    array_push($subResult, 8);
-                }
-
-                // only add to result if a harvest move was found
-                if (!empty($subResult)) {
-                    $result[$i] = $subResult;
-                }
+                $result[$i] = array(0);
             }
         }
 
@@ -494,6 +491,7 @@ class BaoLaKiswahili extends Table
     // game modes are distinguished here to exeute it
     function executeMove($player, $field, $direction)
     {
+        self::trace('*** executeMove was called by client with parameters player='.$player.', field='.$field.', direction='.$direction.'.');
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// Action checks and move checks for all variants
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -521,7 +519,7 @@ class BaoLaKiswahili extends Table
                     throw new feException("Impossible move");
                 }
             } elseif ($currentAction == 'selectKichwa') {
-                $possibleKichwas = $this->getMtajiPossibleKichwas($player);
+                $possibleKichwas = $this->getPossibleKichwas($player);
                 if (!array_key_exists($field, $possibleKichwas) || array_search($direction, $possibleKichwas[$field]) === false) {
                     throw new feException("Impossible move");
                 }
@@ -539,7 +537,7 @@ class BaoLaKiswahili extends Table
                     throw new feException("Impossible move");
                 }
             } elseif ($currentAction == 'selectKichwa') {
-                $possibleKichwas = $this->getMtajiPossibleKichwas($player);
+                $possibleKichwas = $this->getPossibleKichwas($player);
                 if (!array_key_exists($field, $possibleKichwas) || array_search($direction, $possibleKichwas[$field]) === false) {
                     throw new feException("Impossible move");
                 }
@@ -559,9 +557,13 @@ class BaoLaKiswahili extends Table
     /// Common preparations for all variants
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Common move execution preparation
-        // we only want to have -1 or +1, thus correct if overflown
-        $moveDirection = $direction - $field;
-        $moveDirection = (abs($moveDirection) > 1) ? $moveDirection / -15 : $moveDirection;
+        // we only want to have -1 or +1, thus correct if overflown, exclude unset direction
+        if ($direction == 0) {
+            $moveDirection = 0;
+        } else {
+            $moveDirection = $direction - $field;
+            $moveDirection = (abs($moveDirection) > 1) ? $moveDirection / -15 : $moveDirection;
+        }
 
         // get start situation
         $oponent = $this->getPlayerAfter($player);
@@ -584,10 +586,8 @@ class BaoLaKiswahili extends Table
         // emptyOponent: empty oponent's field
         // moveActive: move own stones to field
         // move Oponent: move oponent's captured stones to field
+        // placeActive: place a new stone from storage into field
         $moves = array();
-
-        // get stones for move
-        $count = $board[$player][$sourceField]["count"];
 
         // for statistics - total number of stones moved from player
         $overallMoved = 0;
@@ -597,95 +597,35 @@ class BaoLaKiswahili extends Table
         $overallEmptied = 0;
 
         // Distinguish game mode for move execution
-        if ($this->getGameStateValue('game_variant') == VARIANT_KISWAHILI) {
+        if ($this->getGameStateValue('game_variant') == VARIANT_KISWAHILI && $currentAction == 'executeMove') {
+            // take bowl out of storage area and put in bowl 
+            $board[$player][0]["count"] -= 1;
+            $board[$player][$sourceField]["count"] += 1;
+            array_push($moves, "placeActive_" . $sourceField);
+            $overallMoved += 1;
+
+            // get stones for move
+            $count = $board[$player][$sourceField]["count"];
+
+            // distinguish capture and non-capture move
+            if (!empty($possibleCaptures)) {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /// Kiswahili variant
+    /// Kiswahili variant - capture move
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            // TODO
-        } elseif ($this->getGameStateValue('game_variant') == VARIANT_KUJIFUNZA) {
-            // distinguish action for type of move
-            if ($currentAction == 'executeMove') {
+                // this is a capture move, further captures are allowed and captured stones require player action,
+                // do nothing more than to prepare for next part of move in different state, since player has to select kichwa
+                $stateAfterMove = 'continueCapture';
+                $captureField = $sourceField;
+            } else {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /// Kujifunza variant - move
+    /// Kiswahili variant - non-capture move
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                // empty start field
+                // this is a non-capture move, no further captures are allowed, move only continues in own two rows,
+                // first empty start field, then make moves until last field was empty before putting stone
                 $board[$player][$sourceField]["count"] = 0;
                 array_push($moves, "emptyActive_" . $sourceField);
                 $overallMoved += $count;
-
-            // distinguish capture and non-capture move
-                if (!empty($possibleCaptures)) {
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /// Kujifunza variant - capture move
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                    // this is a capture move, further captures are allowed and captured stones require player action
-                    // distribute stones in the next fields in selected direction until last one which has to be a capture
-                    while ($count > 0) {
-                        // calculate next field to move to and leave 1 stone
-                        $destinationField = $this->getNextField($sourceField, $moveDirection);
-                        $board[$player][$destinationField]["count"] += 1;
-                        array_push($moves, "moveActive_" . $destinationField);
-                        $sourceField = $destinationField;
-                        $count -= 1;
-                    }
-                    // prepare for next part of move in different state, since player has to select kichwa
-                    $stateAfterMove = 'continueCapture';
-                    $captureField = $destinationField;
-                } else {
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /// Kujifunza variant - non-capture move
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                    // this is a non-capture move, no further captures are allowed, move only continues in own two rows
-                    // make moves until last field was empty before putting stone
-                    while ($count > 1) {
-                        // distribute stones in the next fields in selected direction until last one
-                        while ($count > 0) {
-                            // calculate next field to move to and leave 1 stone
-                            $destinationField = $this->getNextField($sourceField, $moveDirection);
-                            $board[$player][$destinationField]["count"] += 1;
-                            array_push($moves, "moveActive_" . $destinationField);
-                            $sourceField = $destinationField;
-                            $count -= 1;
-                        }
-
-                        // source field now points to field of last put stone
-                        $count = $board[$player][$sourceField]["count"];
-
-                        // empty own bowl for next move if it ends in non-empty bowl
-                        if ($count > 1) {
-                            $board[$player][$sourceField]["count"] = 0;
-                            array_push($moves, "emptyActive_" . $sourceField);
-                            $overallMoved += $count;
-                        }
-                    }
-                }
-            } elseif ($currentAction == 'selectKichwa') {
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /// Kujifunza variant - kichwa selection
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                // kichwa after capture is selected, first get capture field from previous move and its content
-                $sql = "SELECT value_number FROM kvstore WHERE `key` = 'captureField'";
-                $captureField = $this->getUniqueValueFromDB($sql);
-                $captureCount = $board[$oponent][$captureField]["count"];
-
-                // start with emptying oponent's bowl
-                array_push($moves, "emptyOponent_" . $captureField);
-                $overallMoved += $count;
-                $overallStolen += $count;
-                $overallEmptied += 1;
-                $board[$oponent][$captureField]["count"] = 0;
-
-                // the move takes captured stones and starts with kichwa,
-                // as every move always goes to next field, we go back one field (inverted direction) 
-                // for start of move (sourceField) in order to have same behaviour later as for regular moves
-                $count = $captureCount;
-                $sourceField = $this->getNextField($sourceField, $moveDirection * (-1));
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /// Kujifunza variant - move after kichwa selection
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                // move on until next capture or empty bowl,
-                // condition is checked at the end, since here it is possible to move only 1 stone from capture
-                do {
+                while ($count > 1) {
                     // distribute stones in the next fields in selected direction until last one
                     while ($count > 0) {
                         // calculate next field to move to and leave 1 stone
@@ -696,37 +636,146 @@ class BaoLaKiswahili extends Table
                         $count -= 1;
                     }
 
-                    // check if oponent has lost and stop moves if lost
-                    $scoreOponent = $this->getScore($oponent, $board);
-                    if ($scoreOponent == 0) {
-                        break;
-                    }
-                    
                     // source field now points to field of last put stone
                     $count = $board[$player][$sourceField]["count"];
 
-                    // if move ends in a non-empty bowl, move continues
+                    // empty own bowl for next move if it ends in non-empty bowl
                     if ($count > 1) {
-                        // check if move has another capture
-                        if ($sourceField <= 8 && $board[$oponent][$sourceField]["count"] > 0) {
-                            // prepare for next part of move in different state, since player has to select kichwa
-                            $stateAfterMove = 'continueCapture';
-                            $captureField = $sourceField;
-                            // clear count to leave loop
-                            $count = 0;
-                        } else {
-                            // empty own bowl for next move
-                            $board[$player][$sourceField]["count"] = 0;
-                            array_push($moves, "emptyActive_" . $sourceField);
-                            $overallMoved += $count;
-                        }
+                        $board[$player][$sourceField]["count"] = 0;
+                        array_push($moves, "emptyActive_" . $sourceField);
+                        $overallMoved += $count;
                     }
-                } while ($count > 1);
+                }
             }
+        } elseif ($this->getGameStateValue('game_variant') == VARIANT_KUJIFUNZA && $currentAction == 'executeMove') {
+            // get stones for move
+            $count = $board[$player][$sourceField]["count"];
+
+            // empty start field
+            $board[$player][$sourceField]["count"] = 0;
+            array_push($moves, "emptyActive_" . $sourceField);
+            $overallMoved += $count;
+
+            // distinguish capture and non-capture move
+            if (!empty($possibleCaptures)) {
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// Kujifunza variant - capture move
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // this is a capture move, further captures are allowed and captured stones require player action,
+                // distribute stones in the next fields in selected direction until last one which has to be a capture
+                while ($count > 0) {
+                    // calculate next field to move to and leave 1 stone
+                    $destinationField = $this->getNextField($sourceField, $moveDirection);
+                    $board[$player][$destinationField]["count"] += 1;
+                    array_push($moves, "moveActive_" . $destinationField);
+                    $sourceField = $destinationField;
+                    $count -= 1;
+                }
+                // prepare for next part of move in different state, since player has to select kichwa
+                $stateAfterMove = 'continueCapture';
+                $captureField = $destinationField;
+            } else {
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// Kujifunza variant - non-capture move
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // this is a non-capture move, no further captures are allowed, move only continues in own two rows,
+                // make moves until last field was empty before putting stone
+                while ($count > 1) {
+                    // distribute stones in the next fields in selected direction until last one
+                    while ($count > 0) {
+                        // calculate next field to move to and leave 1 stone
+                        $destinationField = $this->getNextField($sourceField, $moveDirection);
+                        $board[$player][$destinationField]["count"] += 1;
+                        array_push($moves, "moveActive_" . $destinationField);
+                        $sourceField = $destinationField;
+                        $count -= 1;
+                    }
+
+                    // source field now points to field of last put stone
+                    $count = $board[$player][$sourceField]["count"];
+
+                    // empty own bowl for next move if it ends in non-empty bowl
+                    if ($count > 1) {
+                        $board[$player][$sourceField]["count"] = 0;
+                        array_push($moves, "emptyActive_" . $sourceField);
+                        $overallMoved += $count;
+                    }
+                }
+            }
+        } elseif (($this->getGameStateValue('game_variant') == VARIANT_KISWAHILI || $this->getGameStateValue('game_variant') == VARIANT_KUJIFUNZA) 
+            && $currentAction == 'selectKichwa') {
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// Kiwvahili or Kujifunza variant - kichwa selection
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // get stones for move
+            $count = $board[$player][$sourceField]["count"];
+
+            // kichwa after capture is selected, first get capture field from previous move and its content
+            $sql = "SELECT value_number FROM kvstore WHERE `key` = 'captureField'";
+            $captureField = $this->getUniqueValueFromDB($sql);
+            $captureCount = $board[$oponent][$captureField]["count"];
+
+            // start with emptying oponent's bowl
+            array_push($moves, "emptyOponent_" . $captureField);
+            $overallMoved += $count;
+            $overallStolen += $count;
+            $overallEmptied += 1;
+            $board[$oponent][$captureField]["count"] = 0;
+
+            // the move takes captured stones and starts with kichwa,
+            // as every move always goes to next field, we go back one field (inverted direction) 
+            // for start of move (sourceField) in order to have same behaviour later as for regular moves
+            $count = $captureCount;
+            $sourceField = $this->getNextField($sourceField, $moveDirection * (-1));
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// Kiwvahili or Kujifunza variant - move after kichwa selection
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // move on until next capture or empty bowl,
+            // condition is checked at the end, since here it is possible to move only 1 stone from capture
+            do {
+                // distribute stones in the next fields in selected direction until last one
+                while ($count > 0) {
+                    // calculate next field to move to and leave 1 stone
+                    $destinationField = $this->getNextField($sourceField, $moveDirection);
+                    $board[$player][$destinationField]["count"] += 1;
+                    array_push($moves, "moveActive_" . $destinationField);
+                    $sourceField = $destinationField;
+                    $count -= 1;
+                }
+
+                // check if oponent has lost and stop moves if lost
+                $scoreOponent = $this->getScore($oponent, $board);
+                if ($scoreOponent == 0) {
+                    break;
+                }
+                
+                // source field now points to field of last put stone
+                $count = $board[$player][$sourceField]["count"];
+
+                // if move ends in a non-empty bowl, move continues
+                if ($count > 1) {
+                    // check if move has another capture
+                    if ($sourceField <= 8 && $board[$oponent][$sourceField]["count"] > 0) {
+                        // prepare for next part of move in different state, since player has to select kichwa
+                        $stateAfterMove = 'continueCapture';
+                        $captureField = $sourceField;
+                        // clear count to leave loop
+                        $count = 0;
+                    } else {
+                        // empty own bowl for next move
+                        $board[$player][$sourceField]["count"] = 0;
+                        array_push($moves, "emptyActive_" . $sourceField);
+                        $overallMoved += $count;
+                    }
+                }
+            } while ($count > 1);
         } elseif ($this->getGameStateValue('game_variant') == VARIANT_HUS) {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /// Hus variant
+    /// Hus variant - both capture and non-capture move
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // get stones for move
+            $count = $board[$player][$sourceField]["count"];
+
             // empty start field
             $board[$player][$sourceField]["count"] = 0;
             array_push($moves, "emptyActive_" . $sourceField);
@@ -785,7 +834,7 @@ class BaoLaKiswahili extends Table
         // Common move finish
         // save all changed fields and update score
         foreach ($players as $player_id) {
-            for ($field = 1; $field <= 16; $field++) {
+            for ($field = 0; $field <= 16; $field++) {
                 $count = $board[$player_id][$field]["count"];
                 $countBackup = $board[$player_id][$field]["countBackup"];
                 if ($count <> $countBackup) {
@@ -802,8 +851,14 @@ class BaoLaKiswahili extends Table
         self::incStat($overallStolen, "overallStolen", $player);
 
         // notify players of all moves
-        $messageDirection = ($moveDirection < 0) ? 'clockwise' : 'counterclockwise';
-        $message = clienttranslate('${player_name} moved ${message_direction_translated} from field ${selected_field} to field ${source_field} in total ${overall_moved} stone(s), emptying ${overall_emptied} bowl(s) and having stolen ${overall_stolen} stone(s).');
+        if ($moveDirection < 0) {
+            $messageDirection = 'clockwise';
+        } elseif ($moveDirection > 0) {
+            $messageDirection = 'counterclockwise';
+        } else {
+            $messageDirection = 'without direction';
+        }
+        $message = clienttranslate('${player_name} moved ${message_direction_translated} from pit ${selected_field} to pit ${source_field} in total ${overall_moved} seed(s), emptying ${overall_emptied} pit(s) and having stolen ${overall_stolen} seed(s).');
         self::notifyAllPlayers("moveStones", $message, array(
             'i18n' => array('message_direction_translated'),
             'player' => $player,
@@ -861,11 +916,6 @@ class BaoLaKiswahili extends Table
         );
     }
 
-    function argKunamuaCaptureSelection()
-    {
-
-    }
-
     function argSafariDecision()
     {
 
@@ -894,10 +944,10 @@ class BaoLaKiswahili extends Table
         );
     }
 
-    function argMtajiCaptureSelection()
+    function argCaptureSelection()
     {
         return array(
-            'possibleMoves' => $this->getMtajiPossibleKichwas(self::getActivePlayerId())
+            'possibleMoves' => $this->getPossibleKichwas(self::getActivePlayerId())
         );
     }
 
@@ -1083,24 +1133,24 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 10");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 9");
 
-        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$oponent' AND field = 1");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 2");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 3");
-        self::DbQuery("UPDATE board SET stones = 6 WHERE player = '$oponent' AND field = 4");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 5");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 1");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 2");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 3");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 4");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 5");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 6");
-        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$oponent' AND field = 7");
-        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$oponent' AND field = 8");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 7");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 8");
 
         // save test stones for active player
-        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 1");
-        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 2");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 1");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 2");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 3");
         self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 4");
-        self::DbQuery("UPDATE board SET stones = 6 WHERE player = '$player' AND field = 5");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 6");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 5");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 6");
         self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 7");
-        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 8");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 8");
 
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 16");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 15");

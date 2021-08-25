@@ -66,7 +66,7 @@ define([
                 dojo.query('.blk_circle').connect('onclick', this, 'onBowl');
 
                 // click handler for preference change by checkbox
-                dojo.query('#blk_checkbox_kichwa_mode').connect('onclick', this, 'onPrefCheckbox');
+                dojo.query('#checkbox_kichwa_mode').connect('onclick', this, 'onPrefCheckbox');
 
                 // Setup game notifications to handle (see "setupNotifications" method below)
                 this.setupNotifications();
@@ -76,18 +76,17 @@ define([
 
                 // hide preference box if HUS variant
                 if (gamedatas.variant == VARIANT_HUS) {
-                    dojo.query('#blk_preferences').style('display', 'none');
+                    dojo.byId('preferences').style('display', 'none');
                 } else {
                     // set pref checkbox from user preference and connect with change handler for other variants
-                    document.getElementById("blk_checkbox_kichwa_mode").checked = (this.prefs[PREF_KICHWA_MODE].value == PREF_KICHWA_MODE_AUTOMATIC) ? true : false;
+                    dojo.byId('checkbox_kichwa_mode').checked = (this.prefs[PREF_KICHWA_MODE].value == PREF_KICHWA_MODE_AUTOMATIC) ? true : false;
                     this.setupPreference();
                 }
 
                 // hide seed area and nyumbas if not KISWAHILI variant
                 if  (gamedatas.variant != VARIANT_KISWAHILI) {
                     dojo.query('.blk_seed_area').style('display', 'none');
-                    dojo.query('#blk_nyumba_player').style('display', 'none');
-                    dojo.query('#blk_nyumba_oponent').style('display', 'none');
+                    dojo.query('.blk_nyumba').style('display', 'none');
                 }
 
                 console.log("Ending game setup");
@@ -153,6 +152,7 @@ define([
                             this.updateMoveDirection(args.possibleMoves);
 
                             break;
+                        case 'kunamuaCaptureSelection':
                         case 'mtajiCaptureSelection':
                             var count = Object.keys(args.possibleMoves).length;
                             if (count == 1 && this.prefs[PREF_KICHWA_MODE].value == PREF_KICHWA_MODE_AUTOMATIC) {
@@ -199,7 +199,7 @@ define([
                         left: Math.floor(((Math.random() * 45) - 2) * 5) + 40,
                         top: Math.floor(((Math.random() * 5) - 1) * 5) + 15,
                         degree: Math.floor((Math.random() * 73) * 5)
-                    }), 'blk_seed_area_' + player);
+                    }), 'circle_' + player + '_0');
                 } else {
                     dojo.place(this.format_block('jstpl_stone', {
                         no: number,
@@ -218,6 +218,7 @@ define([
                 if (this.isCurrentPlayerActive()) {
                     var player = this.getActivePlayerId();
                     // Remove previously set css markers for possible and captured bowls, stones and directions
+                    dojo.query('.blk_possibleBowl').removeClass('blk_possibleBowl');
                     dojo.query('.blk_possibleDirection').removeClass('blk_possibleDirection');
                     dojo.query('.blk_selectedBowl').removeClass('blk_selectedBowl');
                     dojo.query('.blk_possibleStone').removeClass('blk_possibleStone');
@@ -229,12 +230,21 @@ define([
                         // every entry in this array is a possible bowl
                         dojo.addClass('circle_' + player + '_' + field, 'blk_possibleBowl');
 
-                        // check if entry contains captured field
-                        for (var capturefield of possibleMoves[field]) {
-                            if (typeof capturefield === 'string') {
-                                // capturefield has format '<playerid>_<field>'
-                                // mark oponent's bowl
-                                dojo.addClass('circle_' + capturefield, 'blk_capturedBowl');
+                        // check if entry is empty, so no direction is set
+                        if (possibleMoves[field][0] == 0) {
+                            // remember empty direction
+                            this.clientStateArgs.direction = 0;
+                        } else {
+                            // clean possibly set empty direction
+                            delete this.clientStateArgs.direction;
+
+                            // check if entry contains captured field
+                            for (var capturefield of possibleMoves[field]) {
+                                if (typeof capturefield === 'string') {
+                                    // capturefield has format '<playerid>_<field>'
+                                    // mark oponent's bowl
+                                    dojo.addClass('circle_' + capturefield, 'blk_capturedBowl');
+                                }
                             }
                         }
                     }
@@ -302,7 +312,7 @@ define([
                 // only consider game preferences
                 if (prefId >= 100 && prefId <= 199) {
                     console.log("Preference changed", prefId, prefValue);
-                    document.getElementById("blk_checkbox_kichwa_mode").checked = (this.prefs[PREF_KICHWA_MODE].value == PREF_KICHWA_MODE_AUTOMATIC) ? true : false;
+                    dojo.byId("checkbox_kichwa_mode").checked = (this.prefs[PREF_KICHWA_MODE].value == PREF_KICHWA_MODE_AUTOMATIC) ? true : false;
                 }   
             },
             updatePreference: function(prefId, newValue) {
@@ -353,17 +363,29 @@ define([
                     // remember selected field in client
                     this.clientStateArgs.field = field;
 
-                    // set new client state
-                    // distinguish move type if exists (which is set for kiswahili variant only)
-                    var type = this.clientStateArgs.type;
-                    if (typeof type === 'undefined' || type === 'non-capture') {
-                        this.setClientState('client_directionSelection', {
-                            descriptionmyturn: _('${you} must select direction for ${type} move'),
-                        });
+                    // check if no direction is set, since this immediately triggers server call without further client state
+                    if (this.clientStateArgs.direction == 0) {                    
+                        // call server, game mode will be handled there
+                        this.ajaxcall("/baolakiswahili/baolakiswahili/executeMove.html", {
+                            lock: true,
+                            player: player,
+                            field: field,
+                            direction: 0
+                        }, this, function (result) { });
                     } else {
-                        this.setClientState('client_directionSelection', {
-                            descriptionmyturn: _('${you} must select a kichwa for capture move'),
-                        });
+                        // set new client state
+                        // distinguish move type if exists (which is set for kiswahili variant only)
+                        var type = this.clientStateArgs.type;
+console.log(type);
+                        if (typeof type !== 'undefined') {
+                            this.setClientState('client_directionSelection', {
+                                descriptionmyturn: _('${you} must select direction for ${type} move'),
+                            });
+                        } else {
+                            this.setClientState('client_directionSelection', {
+                                descriptionmyturn: _('${you} must select a kichwa for capture move'),
+                            });
+                        }
                     }
 
                     return;
@@ -418,7 +440,7 @@ define([
                  console.log("Preference " + prefId + " set to " + value);
 
                  // update user preference
-                 if (prefId == "blk_checkbox_kichwa_mode") {
+                 if (prefId == "checkbox_kichwa_mode") {
                      this.updatePreference(PREF_KICHWA_MODE, value ? PREF_KICHWA_MODE_AUTOMATIC : PREF_KICHWA_MODE_MANUAL);
                  }
             },
@@ -475,11 +497,12 @@ define([
                 var player = notif.args.player;
                 var oponent = notif.args.oponent;
                 var players = [player, oponent];
+console.log(players);
 
                 // get all stones in all circles and their stones to have them ready for the moves
                 // and avoid problems during animations and reattachement of html elements
                 var circles = new Map();
-                for (i = 1; i <= 16; i++) {
+                for (i = 0; i <= 16; i++) {
                     for (p of players) {
                         var id = 'circle_' + p + '_' + i;
                         var circle = dojo.byId(id);
@@ -540,7 +563,7 @@ define([
                             stones.push(stone);
                             break;
                         case "moveOponent":
-                            // move all emtied stones of captured field to own field (adjacent or selected kichwa)
+                            // move all emptied stones of captured field to own field (adjacent or selected kichwa)
                             var combinedAnimation = [];
                             for (var id = 0; id < movingStones.length; id++) {
                                 var stone = movingStones[id];
@@ -558,7 +581,20 @@ define([
                             var stones = circles.get('circle_' + player + '_' + field);
                             stones.push(stone);
                             break;
-                        }
+                        case "placeActive":
+                            var id = 'circle_' + player + '_0';
+                            var nodes = dojo.query('#' + id + ' > .blk_stone');
+                            var stone = nodes[0];
+                            // change constructed animation to have positional offset
+                            var currentAnimation = this.slideToObject(stone, 'circle_' + player + '_' + field, 333);
+                            currentAnimation.properties.left += Math.floor((Math.random() * 11) - 5) * 2;
+                            currentAnimation.properties.top += Math.floor((Math.random() * 11) - 5) * 2;
+                            animations.push(currentAnimation);
+                            // put stone in new field
+                            var stones = circles.get('circle_' + player + '_' + field);
+                            stones.push(stone);
+                            break;
+                    }
                 }
 
                 // chain all animations to one in order 

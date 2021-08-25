@@ -8,25 +8,27 @@
  * -----
  */
 
- #blk_board {
+ #board {
     width: 960px;
     height: 493px;
     background-image: url('img/board.png');
     position: relative;
  }
 
- #blk_nyumba_player {
+.blk_nyumba {
+    position: absolute;
+}
+
+ #nyumba_player {
     width: 111px;
     height: 105px;
     background-image: url('img/nyumba_player.png');
-    position: absolute;
  }
 
- #blk_nyumba_oponent {
+ #nyumba_oponent {
     width: 108px;
     height: 99px;
     background-image: url('img/nyumba_oponent.png');
-    position: absolute;
  }
 
 .blk_circle {
@@ -81,7 +83,7 @@
     filter: brightness(125%);
 }
 
-#blk_preferences {
+#preferences {
     grid-column: 2/4;
     grid-row: 9;
 }
