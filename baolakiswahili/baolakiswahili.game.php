@@ -948,7 +948,7 @@ class BaoLaKiswahili extends Table
     {
         return array(
             'possibleMoves' => $this->getPossibleKichwas(self::getActivePlayerId()),
-            'type' => ""
+            'type' => "kichwa"
         );
     }
 

@@ -102,6 +102,13 @@ define([
             onEnteringState: function (stateName, args) {
                 console.log('Entering state: ' + stateName);
 
+                // save type of move for later usage if exists
+                var type = "";
+                if(!!args.args) {
+                    type = args.args.type;
+                }
+                this.clientStateArgs.type = type;
+
                 // states are distinguished in onUpdateActionButtons due to client states
                 switch (stateName) {
                 }
@@ -259,6 +266,7 @@ define([
                     // Remove previously set css markers for possible bowls, stones and directions
                     dojo.query('.blk_possibleBowl').removeClass('blk_possibleBowl');
                     dojo.query('.blk_possibleStone').removeClass('blk_possibleStone');
+                    dojo.query('.blk_possibleDirection').removeClass('blk_possibleDirection');
 
                     // change selected bowl for cancelling
                     dojo.addClass('circle_' + player + '_' + this.clientStateArgs.field, 'blk_selectedBowl');
@@ -367,6 +375,18 @@ define([
                             field: field,
                             direction: 0
                         }, this, function (result) { });
+                    // check if kichwa was selected, then direction is obvious and selection can be skipped
+                    // note: this is always done automatically since it will annoy the user, the automatic kichwa selection is configurable, 
+                    // since this is a new move and even if he only has one option, the player might want to check the board before doing it
+                    } else if (this.clientStateArgs.type == 'kichwa') {
+                        // determine direction which has to be selected and call server, game mode will be handled there
+                        var direction = field == 1 ? 2 : 7;
+                        this.ajaxcall("/baolakiswahili/baolakiswahili/executeMove.html", {
+                            lock: true,
+                            player: player,
+                            field: field,
+                            direction: direction
+                        }, this, function (result) { });
                     } else {
                         // set new client state
                         this.setClientState('client_directionSelection', {
@@ -473,6 +493,7 @@ define([
                 console.log('enter notif_moveStones');
                 
                 // Remove previously set css markers for possible and captured bowls, stones and directions
+                dojo.query('.blk_possibleBowl').removeClass('blk_possibleBowl');
                 dojo.query('.blk_possibleDirection').removeClass('blk_possibleDirection');
                 dojo.query('.blk_selectedBowl').removeClass('blk_selectedBowl');
                 dojo.query('.blk_possibleStone').removeClass('blk_possibleStone');
