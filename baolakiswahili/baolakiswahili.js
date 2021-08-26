@@ -15,6 +15,8 @@ const TESTMODE = true;
 const VARIANT_KISWAHILI = 1;
 const VARIANT_KUJIFUNZA = 2;
 const VARIANT_HUS = 3;
+// 2nd phase of Kiswahili variant
+const VARIANT_KISWAHILI_2ND = 4;
 
 // preference values
 const PREF_KICHWA_MODE = 100;
@@ -71,8 +73,9 @@ define([
                 // Setup game notifications to handle (see "setupNotifications" method below)
                 this.setupNotifications();
 
-                // create empty client args
+                // create empty client args and store game variant
                 this.clientStateArgs = {};
+                this.clientStateArgs.variant = gamedatas.variant;
 
                 // hide preference box if HUS variant
                 if (gamedatas.variant == VARIANT_HUS) {
@@ -84,7 +87,7 @@ define([
                 }
 
                 // hide seed area and nyumbas if not KISWAHILI variant and don't waste space
-                if  (gamedatas.variant != VARIANT_KISWAHILI) {
+                if  (gamedatas.variant == VARIANT_KUJIFUNZA || gamedatas.variant == VARIANT_HUS) {
                     dojo.query('.blk_seed_area').style('display', 'none');
                     dojo.query('.blk_nyumba').style('display', 'none');
                     dojo.query('#board').style('margin', '0px');
@@ -109,6 +112,11 @@ define([
                     type = args.args.type;
                 }
                 this.clientStateArgs.type = type;
+
+                // change phase label in Kiswahili variant
+                if (this.clientStateArgs.variant == 4) {
+                    dojo.byId('phase_label').innerHTML = _('Mtaji phase');
+                }
 
                 // states are distinguished in onUpdateActionButtons due to client states
                 switch (stateName) {

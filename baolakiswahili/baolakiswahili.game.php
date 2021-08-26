@@ -18,15 +18,24 @@
  * self::debug('##################### message');
  */
 
+// board layout from perspective of start player
+// (for 2nd player field is turned 180°, so that 1st field is on the right)
+// 16 15 14 13 12 11 10 09 (oponent's 2nd row)
+// 01 02 03 04 05 06 07 08 (oponent's 1st row)
+// -----------------------
+// 01 02 03 04 05 06 07 08 (player's 1st row)
+// 16 15 14 13 12 11 10 09 (player's 2nd row)
 
 
 require_once(APP_GAMEMODULE_PATH . 'module/table/table.game.php');
 
-// Local constants
+// Local constants for selected game variant at game start
 define( "OPTION_VARIANT", 100 );
 define( "VARIANT_KISWAHILI", 1 );
 define( "VARIANT_KUJIFUNZA", 2 );
 define( "VARIANT_HUS", 3 );
+// have an additional constant for 2nd phase of Kiswahili variant
+define( "VARIANT_KISWAHILI_2ND", 4 );
 
 class BaoLaKiswahili extends Table
 {
@@ -73,6 +82,8 @@ class BaoLaKiswahili extends Table
 
         /************ Start the game initialization *****/
 
+        // note: in real Kiswahili, always player South starts and there is an official notion for the bowls,
+        // here BGA determines the start player, this will be player1 (see board layout above)
         $sql = "INSERT INTO board (player, field, stones) VALUES ";
         $values = array();
         list($player1, $player2) = array_keys($players);
@@ -98,8 +109,8 @@ class BaoLaKiswahili extends Table
             }
 
             // all other stones are placed in front of board (represented by field 0)
-            $values[] = "('$player1', '0', '22')";
-            $values[] = "('$player2', '0', '22')";
+            $values[] = "('$player1', '0', '2')";
+            $values[] = "('$player2', '0', '2')";
         }
         else {
             // in other variants all bowls contain 2 stones
@@ -131,11 +142,23 @@ class BaoLaKiswahili extends Table
         self::initStat('player', 'overallEmptied', 0);
 
         // Init key value store
-        $sql = "INSERT INTO kvstore(`key`, value_text, value_number) VALUES ('stateAfterMove', 'nextPlayer', null)";
+        // phase is used to distinguish the 2 game phases in Kiswahili variant - will be ignored by other variants
+        $sql = "INSERT INTO kvstore(`key`, value_text) VALUES ('phase', '1st')";
         self::DbQuery($sql);
-        $sql = "INSERT INTO kvstore(`key`, value_text, value_number) VALUES ('captureField', null, 0)";
+        // stateAfterMove is used to set state after move execution to use in next state
+        $sql = "INSERT INTO kvstore(`key`, value_text) VALUES ('stateAfterMove', 'nextPlayer')";
         self::DbQuery($sql);
-        $sql = "INSERT INTO kvstore(`key`, value_text, value_number) VALUES ('moveDirection', null, 0)";
+        // captureField persists the last field number which allowed a capture to use in later move
+        $sql = "INSERT INTO kvstore(`key`, value_number) VALUES ('captureField', 0)";
+        self::DbQuery($sql);
+        // moveDirection persists the last move direction to keep it in further moves
+        $sql = "INSERT INTO kvstore(`key`, value_number) VALUES ('moveDirection', 0)";
+        self::DbQuery($sql);
+        // nyumba5functional is a flag if player 1 still owns a functional nyumba (field 5) - will be ignored for variants other than Kiswahili
+        $sql = "INSERT INTO kvstore(`key`, value_boolean) VALUES ('nyumba5functional', true)";
+        self::DbQuery($sql);
+        // nyumba4functional is a flag if player 2 still owns a functional nyumba (field 4) - will be ignored for variants other than Kiswahili
+        $sql = "INSERT INTO kvstore(`key`, value_boolean) VALUES ('nyumba4functional', true)";
         self::DbQuery($sql);
 
         // Activate first player (which is in general a good idea :) )
@@ -167,7 +190,7 @@ class BaoLaKiswahili extends Table
         $sql = "SELECT player player, field no, stones count FROM board ";
         $result['board'] = self::getObjectListFromDB($sql);
 
-        $result['variant'] = $this->getGameStateValue('game_variant');
+        $result['variant'] = $this->getVariant();
 
         return $result;
     }
@@ -206,6 +229,16 @@ class BaoLaKiswahili extends Table
     /*
         In this space, you can put any utility methods useful for your game logic
     */
+
+    // Encapsulate game variant check to also consider 2nd phase of Kiswahili
+    function getVariant()
+    {
+        $sql = "SELECT value_text FROM kvstore WHERE `key` = 'phase'";
+        $phase = $this->getUniqueValueFromDB($sql);
+        $variant = $this->getGameStateValue('game_variant');
+
+        return $phase === "2nd" ? VARIANT_KISWAHILI_2ND : $variant;
+    }
 
     // Get the complete board with a double associative array player/no -> count
     function getBoard()
@@ -391,20 +424,45 @@ class BaoLaKiswahili extends Table
 
         $board = $this->getBoard();
         $nyumba = $this->getNyumba($player_id);
-        // check all bowl in the 1st row for stones
-        for ($i = 1; $i <= 8; $i++) {
-            // skip nyumba for now
-            if ($i != $nyumba && $board[$player_id][$i]["count"] >= 1) {
-                $left = $i == 1 ? 16 : $i - 1;
-                $right = $i + 1;
-                $result[$i] = array($left, $right);
+        $nyumbaFunctional = $this->checkForFunctionalNyumba($nyumba, $player_id, $board);
+        // in case of non-functional nyumba, there have to be 2 stones in a bowl of 1st row if possible
+        if (!$nyumbaFunctional) {
+            // check all bowls in the 1st row for stones
+            for ($i = 1; $i <= 8; $i++) {
+                if ($board[$player_id][$i]["count"] >= 2) {
+                    $left = $i == 1 ? 16 : $i - 1;
+                    $right = $i + 1;
+                    $result[$i] = array($left, $right);
+                }
             }
-        }
-        // only add nyumba now if no other was found
-        if (empty($result) && $board[$player_id][$nyumba]["count"] >= 1) {
-            $left = $nyumba - 1;
-            $right = $nyumba + 1;
-            $result[$nyumba] = array($left, $right);
+            // if none with 2 stones were found, accept those with 1
+            if (empty($result)) {
+                // check all bowls in the 1st row for stones
+                for ($i = 1; $i <= 8; $i++) {
+                    if ($board[$player_id][$i]["count"] >= 1) {
+                        $left = $i == 1 ? 16 : $i - 1;
+                        $right = $i + 1;
+                        $result[$i] = array($left, $right);
+                    }
+                }
+            }
+        // in case of a functional nyumba, only take this, if it's the only non-empty bowl
+        } else {
+            // check all bowls in the 1st row for stones
+            for ($i = 1; $i <= 8; $i++) {
+                // skip functional nyumba for now
+                if ($i != $nyumba && $board[$player_id][$i]["count"] >= 1) {
+                    $left = $i == 1 ? 16 : $i - 1;
+                    $right = $i + 1;
+                    $result[$i] = array($left, $right);
+                }
+            }
+            // only add functional nyumba now if no other was found
+            if (empty($result) && $board[$player_id][$nyumba]["count"] >= 1) {
+                $left = $nyumba - 1;
+                $right = $nyumba + 1;
+                $result[$nyumba] = array($left, $right);
+            }
         }
 
         return $result;
@@ -432,13 +490,23 @@ class BaoLaKiswahili extends Table
         return $destinationField;
     }
 
+    // Check if a player still owns a functional nyumba
+    function checkForFunctionalNyumba($nyumba, $player_id, $board)
+    {
+        $key = "nyumba".$nyumba."functional";
+        $sql = "SELECT value_boolean FROM kvstore WHERE `key` = '$key'";
+        $hasNyumba = self::getUniqueValueFromDB($sql);
+        
+        return $hasNyumba && $board[$player_id][$nyumba]["count"] >= 6;
+    }
+
     // Calculate player's stones in first row
-    function getFirstRowCount($player, $board)
+    function getFirstRowCount($player_id, $board)
     {
         // first check if the player can still move and sum up stones
         $sum = 0;
         for ($i = 1; $i <= 8; $i++) {
-            $count = $board[$player][$i]["count"];
+            $count = $board[$player_id][$i]["count"];
             $sum += $count;
         }
 
@@ -446,13 +514,13 @@ class BaoLaKiswahili extends Table
     }
 
     // Calculate player's score, which is 0 if lost or sum of fields if not
-    function getScore($player, $board)
+    function getScore($player_id, $board)
     {
         // first check if the player can still move and sum up stones
         $sum = 0;
         $canMove = false;
         for ($i = 1; $i <= 16; $i++) {
-            $count = $board[$player][$i]["count"];
+            $count = $board[$player_id][$i]["count"];
             $sum += $count;
             if ($count > 1) {
                 $canMove = true;
@@ -463,7 +531,7 @@ class BaoLaKiswahili extends Table
         $isEmpty = true;
         if ($canMove) {
             for ($i = 1; $i <= 8; $i++) {
-                if ($board[$player][$i]["count"] > 0) {
+                if ($board[$player_id][$i]["count"] > 0) {
                     $isEmpty = false;
                     break;
                 }
@@ -489,6 +557,10 @@ class BaoLaKiswahili extends Table
 
     // player has selected a move (start field and direction field)
     // game modes are distinguished here to exeute it
+    // note: to keep logic free from complicated checks of rare edge cases, some official rules are deliberately ignored:
+    // 1) no check for infinite or very long moves
+    // 2) no prevention of a move which causes loss of the player
+    // 3) no check if a move from kichwa to the outer row is the only filled bowl and contains 16 or more stones
     function executeMove($player, $field, $direction)
     {
         self::trace('*** executeMove was called by client with parameters player='.$player.', field='.$field.', direction='.$direction.'.');
@@ -506,7 +578,7 @@ class BaoLaKiswahili extends Table
         }
 
         // Distinguish game mode for move check
-        if ($this->getGameStateValue('game_variant') == VARIANT_KISWAHILI) {
+        if ($this->getVariant() == VARIANT_KISWAHILI) {
             // Check that move is possible, distinguish action
             if ($currentAction == 'executeMove') {
                 $possibleCaptures = $this->getKunamuaPossibleCaptures($player);
@@ -524,7 +596,7 @@ class BaoLaKiswahili extends Table
                     throw new feException("Impossible move: move to execute is not in possible kichwas");
                 }
             }
-        } elseif ($this->getGameStateValue('game_variant') == VARIANT_KUJIFUNZA) {
+        } elseif ($this->getVariant() == VARIANT_KUJIFUNZA || $this->getVariant() == VARIANT_KISWAHILI_2ND) {
             // Check that move is possible, distinguish action
             if ($currentAction == 'executeMove') {
                 $possibleCaptures = $this->getMtajiPossibleCaptures($player);
@@ -542,7 +614,7 @@ class BaoLaKiswahili extends Table
                     throw new feException("Impossible move: move to execute is not in possible kichwas");
                 }
             }
-        } elseif ($this->getGameStateValue('game_variant') == VARIANT_HUS) {
+        } elseif ($this->getVariant() == VARIANT_HUS) {
             // Check that move is possible
             $possibleMoves = $this->getHusPossibleMoves($player);
             if (!array_key_exists($field, $possibleMoves) || array_search($direction, $possibleMoves[$field]) === false) {
@@ -597,7 +669,7 @@ class BaoLaKiswahili extends Table
         $overallEmptied = 0;
 
         // Distinguish game mode for move execution
-        if ($this->getGameStateValue('game_variant') == VARIANT_KISWAHILI && $currentAction == 'executeMove') {
+        if ($this->getVariant() == VARIANT_KISWAHILI && $currentAction == 'executeMove') {
             // take bowl out of storage area and put in bowl 
             $board[$player][0]["count"] -= 1;
             $board[$player][$sourceField]["count"] += 1;
@@ -639,15 +711,23 @@ class BaoLaKiswahili extends Table
                     // source field now points to field of last put stone
                     $count = $board[$player][$sourceField]["count"];
 
-                    // empty own bowl for next move if it ends in non-empty bowl
+                    // empty own bowl for next move if it ends in non-empty bowl which is not a functional nyumba
                     if ($count > 1) {
-                        $board[$player][$sourceField]["count"] = 0;
-                        array_push($moves, "emptyActive_" . $sourceField);
-                        $overallMoved += $count;
+                        // TODO: check for block by kutakatia (2nd phase)
+                        $nyumba = $this->getNyumba($player);
+                        if ($sourceField == $nyumba && $this->checkForFunctionalNyumba($nyumba, $player, $board)) {
+                            // clear count to leave loop
+                            $count = 0;
+                        } else {
+                            $board[$player][$sourceField]["count"] = 0;
+                            array_push($moves, "emptyActive_" . $sourceField);
+                            $overallMoved += $count;
+                        }
                     }
                 }
             }
-        } elseif ($this->getGameStateValue('game_variant') == VARIANT_KUJIFUNZA && $currentAction == 'executeMove') {
+        } elseif (($this->getVariant() == VARIANT_KUJIFUNZA || $this->getVariant() == VARIANT_KISWAHILI_2ND) 
+            && $currentAction == 'executeMove') {
             // get stones for move
             $count = $board[$player][$sourceField]["count"];
 
@@ -702,10 +782,10 @@ class BaoLaKiswahili extends Table
                     }
                 }
             }
-        } elseif (($this->getGameStateValue('game_variant') == VARIANT_KISWAHILI || $this->getGameStateValue('game_variant') == VARIANT_KUJIFUNZA) 
+        } elseif (($this->getVariant() == VARIANT_KISWAHILI || $this->getVariant() == VARIANT_KUJIFUNZA || $this->getVariant() == VARIANT_KISWAHILI_2ND) 
             && $currentAction == 'selectKichwa') {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /// Kiwvahili or Kujifunza variant - kichwa selection
+    /// Kiswahili or Kujifunza variant - kichwa selection
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             // get stones for move
             $count = $board[$player][$sourceField]["count"];
@@ -754,6 +834,8 @@ class BaoLaKiswahili extends Table
 
                 // if move ends in a non-empty bowl, move continues
                 if ($count > 1) {
+                    // TODO: check for functional nyumba to let player decide to safari or stop (Kiswahili and 1st phase)
+                    // TODO: check for kutakatiaed bowl (Kiswahili and 2nd phase)
                     // check if move has another capture
                     if ($sourceField <= 8 && $board[$oponent][$sourceField]["count"] > 0) {
                         // prepare for next part of move in different state, since player has to select kichwa
@@ -769,7 +851,7 @@ class BaoLaKiswahili extends Table
                     }
                 }
             } while ($count > 1);
-        } elseif ($this->getGameStateValue('game_variant') == VARIANT_HUS) {
+        } elseif ($this->getVariant() == VARIANT_HUS) {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// Hus variant - both capture and non-capture move
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -977,11 +1059,11 @@ class BaoLaKiswahili extends Table
     function stVariantSelect()
     {
         // transit to the correct phase, which is separate for the 3 possible game options
-        if ($this->getGameStateValue('game_variant') == VARIANT_KISWAHILI) {
+        if ($this->getVariant() == VARIANT_KISWAHILI) {
             $this->gamestate->nextState('playKiswahili');
-        } elseif ($this->getGameStateValue('game_variant') == VARIANT_KUJIFUNZA) {
+        } elseif ($this->getVariant() == VARIANT_KUJIFUNZA) {
             $this->gamestate->nextState('playKujifunza');
-        } elseif ($this->getGameStateValue('game_variant') == VARIANT_HUS) {
+        } elseif ($this->getVariant() == VARIANT_HUS) {
             $this->gamestate->nextState('playHus');
         } else {
             // error in options, end game
@@ -1022,7 +1104,7 @@ class BaoLaKiswahili extends Table
             "scores" => $newScores
         ));
 
-        // set next state depending on lost state
+        // first check for end of game
         if ($scoreLast == 0 || $scoreNext == 0) {
             $this->gamestate->nextState('endGame');
         } else {
@@ -1031,6 +1113,17 @@ class BaoLaKiswahili extends Table
             $stateAfterMove = self::getUniqueValueFromDB($sql);
 
             if ($stateAfterMove === "nextPlayer") {
+                // check for phase change in Kiswahili variant
+                if ($this->getVariant() == VARIANT_KISWAHILI && 
+                    $board[$playerLast][0]["count"] == 0 && $board[$playerNext][0]["count"] == 0) {
+
+                    // store new phase and switch to it
+                    $sql = "UPDATE kvstore SET value_text = '2nd' WHERE `key` = 'phase'";
+                    self::DbQuery($sql);
+
+                    // change state to move to 
+                    $stateAfterMove = "switchPhase";
+                }
                 // Next player can play and gets extra time
                 self::giveExtraTime($playerNext);
                 $this->activeNextPlayer();
@@ -1117,18 +1210,12 @@ class BaoLaKiswahili extends Table
         $player = self::getActivePlayerId();
         $oponent = self::getPlayerAfter($player);
 
-        // board layout from perspective of start player
-        // (for 2nd player field is turned 180°, so that 1st field is on the right)
-        // 16 15 14 13 12 11 10 09 (oponent's 2nd row)
-        // 01 02 03 04 05 06 07 08 (oponent's 1st row)
-        // -----------------------
-        // 01 02 03 04 05 06 07 08 (player's 1st row)
-        // 16 15 14 13 12 11 10 09 (player's 2nd row)
-
         // save test stones for oponent
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 0");
+
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 16");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 15");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 14");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 14");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 13");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 12");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 11");
@@ -1138,29 +1225,31 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 1");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 2");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 3");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 4");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 5");
+        self::DbQuery("UPDATE board SET stones = 6 WHERE player = '$oponent' AND field = 4");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 5");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 6");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 7");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 8");
+        self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$oponent' AND field = 7");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 8");
 
         // save test stones for active player
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 1");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 2");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 3");
-        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 4");
-        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 5");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 6");
-        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 7");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 3");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 4");
+        self::DbQuery("UPDATE board SET stones = 6 WHERE player = '$player' AND field = 5");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 6");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 7");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 8");
 
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 16");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 15");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 14");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 13");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 12");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 12");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 11");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 10");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 9");
+
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 0");
     }
 }

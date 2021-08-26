@@ -60,6 +60,7 @@ class view_baolakiswahili_baolakiswahili extends game_view
     // translate labels
     $this->tpl['LBL_PREF_TITLE'] = self::_("Automatic actions");
     $this->tpl['LBL_PREF_AUTO_KICHWA'] = self::_("Automatic Kichwa selection");
+    $this->tpl['LBL_PHASE'] = self::_("Kunamua phase");
 
     /*********** Do not change anything below this line  ************/
   }

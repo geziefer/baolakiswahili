@@ -15,10 +15,11 @@ CREATE TABLE IF NOT EXISTS `board` (
     PRIMARY KEY (`player`, `field`)
 ) ENGINE = InnoDB;
 
--- create table for storing arbitrary data with key and wither string or numeric value
+-- create table for storing arbitrary data with key and with string, numeric or boolean value
 CREATE TABLE IF NOT EXISTS `kvstore` (
     `key` VARCHAR(20) NOT NULL, 
-    `value_text` VARCHAR(100),
-    `value_number` INT,
+    `value_text` VARCHAR(100) DEFAULT '',
+    `value_number` INT DEFAULT 0,
+    `value_boolean` BOOLEAN DEFAULT false,
     PRIMARY KEY (`key`)
 ) ENGINE = InnoDB;

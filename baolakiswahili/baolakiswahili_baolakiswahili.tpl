@@ -15,6 +15,9 @@
     var jstpl_stone = '<div id="stone_${no}" class="blk_stone" style="left: ${left}px; top: ${top}px; transform: rotate(${degree}deg);"></div>';
 </script>
 
+<div id="phase_label" class="blk_phase_label">
+    <p>{LBL_PHASE}</p>
+</div>
 <div id="board">
     <div id="circle_{PLAYER2}_0" class="blk_seed_area" style="top: -75px">
         <div id="label_{PLAYER2}_0" class="blk_label" style="margin-left:5px;">

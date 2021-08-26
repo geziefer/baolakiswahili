@@ -110,3 +110,12 @@
     margin-left: 330px;
     position: relative;
 }
+
+.blk_phase_label {
+    margin-top: -60px;
+    margin-left: 10px;
+    font-size: x-large;
+    font-weight: bold;
+    color: black;
+    position: absolute;
+}
