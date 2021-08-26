@@ -960,7 +960,8 @@ class BaoLaKiswahili extends Table
     function argHusMoveSelection()
     {
         return array(
-            'possibleMoves' => $this->getHusPossibleMoves(self::getActivePlayerId())
+            'possibleMoves' => $this->getHusPossibleMoves(self::getActivePlayerId()),
+            'type' => ""
         );
     }
 

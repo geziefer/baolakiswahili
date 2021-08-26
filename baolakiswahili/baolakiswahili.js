@@ -76,17 +76,18 @@ define([
 
                 // hide preference box if HUS variant
                 if (gamedatas.variant == VARIANT_HUS) {
-                    dojo.byId('preferences').style('display', 'none');
+                    dojo.query('#preferences').style('display', 'none');
                 } else {
                     // set pref checkbox from user preference and connect with change handler for other variants
                     dojo.byId('checkbox_kichwa_mode').checked = (this.prefs[PREF_KICHWA_MODE].value == PREF_KICHWA_MODE_AUTOMATIC) ? true : false;
                     this.setupPreference();
                 }
 
-                // hide seed area and nyumbas if not KISWAHILI variant
+                // hide seed area and nyumbas if not KISWAHILI variant and don't waste space
                 if  (gamedatas.variant != VARIANT_KISWAHILI) {
                     dojo.query('.blk_seed_area').style('display', 'none');
                     dojo.query('.blk_nyumba').style('display', 'none');
+                    dojo.query('#board').style('margin', '0px');
                 }
 
                 console.log("Ending game setup");
