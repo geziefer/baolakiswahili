@@ -86,10 +86,11 @@ define([
                     this.setupPreference();
                 }
 
-                // hide seed area and nyumbas if not KISWAHILI variant and don't waste space
+                // hide seed area and nyumbas and phase label if not KISWAHILI variant and don't waste space
                 if  (gamedatas.variant == VARIANT_KUJIFUNZA || gamedatas.variant == VARIANT_HUS) {
                     dojo.query('.blk_seed_area').style('display', 'none');
                     dojo.query('.blk_nyumba').style('display', 'none');
+                    dojo.query('#phase_label').style('display', 'none');
                     dojo.query('#board').style('margin', '0px');
                 }
 
@@ -106,16 +107,21 @@ define([
             onEnteringState: function (stateName, args) {
                 console.log('Entering state: ' + stateName);
 
-                // save type of move for later usage if exists
+                // save type of move for later usage and if exists
                 var type = "";
                 if(!!args.args) {
                     type = args.args.type;
                 }
                 this.clientStateArgs.type = type;
 
-                // change phase label in Kiswahili variant
-                if (this.clientStateArgs.variant == 4) {
-                    dojo.byId('phase_label').innerHTML = _('Mtaji phase');
+                // change phase label according to parameter from move - only needed in Kiswahili variant
+                if(!!args.args && !!args.args.variant) {
+                    if (args.args.variant == 1) {
+                        dojo.byId('phase_label').innerHTML = _('Kunamua phase');
+                    } else if (args.args.variant == 4) {
+                        dojo.byId('phase_label').innerHTML = _('Mtaji phase');
+                    }
+                    this.clientStateArgs.variant = args.args.variant;
                 }
 
                 // states are distinguished in onUpdateActionButtons due to client states

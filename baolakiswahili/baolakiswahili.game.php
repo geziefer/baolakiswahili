@@ -994,7 +994,8 @@ class BaoLaKiswahili extends Table
 
         return array(
             'possibleMoves' => $result,
-            'type' => $capture ? "capture" : "non-capture"
+            'type' => $capture ? "capture" : "non-capture",
+            'variant' => $this->getVariant()
         );
     }
 
@@ -1022,7 +1023,8 @@ class BaoLaKiswahili extends Table
 
         return array(
             'possibleMoves' => $result,
-            'type' => $capture ? "capture" : "non-capture"
+            'type' => $capture ? "capture" : "non-capture",
+            'variant' => $this->getVariant()
         );
     }
 
@@ -1211,7 +1213,7 @@ class BaoLaKiswahili extends Table
         $oponent = self::getPlayerAfter($player);
 
         // save test stones for oponent
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 0");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$oponent' AND field = 0");
 
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 16");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 15");
@@ -1250,6 +1252,24 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 10");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 9");
 
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 0");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player' AND field = 0");
+
+        // reset key value store
+        $sql = "UPDATE kvstore SET value_text = '1st' WHERE `key` = 'phase'";
+        self::DbQuery($sql);
+        $sql = "UPDATE kvstore SET value_text = 'nextPlayer' WHERE `key` = 'stateAfterMove'";
+        self::DbQuery($sql);
+        $sql = "UPDATE kvstore SET value_number = 0 WHERE `key` = 'captureField'";
+        self::DbQuery($sql);
+        $sql = "UPDATE kvstore SET value_number = 0 WHERE `key` = 'moveDirection'";
+        self::DbQuery($sql);
+        $sql = "UPDATE kvstore SET value_boolean = true WHERE `key` = 'nyumba5functional'";
+        self::DbQuery($sql);
+        $sql = "UPDATE kvstore SET value_boolean = true WHERE `key` = 'nyumba4functional'";
+        self::DbQuery($sql);
+
+        // reset state in database
+        $sql = "UPDATE global SET global_value = 10 WHERE global_id = 1";
+        self::DbQuery($sql);
     }
 }
