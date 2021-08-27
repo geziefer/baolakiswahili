@@ -16,10 +16,10 @@ $gameinfos = array(
     'game_name' => "Bao la Kiswahili",
 
     // Game designer (or game designers, separated by commas)
-    'designer' => 'Alexander Rühl',
+    'designer' => 'Alexander Ruehl',
 
     // Game artist (or game artists, separated by commas)
-    'artist' => 'Alexander Rühl',
+    'artist' => 'Alexander Ruehl',
 
     // Year of FIRST publication of this game. Can be negative.
     'year' => 2021,
@@ -83,13 +83,13 @@ $gameinfos = array(
     'language_dependency' => false,
 
     // Complexity of the game, from 0 (extremely simple) to 5 (extremely complex)
-    'complexity' => 2,
+    'complexity' => 5,
 
     // Luck of the game, from 0 (absolutely no luck in this game) to 5 (totally luck driven)
     'luck' => 0,
 
     // Strategy of the game, from 0 (no strategy can be setup) to 5 (totally based on strategy)
-    'strategy' => 4,
+    'strategy' => 5,
 
     // Diplomacy of the game, from 0 (no interaction in this game) to 5 (totally based on interaction and discussion between players)
     'diplomacy' => 0,
@@ -126,8 +126,9 @@ $gameinfos = array(
     // Each paragraph must be wrapped with totranslate() for translation and should not contain html (plain text without formatting).
     // A good length for this text is between 100 and 150 words (about 6 to 9 lines on a standard display)
     'presentation' => array(
-        //    totranslate("Bao is an East African board game - actually, "BAO" is the Swahili word for "board game"."),
-        //    totranslate("It consists of bowls containing stones. The objective is to move stones around the board and thereby taking those of the oponent until he can't move anymore."),
+            totranslate("Bao is an East African board game - actually, `Bao` is the Swahili word for `board game`."),
+            totranslate("It consists of a board with two rows of pits containing seeds. The objective is to move seeds around the board and thereby taking those of the oponent until he cannot move anymore."),
+            totranslate("This game is available in 3 versions: A simple one called `Hus Bao`, which is commonly played by kids. A more complex version called `Bao la Kujifunza`. And the full version called `Bao la Kiswahili`, which comes in 2 game phases and with a compex ruleset.")
     ),
 
     // Games categories

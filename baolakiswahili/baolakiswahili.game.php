@@ -109,8 +109,8 @@ class BaoLaKiswahili extends Table
             }
 
             // all other stones are placed in front of board (represented by field 0)
-            $values[] = "('$player1', '0', '2')";
-            $values[] = "('$player2', '0', '2')";
+            $values[] = "('$player1', '0', '22')";
+            $values[] = "('$player2', '0', '22')";
         }
         else {
             // in other variants all bowls contain 2 stones
