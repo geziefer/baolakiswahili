@@ -692,6 +692,7 @@ class BaoLaKiswahili extends Table
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// Kiswahili variant - non-capture move
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // TODO: check for tax of nyumba instead of emptying
                 // this is a non-capture move, no further captures are allowed, move only continues in own two rows,
                 // first empty start field, then make moves until last field was empty before putting stone
                 $board[$player][$sourceField]["count"] = 0;
@@ -801,6 +802,7 @@ class BaoLaKiswahili extends Table
             $overallStolen += $count;
             $overallEmptied += 1;
             $board[$oponent][$captureField]["count"] = 0;
+            // TODO: check for captured (destroyed) nyumba
 
             // the move takes captured stones and starts with kichwa,
             // as every move always goes to next field, we go back one field (inverted direction) 
@@ -834,7 +836,7 @@ class BaoLaKiswahili extends Table
 
                 // if move ends in a non-empty bowl, move continues
                 if ($count > 1) {
-                    // TODO: check for functional nyumba to let player decide to safari or stop (Kiswahili and 1st phase)
+                    // TODO: check for functional nyumba to let player decide to safari (destroy nyumba) or stop (Kiswahili and 1st phase)
                     // TODO: check for kutakatiaed bowl (Kiswahili and 2nd phase)
                     // check if move has another capture
                     if ($sourceField <= 8 && $board[$oponent][$sourceField]["count"] > 0) {
