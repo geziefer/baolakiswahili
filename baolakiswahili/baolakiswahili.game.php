@@ -500,6 +500,17 @@ class BaoLaKiswahili extends Table
         return $hasNyumba && $board[$player_id][$nyumba]["count"] >= 6;
     }
 
+    // check if nyumba was captured and thereby has to be marked as destroyed
+    function checkAndMarkDestoryedNyumba($player_id, $field)
+    {
+        $nyumba = $this->getNyumba($player_id);
+        if ($field == $nyumba) {
+            $key = "nyumba".$nyumba."functional";
+            $sql = "UPDATE kvstore SET value_boolean = false WHERE `key` = '$key'";
+            self::DbQuery($sql);
+        }
+    }
+
     // Calculate player's stones in first row
     function getFirstRowCount($player_id, $board)
     {
@@ -802,7 +813,9 @@ class BaoLaKiswahili extends Table
             $overallStolen += $count;
             $overallEmptied += 1;
             $board[$oponent][$captureField]["count"] = 0;
-            // TODO: check for captured (destroyed) nyumba
+
+            // check if oponent's nyumba was captured and thereby destroyed
+            $this->checkAndMarkDestoryedNyumba($oponent, $captureField);
 
             // the move takes captured stones and starts with kichwa,
             // as every move always goes to next field, we go back one field (inverted direction) 
