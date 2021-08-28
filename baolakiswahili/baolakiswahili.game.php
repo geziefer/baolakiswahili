@@ -291,6 +291,7 @@ class BaoLaKiswahili extends Table
         $board = $this->getBoard();
         $oponent = self::getPlayerAfter($player_id);
 
+        // TODO: limit to only previously blocked bowl for Kiswahili 2nd phase
         // check if any bowl with at least 2 and at most 15 stones leads to a harvest in initial move
         for ($i = 1; $i<= 16; $i++) {
             $count = $board[$player_id][$i]["count"];
@@ -332,6 +333,7 @@ class BaoLaKiswahili extends Table
 
         $board = $this->getBoard();
 
+        // TODO: exclude katakatiaed bowl for Kiswahili 2nd phase
         // first check if any bowl in the 1st row has at least 2 stones, then in the 2nd row
         for ($i = 1; $i <= 8; $i++) {
             if ($board[$player_id][$i]["count"] >= 2) {
@@ -754,7 +756,6 @@ class BaoLaKiswahili extends Table
 
                     // empty own bowl for next move if it ends in non-empty bowl which is not a functional nyumba
                     if ($count > 1) {
-                        // TODO: check for block by kutakatia (2nd phase)
                         $nyumba = $this->getNyumba($player);
                         if ($sourceField == $nyumba && $this->checkForFunctionalNyumba($nyumba, $player, $board)) {
                             // clear count to leave loop
@@ -780,7 +781,7 @@ class BaoLaKiswahili extends Table
             // distinguish capture and non-capture move
             if (!empty($possibleCaptures)) {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /// Kujifunza variant - capture move
+    /// Kujifunza variant or 2nd phase Kiswahili variant - capture move
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 // this is a capture move, further captures are allowed and captured stones require player action,
                 // distribute stones in the next fields in selected direction until last one which has to be a capture
@@ -797,7 +798,7 @@ class BaoLaKiswahili extends Table
                 $captureField = $destinationField;
             } else {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /// Kujifunza variant - non-capture move
+    /// Kujifunza variant or 2nd phase Kiswahili variant - non-capture move
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 // this is a non-capture move, no further captures are allowed, move only continues in own two rows,
                 // make moves until last field was empty before putting stone
@@ -815,6 +816,7 @@ class BaoLaKiswahili extends Table
                     // source field now points to field of last put stone
                     $count = $board[$player][$sourceField]["count"];
 
+                    // TODO: check if move stops due to kutakatiaed bowl
                     // empty own bowl for next move if it ends in non-empty bowl
                     if ($count > 1) {
                         $board[$player][$sourceField]["count"] = 0;
@@ -822,6 +824,7 @@ class BaoLaKiswahili extends Table
                         $overallMoved += $count;
                     }
                 }
+                // TODO: check if kutakatia happened for Kiswahili variant 2nd phase, respect 3 excluded situations
             }
         } elseif (($this->getVariant() == VARIANT_KISWAHILI || $this->getVariant() == VARIANT_KUJIFUNZA || $this->getVariant() == VARIANT_KISWAHILI_2ND) 
             && ($currentAction == 'selectKichwa' || $currentAction == 'decideSafari')) {
@@ -907,7 +910,6 @@ class BaoLaKiswahili extends Table
                         }
                     }
 
-                    // TODO: check for kutakatiaed bowl (Kiswahili and 2nd phase)
                     // check if move has another capture
                     if ($sourceField <= 8 && $board[$oponent][$sourceField]["count"] > 0) {
                         // prepare for next part of move in different state, since player has to select kichwa
