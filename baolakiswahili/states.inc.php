@@ -50,7 +50,7 @@ $machinestates = array(
         "type" => "game",
         "action" => "stNextPlayer",
         "updateGameProgression" => true,
-        "transitions" => array("nextPlayer" => 10, "continueCapture" => 12, "decideSafari" => 13, "selectTax" => 14, "switchPhase" => 20, "endGame" => 99)
+        "transitions" => array("nextPlayer" => 10, "continueCapture" => 12, "decideSafari" => 13, "switchPhase" => 20, "endGame" => 99)
     ),
     
     // First phase decision of making safari
@@ -73,17 +73,6 @@ $machinestates = array(
         "args" => "argSafariDecision",
         "possibleactions" => array("continueMove"),
         "transitions" => array("continueMove" => 11, "zombiePass" => 11)
-    ),
-
-    // First phase player selects a kichwa after capture
-    14 => array(
-        "name" => "nyumbaTaxSelection",
-        "description" => clienttranslate('${actplayer} must tax nyumba'),
-        "descriptionmyturn" => clienttranslate('${you} must tax nyumba'),
-        "type" => "activeplayer",
-        "args" => "argNyumbaTaxSelection",
-        "possibleactions" => array("taxNyumba"),
-        "transitions" => array("taxNyumba" => 11, "zombiePass" => 11)
     ),
 
     // Second phase or kujifunza type, player selects a pit, then a direction

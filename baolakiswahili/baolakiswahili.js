@@ -615,7 +615,22 @@ define([
                             var stones = circles.get('circle_' + player + '_' + field);
                             stones.push(stone);
                             break;
-                    }
+                        case "taxActive":
+                            // put 2 stones (= their ids) into list and remove from circle
+                            var stones = circles.get('circle_' + player + '_' + field);
+console.log('before taxActive');
+console.log(circles);
+console.log(stones);
+                            movingStones.push(stones[0]);
+                            movingStones.push(stones[1]);
+console.log('moving stones', movingStones);
+                            stones.splice(0, 2);
+                            circles.set('circle_' + player + '_' + field, stones);
+console.log('after taxActive');
+console.log(circles);
+console.log(stones);
+                            break;
+                        }
                 }
 
                 // chain all animations to one in order 
