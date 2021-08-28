@@ -703,37 +703,43 @@ class BaoLaKiswahili extends Table
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// Kiswahili variant - non-capture move
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                // TODO: check for tax of nyumba instead of emptying
-                // this is a non-capture move, no further captures are allowed, move only continues in own two rows,
-                // first empty start field, then make moves until last field was empty before putting stone
-                $board[$player][$sourceField]["count"] = 0;
-                array_push($moves, "emptyActive_" . $sourceField);
-                $overallMoved += $count;
-                while ($count > 1) {
-                    // distribute stones in the next fields in selected direction until last one
-                    while ($count > 0) {
-                        // calculate next field to move to and leave 1 stone
-                        $destinationField = $this->getNextField($sourceField, $moveDirection);
-                        $board[$player][$destinationField]["count"] += 1;
-                        array_push($moves, "moveActive_" . $destinationField);
-                        $sourceField = $destinationField;
-                        $count -= 1;
-                    }
+                // distinguish between taxing nyumba and regular move
+                $nyumba = $this->getNyumba($player);
+                if ($sourceField == $nyumba) {
+                    // nyumba is not emptied, but has to be taxed which needs player action for selecting direction
+                    $stateAfterMove = 'selectTax';
+                } else {
+                    // this is a non-capture move, no further captures are allowed, move only continues in own two rows,
+                    // first empty start field, then make moves until last field was empty before putting stone
+                    $board[$player][$sourceField]["count"] = 0;
+                    array_push($moves, "emptyActive_" . $sourceField);
+                    $overallMoved += $count;
+                    while ($count > 1) {
+                        // distribute stones in the next fields in selected direction until last one
+                        while ($count > 0) {
+                            // calculate next field to move to and leave 1 stone
+                            $destinationField = $this->getNextField($sourceField, $moveDirection);
+                            $board[$player][$destinationField]["count"] += 1;
+                            array_push($moves, "moveActive_" . $destinationField);
+                            $sourceField = $destinationField;
+                            $count -= 1;
+                        }
 
-                    // source field now points to field of last put stone
-                    $count = $board[$player][$sourceField]["count"];
+                        // source field now points to field of last put stone
+                        $count = $board[$player][$sourceField]["count"];
 
-                    // empty own bowl for next move if it ends in non-empty bowl which is not a functional nyumba
-                    if ($count > 1) {
-                        // TODO: check for block by kutakatia (2nd phase)
-                        $nyumba = $this->getNyumba($player);
-                        if ($sourceField == $nyumba && $this->checkForFunctionalNyumba($nyumba, $player, $board)) {
-                            // clear count to leave loop
-                            $count = 0;
-                        } else {
-                            $board[$player][$sourceField]["count"] = 0;
-                            array_push($moves, "emptyActive_" . $sourceField);
-                            $overallMoved += $count;
+                        // empty own bowl for next move if it ends in non-empty bowl which is not a functional nyumba
+                        if ($count > 1) {
+                            // TODO: check for block by kutakatia (2nd phase)
+                            $nyumba = $this->getNyumba($player);
+                            if ($sourceField == $nyumba && $this->checkForFunctionalNyumba($nyumba, $player, $board)) {
+                                // clear count to leave loop
+                                $count = 0;
+                            } else {
+                                $board[$player][$sourceField]["count"] = 0;
+                                array_push($moves, "emptyActive_" . $sourceField);
+                                $overallMoved += $count;
+                            }
                         }
                     }
                 }
@@ -1021,7 +1027,18 @@ class BaoLaKiswahili extends Table
 
     function argNyumbaTaxSelection()
     {
+        // move is always from nyumba in both directions without capturing
+        $nyumba = $this->getNyumba(self::getActivePlayerId());
+        $result = array();
+        $left = $nyumba - 1;
+        $right = $nyumba + 1;
+        $result[$nyumba] = array($left, $right);
 
+        return array(
+            'possibleMoves' => $result,
+            'type' => "non-capture",
+            'variant' => $this->getVariant()
+        );
     }
 
     function argMtajiMoveSelection()
@@ -1245,17 +1262,17 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 6 WHERE player = '$oponent' AND field = 4");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 5");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 6");
-        self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$oponent' AND field = 7");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$oponent' AND field = 7");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$oponent' AND field = 8");
 
         // save test stones for active player
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 1");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 2");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 3");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 3");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 4");
         self::DbQuery("UPDATE board SET stones = 6 WHERE player = '$player' AND field = 5");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 6");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player' AND field = 7");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 7");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 8");
 
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player' AND field = 16");
