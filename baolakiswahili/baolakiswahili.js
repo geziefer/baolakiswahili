@@ -159,7 +159,6 @@ define([
                         case 'mtajiMoveSelection':
                         case 'husMoveSelection':
                             this.updateBowlSelection(args.possibleMoves);
-
                             break;
                         case 'client_directionSelection':
                             // add cancel button to go back to previous state
@@ -167,7 +166,6 @@ define([
 
                             // show possible directions
                             this.updateMoveDirection(args.possibleMoves);
-
                             break;
                         case 'kunamuaCaptureSelection':
                         case 'mtajiCaptureSelection':
@@ -190,7 +188,14 @@ define([
                                 // let the user select the kichwa
                                 this.updateBowlSelection(args.possibleMoves);
                             }
-
+                            break;
+                        case 'safariDecision':
+                            // add buttons for safari decisicon, either continue or stop and mark nyumba like for caputred field
+                            this.addActionButton('button_safari', _('Go on safari'), 'onGoSafari');
+                            this.addActionButton('button_stop', _('Stop move'), 'onStopMove');
+                            var field = args.possibleMoves[0];
+                            var player = this.getActivePlayerId();
+                            dojo.addClass('circle_' + player + '_' + field, 'blk_capturedBowl');
                             break;
                     }
                 }
@@ -453,6 +458,57 @@ define([
                 this.restoreServerGameState();
             },
 
+            // click on Go on safari button       
+            onGoSafari: function (evt) {
+			    console.log("Enter onGoSafari");
+
+                // Check that this action is possible at this moment
+                if (!this.checkAction('decideSafari')) {
+                    return;
+                }
+
+                // Stop event propagation
+                dojo.stopEvent(evt);
+
+                // call server, game mode will be handled there,
+                // field and direction will have no meaning for the move itself, since server will use correct values for nyumba and previous direction,
+                // field = 0 is used for telling the server about the safari decision: direction = 1 means safari, direction = 0 means stop
+                var player = this.getActivePlayerId();
+                this.ajaxcall("/baolakiswahili/baolakiswahili/executeMove.html", {
+                    lock: true,
+                    player: player,
+                    field: 0,
+                    direction: 1
+                }, this, function (result) { });
+            },
+
+            // click on Stop move button       
+            onStopMove: function (evt) {
+			    console.log("Enter onStopMove");
+
+                // Check that this action is possible at this moment
+                if (!this.checkAction('decideSafari')) {
+                    return;
+                }
+
+                // Stop event propagation
+                dojo.stopEvent(evt);
+
+                // remove marked nyumba
+                dojo.query('.blk_capturedBowl').removeClass('blk_capturedBowl');
+                
+                // call server, game mode will be handled there,
+                // field and direction will have no meaning for the move itself, since server will use correct values for nyumba and previous direction,
+                // field = 0 is used for telling the server about the safari decision: direction = 1 means safari, direction = 0 means stop
+                var player = this.getActivePlayerId();
+                this.ajaxcall("/baolakiswahili/baolakiswahili/executeMove.html", {
+                    lock: true,
+                    player: player,
+                    field: 0,
+                    direction: 0
+                }, this, function (result) { });
+            },
+
             // player has selected a preference from the preference box under the board
             onPrefCheckbox: function (evt) {
                 // get selected preference
@@ -618,17 +674,10 @@ define([
                         case "taxActive":
                             // put 2 stones (= their ids) into list and remove from circle
                             var stones = circles.get('circle_' + player + '_' + field);
-console.log('before taxActive');
-console.log(circles);
-console.log(stones);
                             movingStones.push(stones[0]);
                             movingStones.push(stones[1]);
-console.log('moving stones', movingStones);
                             stones.splice(0, 2);
                             circles.set('circle_' + player + '_' + field, stones);
-console.log('after taxActive');
-console.log(circles);
-console.log(stones);
                             break;
                         }
                 }

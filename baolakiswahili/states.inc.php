@@ -71,8 +71,8 @@ $machinestates = array(
         "descriptionmyturn" => clienttranslate('${you} must decide about safari'),
         "type" => "activeplayer",
         "args" => "argSafariDecision",
-        "possibleactions" => array("continueMove"),
-        "transitions" => array("continueMove" => 11, "zombiePass" => 11)
+        "possibleactions" => array("decideSafari"),
+        "transitions" => array("executeMove" => 11, "zombiePass" => 11)
     ),
 
     // Second phase or kujifunza type, player selects a pit, then a direction

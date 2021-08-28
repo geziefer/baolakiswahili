@@ -501,7 +501,7 @@ class BaoLaKiswahili extends Table
     }
 
     // check if nyumba was captured and thereby has to be marked as destroyed
-    function checkAndMarkDestoryedNyumba($player_id, $field)
+    function checkAndMarkDestroyedNyumba($player_id, $field)
     {
         $nyumba = $this->getNyumba($player_id);
         if ($field == $nyumba) {
@@ -566,6 +566,7 @@ class BaoLaKiswahili extends Table
         (note: each method below must match an input method in baolakiswahili.action.php)
     */
 
+    // Main game logic method, handles all moves after user action,
     // player has selected a move (start field and direction field)
     // game modes are distinguished here to exeute it
     // note: to keep logic free from complicated checks of rare edge cases, some official rules are deliberately ignored:
@@ -584,10 +585,12 @@ class BaoLaKiswahili extends Table
             $currentAction = 'executeMove';
         } elseif ($this->checkAction('selectKichwa', false)) {
             $currentAction = 'selectKichwa';
+        } elseif ($this->checkAction('decideSafari', false)) {
+            $currentAction = 'decideSafari';
         } else {
             throw new feException("Impossible move: action is not executeMove or selectKichwa");
         }
-
+        
         // Distinguish game mode for move check
         if ($this->getVariant() == VARIANT_KISWAHILI) {
             // Check that move is possible, distinguish action
@@ -605,6 +608,20 @@ class BaoLaKiswahili extends Table
                 $possibleKichwas = $this->getPossibleKichwas($player);
                 if (!array_key_exists($field, $possibleKichwas) || array_search($direction, $possibleKichwas[$field]) === false) {
                     throw new feException("Impossible move: move to execute is not in possible kichwas");
+                }
+            } elseif ($currentAction == 'decideSafari') {
+                if ($direction != 0 && $direction != 1) {
+                    throw new feException("Impossible move: direction not possible in safari decision move");
+                }
+
+                // if stop move was selected, quit execution and go to next state
+                if ($direction == 0) {
+                    // persist planned state after move and possible capture field in database for using in stNextPlayer
+                    $sql = "UPDATE kvstore SET value_text = 'nextPlayer' WHERE `key` = 'stateAfterMove'";
+                    self::DbQuery($sql);
+
+                    $this->gamestate->nextState('executeMove');
+                    return;
                 }
             }
         } elseif ($this->getVariant() == VARIANT_KUJIFUNZA || $this->getVariant() == VARIANT_KISWAHILI_2ND) {
@@ -807,33 +824,50 @@ class BaoLaKiswahili extends Table
                 }
             }
         } elseif (($this->getVariant() == VARIANT_KISWAHILI || $this->getVariant() == VARIANT_KUJIFUNZA || $this->getVariant() == VARIANT_KISWAHILI_2ND) 
-            && $currentAction == 'selectKichwa') {
+            && ($currentAction == 'selectKichwa' || $currentAction == 'decideSafari')) {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// Kiswahili or Kujifunza variant - kichwa selection
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            // get stones for move
-            $count = $board[$player][$sourceField]["count"];
+            // distinguish between initial kichwa selection and continuing after safari
+            if ($currentAction == 'decideSafari') {
+                // correct fields to select nyumba and previous direction,
+                $sourceField = $this->getNyumba($player);
+                $count = $board[$player][$sourceField]["count"];
+                $sql = "SELECT value_number FROM kvstore WHERE `key` = 'moveDirection'";
+                $moveDirection = $this->getUniqueValueFromDB($sql);
 
-            // kichwa after capture is selected, first get capture field from previous move and its content
-            $sql = "SELECT value_number FROM kvstore WHERE `key` = 'captureField'";
-            $captureField = $this->getUniqueValueFromDB($sql);
-            $captureCount = $board[$oponent][$captureField]["count"];
+                // empty own bowl for next move
+                $board[$player][$sourceField]["count"] = 0;
+                array_push($moves, "emptyActive_" . $sourceField);
+                $overallMoved += $count;
 
-            // start with emptying oponent's bowl
-            array_push($moves, "emptyOponent_" . $captureField);
-            $overallMoved += $count;
-            $overallStolen += $count;
-            $overallEmptied += 1;
-            $board[$oponent][$captureField]["count"] = 0;
+                // set nyumba destroyed
+                $this->checkAndMarkDestroyedNyumba($player, $sourceField);
+            } else {
+                // get stones for move
+                $count = $board[$player][$sourceField]["count"];
 
-            // check if oponent's nyumba was captured and thereby destroyed
-            $this->checkAndMarkDestoryedNyumba($oponent, $captureField);
+                // kichwa after capture is selected, first get capture field from previous move and its content
+                $sql = "SELECT value_number FROM kvstore WHERE `key` = 'captureField'";
+                $captureField = $this->getUniqueValueFromDB($sql);
+                $captureCount = $board[$oponent][$captureField]["count"];
 
-            // the move takes captured stones and starts with kichwa,
-            // as every move always goes to next field, we go back one field (inverted direction) 
-            // for start of move (sourceField) in order to have same behaviour later as for regular moves
-            $count = $captureCount;
-            $sourceField = $this->getNextField($sourceField, $moveDirection * (-1));
+                // start with emptying oponent's bowl
+                array_push($moves, "emptyOponent_" . $captureField);
+                $overallMoved += $count;
+                $overallStolen += $count;
+                $overallEmptied += 1;
+                $board[$oponent][$captureField]["count"] = 0;
+
+                // check if oponent's nyumba was captured and thereby destroyed
+                $this->checkAndMarkDestroyedNyumba($oponent, $captureField);
+
+                // the move takes captured stones and starts with kichwa,
+                // as every move always goes to next field, we go back one field (inverted direction) 
+                // for start of move (sourceField) in order to have same behaviour later as for regular moves
+                $count = $captureCount;
+                $sourceField = $this->getNextField($sourceField, $moveDirection * (-1));
+            }
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// Kiwvahili or Kujifunza variant - move after kichwa selection
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -861,15 +895,26 @@ class BaoLaKiswahili extends Table
 
                 // if move ends in a non-empty bowl, move continues
                 if ($count > 1) {
-                    // TODO: check for functional nyumba to let player decide to safari (destroy nyumba) or stop (Kiswahili and 1st phase)
+                    // for Kiswahili kunamua phase check if a functional nyumba would be emptied now
+                    if ($this->getVariant() == VARIANT_KISWAHILI) {
+                        $nyumba = $this->getNyumba($player);
+                        $nyumbaFunctional = $this->checkForFunctionalNyumba($nyumba, $player, $board);
+                        // if there is a functional nyumba, move stops here to let player decide
+                        if ($sourceField == $nyumba && $nyumbaFunctional) {
+                            $stateAfterMove = 'decideSafari';
+                            // leave loop to stop move
+                            break;
+                        }
+                    }
+
                     // TODO: check for kutakatiaed bowl (Kiswahili and 2nd phase)
                     // check if move has another capture
                     if ($sourceField <= 8 && $board[$oponent][$sourceField]["count"] > 0) {
                         // prepare for next part of move in different state, since player has to select kichwa
                         $stateAfterMove = 'continueCapture';
                         $captureField = $sourceField;
-                        // clear count to leave loop
-                        $count = 0;
+                        // leave loop to stop move
+                        break;
                     } else {
                         // empty own bowl for next move
                         $board[$player][$sourceField]["count"] = 0;
@@ -983,7 +1028,7 @@ class BaoLaKiswahili extends Table
             'board' => $board
         ));
 
-        // persist planned state after move and possible caputre field in database for using in stNextPlayer
+        // persist planned state after move and possible capture field in database for using in stNextPlayer
         $sql = "UPDATE kvstore SET value_text = '$stateAfterMove' WHERE `key` = 'stateAfterMove'";
         self::DbQuery($sql);
         $sql = "UPDATE kvstore SET value_number = $captureField WHERE `key` = 'captureField'";
@@ -1050,7 +1095,14 @@ class BaoLaKiswahili extends Table
 
     function argSafariDecision()
     {
-
+        // no moves currently possible, but put nyumba in possible moves to allow for highlighting, 
+        // button selection will be presented to decide for continuing or stopping
+        $nyumba = $this->getNyumba(self::getActivePlayerId());
+        return array(
+            'possibleMoves' => array($nyumba),
+            'type' => "safari",
+            'variant' => $this->getVariant()
+        );
     }
 
     function argMtajiMoveSelection()
@@ -1277,7 +1329,7 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 5");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 6");
         self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player2' AND field = 7");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 8");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player2' AND field = 8");
 
         // save test stones for player 1
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 1");
@@ -1287,7 +1339,7 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 6 WHERE player = '$player1' AND field = 5");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 6");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 7");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 8");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player1' AND field = 8");
 
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 16");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 15");
