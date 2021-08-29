@@ -28,11 +28,11 @@ $stats_type = array(
                     "type" => "int" ),
 
         "overallStolen" => array("id"=> 12,
-                    "name" => totranslate("Number of stolen stones from oponent"),
+                    "name" => totranslate("Number of stolen stones from opponent"),
                     "type" => "int" ),
 
         "overallEmptied" => array("id"=> 13,
-                    "name" => totranslate("Number of emptied bowls from oponent"),
+                    "name" => totranslate("Number of emptied bowls from opponent"),
                     "type" => "int" ),
     
     )

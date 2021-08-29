@@ -27,10 +27,10 @@
     background-image: url('img/nyumba_player.png');
  }
 
- #nyumba_oponent {
+ #nyumba_opponent {
     width: 108px;
     height: 99px;
-    background-image: url('img/nyumba_oponent.png');
+    background-image: url('img/nyumba_opponent.png');
  }
 
 .blk_circle {

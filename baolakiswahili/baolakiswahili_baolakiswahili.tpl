@@ -24,7 +24,7 @@
             <p>2</p>
         </div>
     </div>
-    <div id="nyumba_oponent" class="blk_nyumba" style="left: 379px; top: 119px;"></div>
+    <div id="nyumba_opponent" class="blk_nyumba" style="left: 379px; top: 119px;"></div>
     <div id="nyumba_player" class="blk_nyumba" style="left: 482px; top: 237px;"></div>
     <!-- BEGIN circle -->
     <div id="circle_{PLAYER}_{FIELD}" class="blk_circle" style="left: {LEFT}px; top: {TOP}px;">

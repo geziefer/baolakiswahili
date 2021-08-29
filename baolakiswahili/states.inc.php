@@ -94,7 +94,7 @@ $machinestates = array(
         "type" => "game",
         "action" => "stNextPlayer",
         "updateGameProgression" => true,
-        "transitions" => array("nextPlayer" => 20, "continueCapture" => 22, "declareKutakatia" => 23, "endGame" => 99)
+        "transitions" => array("nextPlayer" => 20, "continueCapture" => 22, "endGame" => 99)
     ),
     
     // Second phase or kujifunza type. Player selects a kichwa after capture
@@ -105,17 +105,6 @@ $machinestates = array(
         "type" => "activeplayer",
         "args" => "argCaptureSelection",
         "possibleactions" => array("selectKichwa"),
-        "transitions" => array("executeMove" => 21, "zombiePass" => 21)
-    ),
-
-    // Second phase special move kutakatia
-    23 => array(
-        "name" => "kutakatiaMoveSelection",
-        "description" => clienttranslate('${actplayer} has takasiaed pit and must make a move'),
-        "descriptionmyturn" => clienttranslate('${you} have takasiaed pit and must make a move'),
-        "type" => "activeplayer",
-        "args" => "argTakasiaMoveSelection",
-        "possibleactions" => array("executeMove"),
         "transitions" => array("executeMove" => 21, "zombiePass" => 21)
     ),
 

@@ -127,7 +127,7 @@ $gameinfos = array(
     // A good length for this text is between 100 and 150 words (about 6 to 9 lines on a standard display)
     'presentation' => array(
             totranslate("Bao is an East African board game - actually, `Bao` is the Swahili word for `board game`."),
-            totranslate("It consists of a board with two rows of pits containing seeds. The objective is to move seeds around the board and thereby taking those of the oponent until he cannot move anymore."),
+            totranslate("It consists of a board with two rows of pits containing seeds. The objective is to move seeds around the board and thereby taking those of the opponent until he cannot move anymore."),
             totranslate("This game is available in 3 versions: A simple one called `Hus Bao`, which is commonly played by kids. A more complex version called `Bao la Kujifunza`. And the full version called `Bao la Kiswahili`, which comes in 2 game phases and with a compex ruleset.")
     ),
 

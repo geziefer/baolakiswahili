@@ -264,7 +264,7 @@ define([
                             for (var capturefield of possibleMoves[field]) {
                                 if (typeof capturefield === 'string') {
                                     // capturefield has format '<playerid>_<field>'
-                                    // mark oponent's bowl
+                                    // mark opponent's bowl
                                     dojo.addClass('circle_' + capturefield, 'blk_capturedBowl');
                                 }
                             }
@@ -496,7 +496,7 @@ define([
 
                 // remove marked nyumba
                 dojo.query('.blk_capturedBowl').removeClass('blk_capturedBowl');
-                
+
                 // call server, game mode will be handled there,
                 // field and direction will have no meaning for the move itself, since server will use correct values for nyumba and previous direction,
                 // field = 0 is used for telling the server about the safari decision: direction = 1 means safari, direction = 0 means stop
@@ -573,8 +573,8 @@ define([
 
                 // get players
                 var player = notif.args.player;
-                var oponent = notif.args.oponent;
-                var players = [player, oponent];
+                var opponent = notif.args.opponent;
+                var players = [player, opponent];
 
                 // get all stones in all circles and their stones to have them ready for the moves
                 // and avoid problems during animations and reattachement of html elements
@@ -612,13 +612,13 @@ define([
                             }
                             circles.set('circle_' + player + '_' + field, []);
                             break;
-                        case "emptyOponent":
+                        case "emptyopponent":
                             // put all oposite stones (= their ids) into list and empty their circle
-                            var stones = circles.get('circle_' + oponent + '_' + field);
+                            var stones = circles.get('circle_' + opponent + '_' + field);
                             for (var id = 0; id < stones.length; id++) {
                                 movingStones.push(stones[id]);
                             }
-                            circles.set('circle_' + oponent + '_' + field, []);
+                            circles.set('circle_' + opponent + '_' + field, []);
                             break;
                         case "moveActive":
                             // move all remaining stones to new field
@@ -639,7 +639,7 @@ define([
                             var stones = circles.get('circle_' + player + '_' + field);
                             stones.push(stone);
                             break;
-                        case "moveOponent":
+                        case "moveopponent":
                             // move all emptied stones of captured field to own field (adjacent or selected kichwa)
                             var combinedAnimation = [];
                             for (var id = 0; id < movingStones.length; id++) {
