@@ -9,7 +9,7 @@
  */
 
 // flag for TESTMODE in development (default = false), enables button to set stones
-const TESTMODE = true;
+const TESTMODE = false;
 
 // game variants
 const VARIANT_KISWAHILI = 1;
