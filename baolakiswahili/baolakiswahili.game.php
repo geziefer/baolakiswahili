@@ -154,6 +154,9 @@ class BaoLaKiswahili extends Table
         // moveDirection persists the last move direction to keep it in further moves
         $sql = "INSERT INTO kvstore(`key`, value_number) VALUES ('moveDirection', 0)";
         self::DbQuery($sql);
+        // kutakatiaMoves persists the moves yet to make in kutakatia until normal move mode is active again - will be ignored for variants other than Kiswahili
+        $sql = "INSERT INTO kvstore(`key`, value_number) VALUES ('kutakatiaMoves', 0)";
+        self::DbQuery($sql);
         // blockedField persists a field blocked by kutakatia - will be ignored for variants other than Kiswahili
         $sql = "INSERT INTO kvstore(`key`, value_number) VALUES ('blockedField', 0)";
         self::DbQuery($sql);
@@ -184,16 +187,17 @@ class BaoLaKiswahili extends Table
     */
     protected function getAllDatas()
     {
+        self::trace('*** getAllDatas was called');
         $result = array();
 
         $current_player_id = self::getCurrentPlayerId();    // !! We must only return informations visible by this player !!
 
         // Get information about players
         // Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
-        $sql = "SELECT player_id id, player_score score FROM player ";
+        $sql = "SELECT player_id id, player_score score FROM player";
         $result['players'] = self::getCollectionFromDb($sql);
 
-        $sql = "SELECT player player, field no, stones count FROM board ";
+        $sql = "SELECT player player, field no, stones count FROM board";
         $result['board'] = self::getObjectListFromDB($sql);
 
         $result['variant'] = $this->getVariant();
@@ -249,7 +253,7 @@ class BaoLaKiswahili extends Table
     // Get the complete board with a double associative array player/no -> count
     function getBoard()
     {
-        $sql = "SELECT player player, field no, stones count, stones countBackup FROM board ";
+        $sql = "SELECT player player, field no, stones count, stones countBackup FROM board";
         return self::getDoubleKeyCollectionFromDB($sql);
     }
 
@@ -274,6 +278,7 @@ class BaoLaKiswahili extends Table
     // Hus variant: Possible bowls and their direction of a player's bowls with at least 2 stones
     function getHusPossibleMoves($player_id)
     {
+        self::trace('*** getHusPossibleMoves was called with parameter player_id='.$player_id);
         $result = array();
 
         $board = $this->getBoard();
@@ -292,12 +297,23 @@ class BaoLaKiswahili extends Table
     // mtaji phase step #1: if possible, a capture move has to be played
     function getMtajiPossibleCaptures($player_id)
     {
+        self::trace('*** getMtajiPossibleCaptures was called with parameter player_id='.$player_id);
         $result = array();
 
         $board = $this->getBoard();
         $opponent = self::getPlayerAfter($player_id);
 
-        // TODO: limit to only previously blocked bowl for Kiswahili 2nd phase
+        // check if in kutakatia state for Kiswahili 2nd phase
+        $kutakatiaMoves = 0;
+        if ($this->getVariant() == VARIANT_KISWAHILI_2ND) {
+            $sql = "SELECT value_number FROM kvstore WHERE `key` = 'kutakatiaMoves'";
+            $kutakatiaMoves = $this->getUniqueValueFromDB($sql);
+            $sql = "SELECT value_number FROM kvstore WHERE `key` = 'blockedField'";
+            $blockedField = $this->getUniqueValueFromDB($sql);
+            $sql = "SELECT value_number FROM kvstore WHERE `key` = 'blockedPlayer'";
+            $blockedPlayer = $this->getUniqueValueFromDB($sql);
+        }
+
         // check if any bowl with at least 2 and at most 15 stones leads to a harvest in initial move
         for ($i = 1; $i<= 16; $i++) {
             $count = $board[$player_id][$i]["count"];
@@ -310,7 +326,10 @@ class BaoLaKiswahili extends Table
                 if ($destinationField <= 8 && $board[$player_id][$destinationField]["count"] > 0 &&
                     $board[$opponent][$destinationField]["count"] > 0) {
                     $left = $i == 1 ? 16 : $i - 1;
-                    array_push($subResult, $left);
+                    // in kutakatia move mode, only the field which captures the blocked field of opponent should be added
+                    if ($kutakatiaMoves == 0 || ($blockedPlayer == $opponent && $blockedField == $destinationField)) {
+                        array_push($subResult, $left);
+                    }
                 }
 
                 // check if move to the right gets to 1st, lands in non-empty bowl row and has an adjacent filled bowl
@@ -318,7 +337,10 @@ class BaoLaKiswahili extends Table
                 if ($destinationField <= 8 && $board[$player_id][$destinationField]["count"] > 0 &&
                     $board[$opponent][$destinationField]["count"] > 0) {
                     $right = $i == 16 ? 1 : $i + 1;
-                    array_push($subResult, $right);
+                    // in kutakatia move mode, only the field which captures the blocked field of opponent should be added
+                    if ($kutakatiaMoves == 0 || ($blockedPlayer == $opponent && $blockedField == $destinationField)) {
+                        array_push($subResult, $right);
+                    }
                 }
 
                 // only add to result if a harvest move was found
@@ -335,17 +357,31 @@ class BaoLaKiswahili extends Table
     // assumes that before the caputure step was checked
     function getMtajiPossibleNonCaptures($player_id)
     {
+        self::trace('*** getMtajiPossibleNonCaptures was called with parameter player_id='.$player_id);
         $result = array();
 
         $board = $this->getBoard();
 
-        // TODO: exclude katakatiaed bowl for Kiswahili 2nd phase
+        // check if in kutakatia state for Kiswahili 2nd phase
+        $kutakatiaMoves = 0;
+        if ($this->getVariant() == VARIANT_KISWAHILI_2ND) {
+            $sql = "SELECT value_number FROM kvstore WHERE `key` = 'kutakatiaMoves'";
+            $kutakatiaMoves = $this->getUniqueValueFromDB($sql);
+            $sql = "SELECT value_number FROM kvstore WHERE `key` = 'blockedField'";
+            $blockedField = $this->getUniqueValueFromDB($sql);
+            $sql = "SELECT value_number FROM kvstore WHERE `key` = 'blockedPlayer'";
+            $blockedPlayer = $this->getUniqueValueFromDB($sql);
+        }
+
         // first check if any bowl in the 1st row has at least 2 stones, then in the 2nd row
         for ($i = 1; $i <= 8; $i++) {
-            if ($board[$player_id][$i]["count"] >= 2) {
-                $left = $i == 1 ? 16 : $i - 1;
-                $right = $i + 1;
-                $result[$i] = array($left, $right);
+            // exclude blocked bowl if there is one (active player is the one being blocked)
+            if ($kutakatiaMoves == 0 || !($player_id == $blockedPlayer && $i == $blockedField)) {
+                if ($board[$player_id][$i]["count"] >= 2 && !($player_id == $blockedPlayer && $i == $blockedField)) {
+                    $left = $i == 1 ? 16 : $i - 1;
+                    $right = $i + 1;
+                    $result[$i] = array($left, $right);
+                }
             }
         }
         if (empty($result)) {
@@ -364,6 +400,7 @@ class BaoLaKiswahili extends Table
     // move from kichwa after capture in Kiswahili or Kujifunza variant
     function getPossibleKichwas($player_id)
     {
+        self::trace('*** getPossibleKichwas was called with parameter player_id='.$player_id);
         $result = array();
 
         $opponent = $this->getPlayerAfter($player_id);
@@ -405,6 +442,7 @@ class BaoLaKiswahili extends Table
     // kunamua phase step #1: if possible, a capture move has to be played
     function getKunamuaPossibleCaptures($player_id)
     {
+        self::trace('*** getKunamuaPossibleCaptures was called with parameter player_id='.$player_id);
         $result = array();
 
         $board = $this->getBoard();
@@ -428,6 +466,7 @@ class BaoLaKiswahili extends Table
     // assumes that before the caputure step was checked
     function getKunamuaPossibleNonCaptures($player_id)
     {
+        self::trace('*** getKunamuaPossibleNonCaptures was called with parameter player_id='.$player_id);
         $result = array();
 
         $board = $this->getBoard();
@@ -501,6 +540,7 @@ class BaoLaKiswahili extends Table
     // Check if a player still owns a functional nyumba
     function checkForFunctionalNyumba($nyumba, $player_id, $board)
     {
+        self::trace('*** checkForFunctionalNyumba was called with parameter nyumba='.$nyumba.',player_id='.$player_id);
         $key = "nyumba".$nyumba."functional";
         $sql = "SELECT value_boolean FROM kvstore WHERE `key` = '$key'";
         $hasNyumba = self::getUniqueValueFromDB($sql);
@@ -514,11 +554,13 @@ class BaoLaKiswahili extends Table
      // and the opponent can only do a move without harvest, then persist blocked field as it gets used in next 2 moves
      function checkAndMarkKutakatia($player_id, $board)
      {
+        self::trace('*** checkAndMarkKutakatia was called with parameter player_id='.$player_id);
         $nyumba = $this->getNyumba($player_id);
         // kutakatia only possible with functional nyumba
         if ($this->checkForFunctionalNyumba($nyumba, $player_id, $board)) {
 
             // determine all criteria in one loop through 1st row and store in separate arrays
+            $possiblePlayerCaptures = $this->getMtajiPossibleCaptures($player_id);
             $opponent = $this->getPlayerAfter($player_id);
             $nyumbaOpponent = $this->getNyumba($opponent);
             $possibleOpponentsCaptures = $this->getMtajiPossibleCaptures($opponent);
@@ -537,9 +579,9 @@ class BaoLaKiswahili extends Table
                 }
             }
 
-            // kutakatia only possible when exactly one bowl is subject to caputure for player next move
+            // kutakatia is only possible when exactly one bowl is subject to caputure for player next move
             // and opponent cannot capture
-            if (count($bowlWithOppositeStone) == 1 && count($possibleOpponentsCaptures) == 0) {
+            if (count($bowlWithOppositeStone) == 1 && count($possiblePlayerCaptures) >= 1 && count($possibleOpponentsCaptures) == 0) {
                 // take the only possible one
                 $field = $bowlWithOppositeStone[0];
 
@@ -547,10 +589,12 @@ class BaoLaKiswahili extends Table
                 if (!($this->checkForFunctionalNyumba($nyumbaOpponent, $opponent, $board) && $field == $nyumbaOpponent)
                     && !(count($bowlsWith1Stone) == 1 && $field == $bowlsWith1Stone[0])
                     && !(count($bowlsWith2Stones) == 1 && $field == $bowlsWith2Stones[0])) {
-                        // persist blocked field and player for next moves
-                        $sql = "UPDATE kvstore SET value_number = ".$field." WHERE `key` = 'blockedField'";
+                        // persist blocked field and player and set kutakatia mode for next 3 player changes (which makes one move per player)
+                        $sql = "UPDATE kvstore SET value_number = 3 WHERE `key` = 'kutakatiaMoves'";
+                        self::DbQuery($sql);                
+                        $sql = "UPDATE kvstore SET value_number = $field WHERE `key` = 'blockedField'";
                         self::DbQuery($sql);
-                        $sql = "UPDATE kvstore SET value_number = ".$opponent." WHERE `key` = 'blockedPlayer'";
+                        $sql = "UPDATE kvstore SET value_number = $opponent WHERE `key` = 'blockedPlayer'";
                         self::DbQuery($sql);
                 }
             }
@@ -560,6 +604,7 @@ class BaoLaKiswahili extends Table
      // check if nyumba was captured and thereby has to be marked as destroyed
     function checkAndMarkDestroyedNyumba($player_id, $field)
     {
+        self::trace('*** checkAndMarkDestroyedNyumba was called with parameter player_id='.$player_id.',field='.$field);
         $nyumba = $this->getNyumba($player_id);
         if ($field == $nyumba) {
             $key = "nyumba".$nyumba."functional";
@@ -584,6 +629,7 @@ class BaoLaKiswahili extends Table
     // Calculate player's score, which is 0 if lost or sum of fields if not
     function getScore($player_id, $board)
     {
+        self::trace('*** getScore was called with parameter player_id='.$player_id);
         // first check if the player can still move and sum up stones
         $sum = 0;
         $canMove = false;
@@ -630,9 +676,10 @@ class BaoLaKiswahili extends Table
     // 1) no check for infinite or very long moves
     // 2) no prevention of a move which causes loss of the player
     // 3) no check if a move from kichwa to the outer row is the only filled bowl and contains 16 or more stones
+    // 4) no check if kutakatiaed bowl could be reached in later part of a harvest move by the player having done the blocking, must be harvested directly
     function executeMove($player, $field, $direction)
     {
-        self::trace('*** executeMove was called by client with parameters player='.$player.', field='.$field.', direction='.$direction.'.');
+        self::trace('*** executeMove was called with parameters player='.$player.', field='.$field.', direction='.$direction);
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// Action checks and move checks for all variants
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -858,6 +905,11 @@ class BaoLaKiswahili extends Table
                 // this is a non-capture move, no further captures are allowed, move only continues in own two rows,
                 // make moves until last field was empty before putting stone
                 while ($count > 1) {
+                    // check if nyumba was emptied by move for Kiswahili variant 2nd phase
+                    if ($this->getVariant() == VARIANT_KISWAHILI_2ND) {
+                        $this->checkAndMarkDestroyedNyumba($player, $sourceField);
+                    }
+
                     // distribute stones in the next fields in selected direction until last one
                     while ($count > 0) {
                         // calculate next field to move to and leave 1 stone
@@ -871,7 +923,18 @@ class BaoLaKiswahili extends Table
                     // source field now points to field of last put stone
                     $count = $board[$player][$sourceField]["count"];
 
-                    // TODO: check if move stops due to kutakatiaed bowl
+                    // check if move stops due to kutakatiaed bowl for Kiswahili variant 2nd phase
+                    if ($this->getVariant() == VARIANT_KISWAHILI_2ND) {
+                        $sql = "SELECT value_number FROM kvstore WHERE `key` = 'blockedField'";
+                        $blockedField = $this->getUniqueValueFromDB($sql);
+                        $sql = "SELECT value_number FROM kvstore WHERE `key` = 'blockedPlayer'";
+                        $blockedPlayer = $this->getUniqueValueFromDB($sql);
+                        if ($blockedPlayer == $player && $blockedField == $sourceField) {
+                            // leave loop to stop move
+                            break;
+                        }
+                    }
+
                     // empty own bowl for next move if it ends in non-empty bowl
                     if ($count > 1) {
                         $board[$player][$sourceField]["count"] = 0;
@@ -916,7 +979,7 @@ class BaoLaKiswahili extends Table
                 $overallEmptied += 1;
                 $board[$opponent][$captureField]["count"] = 0;
 
-                // check if opponent's nyumba was captured and thereby destroyed
+                // set nyumba destroyed if opponent's nyumba was captured
                 $this->checkAndMarkDestroyedNyumba($opponent, $captureField);
 
                 // the move takes captured stones and starts with kichwa,
@@ -1115,6 +1178,7 @@ class BaoLaKiswahili extends Table
 
     function argKunamuaMoveSelection()
     {
+        self::trace('*** argKunamuaMoveSelection was called');
         // assume capture move 
         $capture = true;
         $player = self::getActivePlayerId();
@@ -1156,6 +1220,7 @@ class BaoLaKiswahili extends Table
 
     function argSafariDecision()
     {
+        self::trace('*** argSafariDecision was called');
         // no moves currently possible, but put nyumba in possible moves to allow for highlighting, 
         // button selection will be presented to decide for continuing or stopping
         $nyumba = $this->getNyumba(self::getActivePlayerId());
@@ -1168,6 +1233,7 @@ class BaoLaKiswahili extends Table
 
     function argMtajiMoveSelection()
     {
+        self::trace('*** argMtajiMoveSelection was called');
         // assume capture move
         $capture = true;
         $result = $this->getMtajiPossibleCaptures(self::getActivePlayerId());
@@ -1179,18 +1245,19 @@ class BaoLaKiswahili extends Table
         }
 
         // check for blocked bowl by kutakatia
-        $sql = "SELECT value_number FROM kvstore WHERE `key` = 'blockedField'";
-        $blockedField = $this->getUniqueValueFromDB($sql);
+        $sql = "SELECT value_number FROM kvstore WHERE `key` = 'kutakatiaMoves'";
+        $kutakatiaMoves = $this->getUniqueValueFromDB($sql);
 
         return array(
             'possibleMoves' => $result,
-            'type' => $blockedField != 0 ? "kutakatia" : ($capture ? "capture" : "non-capture"),
+            'type' => $kutakatiaMoves != 0 ? "kutakatia" : ($capture ? "capture" : "non-capture"),
             'variant' => $this->getVariant()
         );
     }
 
     function argCaptureSelection()
     {
+        self::trace('*** argCaptureSelection was called');
         return array(
             'possibleMoves' => $this->getPossibleKichwas(self::getActivePlayerId()),
             'type' => "kichwa"
@@ -1199,6 +1266,7 @@ class BaoLaKiswahili extends Table
 
     function argHusMoveSelection()
     {
+        self::trace('*** argHusMoveSelection was called');
         return array(
             'possibleMoves' => $this->getHusPossibleMoves(self::getActivePlayerId()),
             'type' => ""
@@ -1231,6 +1299,7 @@ class BaoLaKiswahili extends Table
 
     function stNextPlayer()
     {
+        self::trace('*** stNextPlayer was called');
         // get current situation
         $board = $this->getBoard();
 
@@ -1282,6 +1351,19 @@ class BaoLaKiswahili extends Table
                     // change state to move to 
                     $stateAfterMove = "switchPhase";
                 }
+
+                // check if in kutakatia move for Kiswahili 2nd phase
+                if ($this->getVariant() == VARIANT_KISWAHILI_2ND) {
+                    $sql = "SELECT value_number FROM kvstore WHERE `key` = 'kutakatiaMoves'";
+                    $kutakatiaMoves = $this->getUniqueValueFromDB($sql);
+                    if ($kutakatiaMoves > 0) {
+                        // persist that one round was played in kutakatia
+                        $kutakatiaMoves -= 1;
+                        $sql = "UPDATE kvstore SET value_number = $kutakatiaMoves WHERE `key` = 'kutakatiaMoves'";
+                        self::DbQuery($sql);
+                    }
+                }
+
                 // Next player can play and gets extra time
                 self::giveExtraTime($playerNext);
                 $this->activeNextPlayer();
@@ -1310,6 +1392,7 @@ class BaoLaKiswahili extends Table
 
     function zombieTurn($state, $active_player)
     {
+        self::trace('*** zombieTurn was called with parameter state='.$state-'", active_player='.$active_player);
         $statename = $state['name'];
 
         if ($state['type'] === "activeplayer") {
@@ -1342,6 +1425,7 @@ class BaoLaKiswahili extends Table
 
     function upgradeTableDb($from_version)
     {
+        self::trace('*** zombieTurn was called with parameter from_version='.$from_version);
         // $from_version is the current version of this game database, in numerical form.
         // For example, if the game was running with a release of your game named "140430-1345",
         // $from_version is equal to 1404301345
@@ -1365,6 +1449,7 @@ class BaoLaKiswahili extends Table
     // TESTMODE only (set by JS): place stones for test purposes and changes database
     function testmode()
     {
+        self::trace('*** TESTMODE was called');
         $sql = "SELECT player_id FROM player WHERE player_no = 1";
         $player1 = self::getUniqueValueFromDB($sql);
         $sql = "SELECT player_id FROM player WHERE player_no = 2";
@@ -1387,18 +1472,18 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player2' AND field = 3");
         self::DbQuery("UPDATE board SET stones = 6 WHERE player = '$player2' AND field = 4");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 5");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 6");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player2' AND field = 6");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 7");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 8");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player2' AND field = 8");
 
         // save test stones for player 1
-        self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$player1' AND field = 1");
-        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player1' AND field = 2");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player1' AND field = 1");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 2");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 3");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 4");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player1' AND field = 4");
         self::DbQuery("UPDATE board SET stones = 6 WHERE player = '$player1' AND field = 5");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 6");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 7");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player1' AND field = 7");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 8");
 
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 16");
@@ -1408,7 +1493,7 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 12");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 11");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 10");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 9");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player1' AND field = 9");
 
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 0");
 
@@ -1420,6 +1505,8 @@ class BaoLaKiswahili extends Table
         $sql = "UPDATE kvstore SET value_number = 0 WHERE `key` = 'captureField'";
         self::DbQuery($sql);
         $sql = "UPDATE kvstore SET value_number = 0 WHERE `key` = 'moveDirection'";
+        self::DbQuery($sql);
+        $sql = "UPDATE kvstore SET value_number = 0 WHERE `key` = 'kutakatiaMoves'";
         self::DbQuery($sql);
         $sql = "UPDATE kvstore SET value_number = 0 WHERE `key` = 'blockedField'";
         self::DbQuery($sql);
