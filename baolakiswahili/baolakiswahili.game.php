@@ -305,6 +305,8 @@ class BaoLaKiswahili extends Table
 
         // check if in kutakatia state for Kiswahili 2nd phase
         $kutakatiaMoves = 0;
+        $blockedField = 0;
+        $blockedPlayer = 0;
         if ($this->getVariant() == VARIANT_KISWAHILI_2ND) {
             $sql = "SELECT value_number FROM kvstore WHERE `key` = 'kutakatiaMoves'";
             $kutakatiaMoves = $this->getUniqueValueFromDB($sql);
@@ -364,6 +366,8 @@ class BaoLaKiswahili extends Table
 
         // check if in kutakatia state for Kiswahili 2nd phase
         $kutakatiaMoves = 0;
+        $blockedField = 0;
+        $blockedPlayer = 0;
         if ($this->getVariant() == VARIANT_KISWAHILI_2ND) {
             $sql = "SELECT value_number FROM kvstore WHERE `key` = 'kutakatiaMoves'";
             $kutakatiaMoves = $this->getUniqueValueFromDB($sql);
