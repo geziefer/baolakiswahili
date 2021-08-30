@@ -329,7 +329,7 @@ class BaoLaKiswahili extends Table
                     $board[$opponent][$destinationField]["count"] > 0) {
                     $left = $i == 1 ? 16 : $i - 1;
                     // in kutakatia move mode, only the field which captures the blocked field of opponent should be added
-                    if ($kutakatiaMoves == 0 || ($blockedPlayer == $opponent && $blockedField == $destinationField)) {
+                    if ($kutakatiaMoves == 0 || ($kutakatiaMoves > 0 && $blockedPlayer == $opponent && $blockedField == $destinationField)) {
                         array_push($subResult, $left);
                     }
                 }
@@ -340,7 +340,7 @@ class BaoLaKiswahili extends Table
                     $board[$opponent][$destinationField]["count"] > 0) {
                     $right = $i == 16 ? 1 : $i + 1;
                     // in kutakatia move mode, only the field which captures the blocked field of opponent should be added
-                    if ($kutakatiaMoves == 0 || ($blockedPlayer == $opponent && $blockedField == $destinationField)) {
+                    if ($kutakatiaMoves == 0 || ($kutakatiaMoves > 0 && $blockedPlayer == $opponent && $blockedField == $destinationField)) {
                         array_push($subResult, $right);
                     }
                 }
@@ -380,7 +380,7 @@ class BaoLaKiswahili extends Table
         // first check if any bowl in the 1st row has at least 2 stones, then in the 2nd row
         for ($i = 1; $i <= 8; $i++) {
             // exclude blocked bowl if there is one (active player is the one being blocked)
-            if ($kutakatiaMoves == 0 || !($player_id == $blockedPlayer && $i == $blockedField)) {
+            if ($kutakatiaMoves == 0 || !($kutakatiaMoves > 0 && $player_id == $blockedPlayer && $i == $blockedField)) {
                 if ($board[$player_id][$i]["count"] >= 2 && !($player_id == $blockedPlayer && $i == $blockedField)) {
                     $left = $i == 1 ? 16 : $i - 1;
                     $right = $i + 1;
