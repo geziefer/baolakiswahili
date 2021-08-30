@@ -530,7 +530,7 @@ define([
                 dojo.stopEvent(evt);
 
                 // call server, activate testmode action
-                this.ajaxcall("/baolakiswahili/baolakiswahili/testmode.html", {}, this, function (result) { });
+                this.ajaxcall("/baolakiswahili/baolakiswahili/testmode.html", {lock: true}, this, function (result) { });
 
                 // refresh view (F5)
                 location.reload();
