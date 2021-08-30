@@ -637,15 +637,34 @@ class BaoLaKiswahili extends Table
         // first check if the player can still move and sum up stones
         $sum = 0;
         $canMove = false;
-        for ($i = 1; $i <= 16; $i++) {
-            $count = $board[$player_id][$i]["count"];
-            $sum += $count;
-            if ($count > 1) {
-                $canMove = true;
+        // distinguish 1st phase of Kiswahili from others to determine condtion for 1st line
+        if ($this->getVariant() == VARIANT_KISWAHILI) {
+            // for Kiswahili, only 1st row can be used, there has to be at least one bowl with at least one stone
+            for ($i = 1; $i <= 8; $i++) {
+                $count = $board[$player_id][$i]["count"];
+                $sum += $count;
+                if ($count >= 1) {
+                    $canMove = true;
+                }
+            }
+            // look at 2nd row just for the sum, does not influence, if player can move
+            for ($i = 9; $i <= 16; $i++) {
+                $count = $board[$player_id][$i]["count"];
+                $sum += $count;
+            }
+        } else {
+            // for all other variants or 2nd phase of Kiswahili determine condition in both lines
+            for ($i = 1; $i <= 16; $i++) {
+                $count = $board[$player_id][$i]["count"];
+                $sum += $count;
+                // there has to be at least one bowl with at least two stones
+                if ($count >= 2) {
+                    $canMove = true;
+                }
             }
         }
 
-        // if he can move, check if 1st line is not empty
+        // if he can move, check if 1st line is not empty (is already checked for Kiswahili 1st phase above, but does not hurt)
         $isEmpty = true;
         if ($canMove) {
             for ($i = 1; $i <= 8; $i++) {
@@ -1460,7 +1479,7 @@ class BaoLaKiswahili extends Table
         $player2 = self::getUniqueValueFromDB($sql);
 
         // save test stones for player 2
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 0");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player2' AND field = 0");
 
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 16");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 15");
@@ -1468,41 +1487,41 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 13");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 12");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 11");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 10");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player2' AND field = 10");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 9");
 
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 1");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player2' AND field = 1");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 2");
         self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player2' AND field = 3");
-        self::DbQuery("UPDATE board SET stones = 6 WHERE player = '$player2' AND field = 4");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 4");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 5");
         self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player2' AND field = 6");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 7");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player2' AND field = 8");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player2' AND field = 8");
 
         // save test stones for player 1
         self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player1' AND field = 1");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 2");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 3");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player1' AND field = 4");
-        self::DbQuery("UPDATE board SET stones = 6 WHERE player = '$player1' AND field = 5");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 6");
-        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player1' AND field = 7");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 8");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 4");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 5");
+        self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$player1' AND field = 6");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 7");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player1' AND field = 8");
 
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 16");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player1' AND field = 16");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 15");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 14");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 13");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 12");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 11");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 10");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player1' AND field = 9");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 9");
 
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 0");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player1' AND field = 0");
 
         // reset key value store
-        $sql = "UPDATE kvstore SET value_text = '2nd' WHERE `key` = 'phase'";
+        $sql = "UPDATE kvstore SET value_text = '1st' WHERE `key` = 'phase'";
         self::DbQuery($sql);
         $sql = "UPDATE kvstore SET value_text = 'nextPlayer' WHERE `key` = 'stateAfterMove'";
         self::DbQuery($sql);
@@ -1516,13 +1535,13 @@ class BaoLaKiswahili extends Table
         self::DbQuery($sql);
         $sql = "UPDATE kvstore SET value_number = 0 WHERE `key` = 'blockedPlayer'";
         self::DbQuery($sql);
-        $sql = "UPDATE kvstore SET value_boolean = true WHERE `key` = 'nyumba5functional'";
+        $sql = "UPDATE kvstore SET value_boolean = false WHERE `key` = 'nyumba5functional'";
         self::DbQuery($sql);
-        $sql = "UPDATE kvstore SET value_boolean = true WHERE `key` = 'nyumba4functional'";
+        $sql = "UPDATE kvstore SET value_boolean = false WHERE `key` = 'nyumba4functional'";
         self::DbQuery($sql);
 
         // reset state in database
-        $sql = "UPDATE global SET global_value = 20 WHERE global_id = 1";
+        $sql = "UPDATE global SET global_value = 10 WHERE global_id = 1";
         self::DbQuery($sql);
     }
 }
