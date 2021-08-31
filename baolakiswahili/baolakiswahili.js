@@ -10,6 +10,8 @@
 
 // flag for TESTMODE in development (default = false), enables button to set stones
 const TESTMODE = false;
+// flag for COLORVARIANCE in development (default = false), enables 2 different stone colors, but will only if no page reload (F5) occurs
+const COLORVARIANCE = false;
 
 // game variants
 const VARIANT_KISWAHILI = 1;
@@ -229,6 +231,12 @@ define([
                         top: Math.floor(((Math.random() * 5) - 1) * 5) + 25,
                         degree: Math.floor((Math.random() * 73) * 5)
                     }), 'circle_' + player + '_' + field);
+                }
+
+                // change stone colors for half the stones to show how they distribute on the board,
+                // since a reload (F5) orders them newly, it will not survive that, thus it's not doable for production
+                if (COLORVARIANCE && number > 32) {
+                    dojo.query('#stone_' + number).addClass('blk_stone_opponent');
                 }
             },
 

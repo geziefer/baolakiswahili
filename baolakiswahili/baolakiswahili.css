@@ -58,6 +58,13 @@
     background-image: url('img/stone.png'); 
 }
 
+.blk_stone_opponent { 
+    width: 45px;
+    height: 32px;
+    position: absolute;
+    background-image: url('img/stone2.png'); 
+}
+
 .blk_possibleBowl {
     cursor: pointer;  
     background: radial-gradient( rgb(255, 255, 255), rgba(255, 255, 255, 0) 75%);    
