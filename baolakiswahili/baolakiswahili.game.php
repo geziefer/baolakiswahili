@@ -1415,7 +1415,7 @@ class BaoLaKiswahili extends Table
 
     function zombieTurn($state, $active_player)
     {
-        self::trace('*** zombieTurn was called with parameter state='.$state-'", active_player='.$active_player);
+        self::trace('*** zombieTurn was called with parameter state='.$state.'", active_player='.$active_player);
         $statename = $state['name'];
 
         if ($state['type'] === "activeplayer") {
