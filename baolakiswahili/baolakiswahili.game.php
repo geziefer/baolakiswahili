@@ -1154,15 +1154,15 @@ class BaoLaKiswahili extends Table
 
         // notify players of all moves
         if ($moveDirection < 0) {
-            $messageDirection = 'clockwise';
+            $messageDirection = clienttranslate("clockwise");
         } elseif ($moveDirection > 0) {
-            $messageDirection = 'counterclockwise';
+            $messageDirection = clienttranslate("counterclockwise");
         } else {
-            $messageDirection = 'without direction';
+            $messageDirection = clienttranslate("without direction");
         }
         $message = clienttranslate('${player_name} moved ${message_direction_translated} from pit ${selected_field} to pit ${source_field} in total ${overall_moved} seed(s), emptying ${overall_emptied} pit(s) and having stolen ${overall_stolen} seed(s).');
         self::notifyAllPlayers("moveStones", $message, array(
-            'i18n' => array('message_direction_translated'),
+            'i18n' => array('message_direction'),
             'player' => $player,
             'player_name' => self::getActivePlayerName(),
             'opponent' => $opponent,
@@ -1241,8 +1241,10 @@ class BaoLaKiswahili extends Table
         }
 
         return array(
+            'i18n' => array('type_translated'),
             'possibleMoves' => $result,
             'type' => $capture ? "capture" : ($onlyNyumba ? "tax" : "non-capture"),
+            'type_translated' => $capture ? clienttranslate("capture") : ($onlyNyumba ? clienttranslate("tax") : clienttranslate("non-capture")),
             'variant' => $this->getVariant()
         );
     }
@@ -1278,8 +1280,10 @@ class BaoLaKiswahili extends Table
         $kutakatiaMoves = $this->getUniqueValueFromDB($sql);
 
         return array(
+            'i18n' => array('type_translated'),
             'possibleMoves' => $result,
             'type' => $kutakatiaMoves != 0 ? "kutakatia" : ($capture ? "capture" : "non-capture"),
+            'type_translated' => $kutakatiaMoves != 0 ? clienttranslate("kutakatia") : ($capture ? clienttranslate("capture") : clienttranslate("non-capture")),
             'variant' => $this->getVariant()
         );
     }

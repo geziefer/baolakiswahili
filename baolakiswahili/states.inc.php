@@ -34,8 +34,8 @@ $machinestates = array(
     // First phase of kiswahili type, player selects a bowl, then a direction
     10 => array(
         "name" => "kunamuaMoveSelection",
-        "description" => clienttranslate('${actplayer} must place seed and make ${type} move'),
-        "descriptionmyturn" => clienttranslate('${you} must place seed for ${type} move'),
+        "description" => clienttranslate('${actplayer} must place seed and make ${type_translated} move'),
+        "descriptionmyturn" => clienttranslate('${you} must place seed for ${type_translated} move'),
         "type" => "activeplayer",
         "args" => "argKunamuaMoveSelection",
         "possibleactions" => array("executeMove"),
@@ -78,8 +78,8 @@ $machinestates = array(
     // Second phase or kujifunza type, player selects a pit, then a direction
     20 => array(
         "name" => "mtajiMoveSelection",
-        "description" => clienttranslate('${actplayer} must make ${type} move'),
-        "descriptionmyturn" => clienttranslate('${you} must select pit for ${type} move'),
+        "description" => clienttranslate('${actplayer} must make ${type_translated} move'),
+        "descriptionmyturn" => clienttranslate('${you} must select pit for ${type_translated} move'),
         "type" => "activeplayer",
         "args" => "argMtajiMoveSelection",
         "possibleactions" => array("executeMove"),
