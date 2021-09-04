@@ -1162,7 +1162,7 @@ class BaoLaKiswahili extends Table
         }
         $message = clienttranslate('${player_name} moved ${message_direction_translated} from pit ${selected_field} to pit ${source_field} in total ${overall_moved} seed(s), emptying ${overall_emptied} pit(s) and having stolen ${overall_stolen} seed(s).');
         self::notifyAllPlayers("moveStones", $message, array(
-            'i18n' => array('message_direction'),
+            'i18n' => array('message_direction_translated'),
             'player' => $player,
             'player_name' => self::getActivePlayerName(),
             'opponent' => $opponent,
