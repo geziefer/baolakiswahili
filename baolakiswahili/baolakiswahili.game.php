@@ -36,13 +36,18 @@ define( "VARIANT_KUJIFUNZA", 2 );
 define( "VARIANT_HUS", 3 );
 // have an additional constant for 2nd phase of Kiswahili variant
 define( "VARIANT_KISWAHILI_2ND", 4 );
+// Local constants for editor mode
+define( "OPTION_EDITOR", 101 );
+define( "EDITOR_OFF", 1 );
+define( "EDITOR_ON", 2 );
 
 class BaoLaKiswahili extends Table
 {
     function __construct()
     {
         self::initGameStateLabels(array(
-            "game_variant" => 100
+            "game_variant" => 100,
+            "editor" => 101
         ));
     }
 
@@ -88,8 +93,18 @@ class BaoLaKiswahili extends Table
         $values = array();
         list($player1, $player2) = array_keys($players);
 
+        // in editor mode, board is empty
+        if ($options[OPTION_EDITOR] == EDITOR_ON) {
+            for ($i = 0; $i <= 16; $i++) {
+                $values[] = "('$player1', '$i', '0')";
+                $values[] = "('$player2', '$i', '0')";
+            }
+
+            // set marker for editor, will be toggled when done
+            $GLOBALS["editDone"] = false;
+        }
         // in Kiswahili variant only 3 bowls per player are filled
-        if ($options[OPTION_VARIANT] == VARIANT_KISWAHILI) {
+        else if ($options[OPTION_VARIANT] == VARIANT_KISWAHILI) {
             for ($i = 1; $i <= 4; $i++) {
                 $values[] = "('$player1', '$i', '0')";
             }
@@ -227,7 +242,7 @@ class BaoLaKiswahili extends Table
         $opponentCount = $this->getFirstRowCount($opponent, $board);
         $minCount = min($playerCount, $opponentCount);
         $maxCount = max($playerCount, $opponentCount);
-        $ratio = $minCount / $maxCount;
+        $ratio = $maxCount == 0 ? 0 : $minCount / $maxCount;
         return (1 - $ratio) * 100;
     }
 
@@ -1190,10 +1205,17 @@ class BaoLaKiswahili extends Table
         $sql = "UPDATE kvstore SET value_number = $moveDirection WHERE `key` = 'moveDirection'";
         self::DbQuery($sql);
 
-        // Go to the next state depending on 
+        // Go to the next state depending on current
         $this->gamestate->nextState('executeMove');
     }
 
+
+    function startWithEditedBoard()
+    {
+        // Go to the next state and stop editing
+        $GLOBALS["editDone"] = true;
+        $this->gamestate->nextState('stopEditing');
+    }
 
     //////////////////////////////////////////////////////////////////////////////
     //////////// Game state arguments
@@ -1306,6 +1328,7 @@ class BaoLaKiswahili extends Table
         );
     }
 
+
     //////////////////////////////////////////////////////////////////////////////
     //////////// Game state actions
     ////////////
@@ -1317,8 +1340,12 @@ class BaoLaKiswahili extends Table
 
     function stVariantSelect()
     {
+        // enter editor if here for the first time and option was selected
+        if ($this->getGameStateValue('editor') == EDITOR_ON && !$GLOBALS["editDone"]) {
+            $this->gamestate->nextState('startEditing');
+        }
         // transit to the correct phase, which is separate for the 3 possible game options
-        if ($this->getVariant() == VARIANT_KISWAHILI) {
+        elseif ($this->getVariant() == VARIANT_KISWAHILI) {
             $this->gamestate->nextState('playKiswahili');
         } elseif ($this->getVariant() == VARIANT_KUJIFUNZA) {
             $this->gamestate->nextState('playKujifunza');

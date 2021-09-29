@@ -33,6 +33,29 @@ $game_options = array(
             ),
         ),
         'default' => 1
+    ),
+    101 => array(
+        'name' => totranslate('Board editor at start'),
+        'values' => array(
+            // Without editor
+            1 => array(
+                'name' => totranslate('off'),
+                'description' => totranslate('Regular board setup depending on selected game variant')
+            ),
+
+            // With editor
+            2 => array(
+                'name' => totranslate('on'),
+                'description' => totranslate('Editor for free board setup at game start for selected game variant')
+            )
+            ),
+        'displaycondition' => array( 
+            // display this option only for training mode
+           array( 'type' => 'otheroption', 
+                'id' => 201, // ELO OFF hardcoded framework option
+                'value' => 1 // 1 if OFF
+           )
+        ),
     )
 );
 

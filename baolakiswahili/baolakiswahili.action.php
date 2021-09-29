@@ -37,6 +37,15 @@ class action_baolakiswahili extends APP_GameAction
         self::ajaxResponse();
     }
 
+    // Action after finish editing board, game may start
+    public function startWithEditedBoard()
+    {
+        self::setAjaxMode();
+        // TODO: transfer parameters
+        $this->game->startWithEditedBoard();
+        self::ajaxResponse();
+    }
+
     // Action for TESTMODE (enabled in JS), sets stones on board for test constellations
     public function testmode()
     {

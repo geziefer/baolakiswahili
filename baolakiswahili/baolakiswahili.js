@@ -199,6 +199,10 @@ define([
                             var player = this.getActivePlayerId();
                             dojo.addClass('circle_' + player + '_' + field, 'blk_capturedBowl');
                             break;
+                        case 'gameEditor':
+                            // add button for leaving game editor
+                            this.addActionButton('button_finishEditing', _('Fisnish editing and start game'), 'onFinishEditing');
+                            break;
                     }
                 }
             },
@@ -514,6 +518,24 @@ define([
                     player: player,
                     field: 0,
                     direction: 0
+                }, this, function (result) { });
+            },
+
+            onFinishEditing: function (evt) {
+			    console.log("Enter onFinishEditing");
+
+                // Check that this action is possible at this moment
+                if (!this.checkAction('edit')) {
+                    return;
+                }
+
+                // Stop event propagation
+                dojo.stopEvent(evt);
+
+                // call server to start selected game mode
+                // TODO: set data after editing
+                this.ajaxcall("/baolakiswahili/baolakiswahili/startWithEditedBoard.html", {
+                    lock: true,
                 }, this, function (result) { });
             },
 

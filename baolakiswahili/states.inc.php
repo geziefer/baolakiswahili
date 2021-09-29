@@ -22,13 +22,23 @@ $machinestates = array(
         "transitions" => array("" => 2)
     ),
 
-    // game variant selection
+    // Game variant selection
     2 => array(
         "name" => "variantSelect",
         "description" => "",
         "type" => "game",
         "action" => "stVariantSelect",
-        "transitions" => array("playKiswahili" => 10, "playKujifunza" => 20, "playHus" => 30)
+        "transitions" => array("playKiswahili" => 10, "playKujifunza" => 20, "playHus" => 30, "startEditing" => 3)
+    ),
+
+    // Board editor for training mode
+    3 => array(
+        "name" => "gameEditor",
+        "description" => clienttranslate('${actplayer} edits board for both players (agree on start constellation via chat or audio)'),
+        "descriptionmyturn" => clienttranslate('${you} must edit board for both players (agree on start constellation via chat or audio)'),
+        "type" => "activeplayer",
+        "possibleactions" => array("edit"),
+        "transitions" => array("stopEditing" => 2)
     ),
 
     // First phase of kiswahili type, player selects a bowl, then a direction
@@ -53,7 +63,7 @@ $machinestates = array(
         "transitions" => array("nextPlayer" => 10, "continueCapture" => 12, "decideSafari" => 13, "switchPhase" => 20, "endGame" => 99)
     ),
     
-    // First phase decision of making safari
+    // First phase decision of selecting kichwa
     12 => array(
         "name" => "kunamuaCaptureSelection",
         "description" => clienttranslate('${actplayer} must select kichwa'),
