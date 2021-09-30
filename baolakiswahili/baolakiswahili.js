@@ -66,8 +66,9 @@ define([
                     dojo.byId('label_' + bowl.player + '_' + bowl.no).innerHTML = "<p>" + bowl.count + "</p>";
                 }
 
-                // click handler for different click situations on bowl
+                // click handler for different click situations on bowl including editor
                 dojo.query('.blk_circle').connect('onclick', this, 'onBowl');
+                dojo.query('.blk_seed_area').connect('onclick', this, 'onBowl');
 
                 // click handler for preference change by checkbox
                 dojo.query('#checkbox_kichwa_mode').connect('onclick', this, 'onPrefCheckbox');
@@ -78,6 +79,16 @@ define([
                 // create empty client args and store game variant
                 this.clientStateArgs = {};
                 this.clientStateArgs.variant = gamedatas.variant;
+
+                // create emtpy board for editor
+                this.clientStateArgs.board = [[]];
+                this.clientStateArgs.board[Object.keys(gamedatas.players)[0]] = [];
+                this.clientStateArgs.board[Object.keys(gamedatas.players)[1]] = [];
+                for(var i = 0; i <= 16; i++)
+                {
+                    this.clientStateArgs.board[Object.keys(gamedatas.players)[0]][i] = 0;
+                    this.clientStateArgs.board[Object.keys(gamedatas.players)[1]][i] = 0;
+                }
 
                 // hide preference box if HUS variant
                 if (gamedatas.variant == VARIANT_HUS) {
@@ -200,8 +211,16 @@ define([
                             dojo.addClass('circle_' + player + '_' + field, 'blk_capturedBowl');
                             break;
                         case 'gameEditor':
-                            // add button for leaving game editor
-                            this.addActionButton('button_finishEditing', _('Fisnish editing and start game'), 'onFinishEditing');
+                            // add button for leaving game editor and activate clear
+                            this.addActionButton('button_clearEditing', _('Clear mode'), 'onClearEditing');
+                            this.addActionButton('button_finishEditing', _('Quit editor'), 'onFinishEditing');
+                            this.updateEditBowls();
+                            break;
+                        case 'client_gameEditorClear':
+                            // add button for leaving game editor and activate edit
+                            this.addActionButton('button_Editing', _('Edit mode'), 'onEditing');
+                            this.addActionButton('button_finishEditing', _('Quit editor'), 'onFinishEditing');
+                            this.updateClearBowls();
                             break;
                     }
                 }
@@ -317,6 +336,34 @@ define([
                 }
             },
 
+            // show all bowls including seed area as editable
+            updateEditBowls: function () {
+                console.log("Enter updateEditBowls");
+
+                // only display for current player
+                if (this.isCurrentPlayerActive()) {
+                    // highlight all bowls and possibly seed areas
+                    dojo.query('.blk_circle').addClass('blk_editBowl');
+                    dojo.query('.blk_seed_area').addClass('blk_editBowl');
+                    dojo.query('.blk_circle').removeClass('blk_clearBowl');
+                    dojo.query('.blk_seed_area').removeClass('blk_clearBowl');
+                }
+            },
+
+            // show all bowls including seed area as clearable
+            updateClearBowls: function () {
+                console.log("Enter updateClearBowls");
+
+                // only display for current player
+                if (this.isCurrentPlayerActive()) {
+                    // highlight all bowls and possibly seed areas
+                    dojo.query('.blk_circle').removeClass('blk_editBowl');
+                    dojo.query('.blk_seed_area').removeClass('blk_editBowl');
+                    dojo.query('.blk_circle').addClass('blk_clearBowl');
+                    dojo.query('.blk_seed_area').addClass('blk_clearBowl');
+                }
+            },
+
             // taken from https://boardgamearena.com/doc/Game_options_and_preferences:_gameoptions.inc.php
             setupPreference: function () {
                 // Extract the ID and value from the UI control
@@ -381,7 +428,8 @@ define([
                 console.log("Enter onBowl");
 
                 // Check that this action is possible at this moment, don't show message for 1st check
-                if (!(this.checkAction('executeMove', true) || this.checkAction('selectKichwa'))) {
+                if (!(this.checkAction('executeMove', true) || this.checkAction('selectKichwa', true) 
+                    || this.checkAction('edit'))) {
                     return;
                 }
 
@@ -391,6 +439,21 @@ define([
                 var params = evt.currentTarget.id.split('_');
                 var player = params[1];
                 var field = params[2];
+
+                // first: check for one of the special editor options
+                if (dojo.hasClass('circle_' + player + '_' + field, 'blk_editBowl')) {
+                    this.addStoneOnBoard(player, field, 1);
+                    this.clientStateArgs.board[player][field]++;
+
+                    return;
+                }
+                if (dojo.hasClass('circle_' + player + '_' + field, 'blk_clearBowl')) {
+                    dojo.query('#circle_' + player + '_' + field + ' > .blk_stone').forEach(dojo.destroy);
+                    
+                    this.clientStateArgs.board[player][field] = 0;
+
+                    return;
+                }
 
                 // action #1: check if a possible bowl has been clicked
                 if (dojo.hasClass('circle_' + player + '_' + field, 'blk_possibleBowl')) {
@@ -521,6 +584,35 @@ define([
                 }, this, function (result) { });
             },
 
+            onClearEditing: function (evt) {
+			    console.log("Enter onClearEditing");
+
+                // Check that this action is possible at this moment
+                if (!this.checkAction('edit')) {
+                    return;
+                }
+
+                // Stop event propagation
+                dojo.stopEvent(evt);
+
+                this.setClientState('client_gameEditorClear');
+            },
+
+            onEditing: function (evt) {
+			    console.log("Enter onEditing");
+
+                // Check that this action is possible at this moment
+                if (!this.checkAction('edit')) {
+                    return;
+                }
+
+                // Stop event propagation
+                dojo.stopEvent(evt);
+
+                 // force re-init
+                 this.restoreServerGameState();
+            },
+
             onFinishEditing: function (evt) {
 			    console.log("Enter onFinishEditing");
 
@@ -532,6 +624,10 @@ define([
                 // Stop event propagation
                 dojo.stopEvent(evt);
 
+                // restore all bowls and possibly seed areas
+                dojo.query('.blk_circle').removeClass('blk_editBowl');
+                dojo.query('.blk_seed_area').removeClass('blk_editBowl');
+                
                 // call server to start selected game mode
                 // TODO: set data after editing
                 this.ajaxcall("/baolakiswahili/baolakiswahili/startWithEditedBoard.html", {

@@ -70,6 +70,16 @@
     background: radial-gradient( rgb(255, 255, 255), rgba(255, 255, 255, 0) 75%);    
 }
 
+.blk_editBowl {
+    cursor: pointer;  
+    background: radial-gradient( rgb(210, 250, 210), rgba(255, 255, 255, 0) 75%);    
+}
+
+.blk_clearBowl {
+    cursor: pointer;  
+    background: radial-gradient( rgb(246, 223, 216), rgba(255, 255, 255, 0) 75%);    
+}
+
 .blk_selectedBowl {
     cursor: pointer;
     background: radial-gradient( rgb(127, 128, 126), rgba(255, 255, 255, 0) 75%);    
