@@ -1209,8 +1209,12 @@ class BaoLaKiswahili extends Table
         $this->gamestate->nextState('executeMove');
     }
 
+    function switchEditPlayer($board)
+    {
+        $this->gamestate->nextState('switchPlayer');
+    }
 
-    function startWithEditedBoard()
+    function startWithEditedBoard($board)
     {
         // Go to the next state and stop editing
         $GLOBALS["editDone"] = true;
@@ -1432,6 +1436,11 @@ class BaoLaKiswahili extends Table
         }
     }
 
+    function stEditSwitch()
+    {
+        $this->activeNextPlayer();
+        $this->gamestate->nextState('nextPlayer');
+    }
 
     //////////////////////////////////////////////////////////////////////////////
     //////////// Zombie

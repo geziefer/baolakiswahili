@@ -33,12 +33,20 @@ $machinestates = array(
 
     // Board editor for training mode
     3 => array(
-        "name" => "gameEditor",
+        "name" => "gameEdit",
         "description" => clienttranslate('${actplayer} edits board for both players (agree on start constellation via chat or audio)'),
         "descriptionmyturn" => clienttranslate('${you} must edit board for both players (agree on start constellation via chat or audio)'),
         "type" => "activeplayer",
         "possibleactions" => array("edit"),
-        "transitions" => array("stopEditing" => 2)
+        "transitions" => array("stopEditing" => 2, "switchPlayer" => 4)
+    ),
+
+    // Switch player for editor in training mode
+    4 => array(
+        "name" => "editSwitch",
+        "type" => "game",
+        "action" => "stEditSwitch",
+        "transitions" => array("nextPlayer" => 3)
     ),
 
     // First phase of kiswahili type, player selects a bowl, then a direction

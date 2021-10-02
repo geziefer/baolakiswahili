@@ -37,12 +37,21 @@ class action_baolakiswahili extends APP_GameAction
         self::ajaxResponse();
     }
 
+    // Action for switching player while in edit mode
+    public function switchEditPlayer()
+    {
+        self::setAjaxMode();
+        $board = self::getArg("board", AT_json, true);
+        $this->game->switchEditPlayer($board);
+        self::ajaxResponse();
+    }
+
     // Action after finish editing board, game may start
     public function startWithEditedBoard()
     {
         self::setAjaxMode();
-        // TODO: transfer parameters
-        $this->game->startWithEditedBoard();
+        $board = self::getArg("board", AT_json, true);
+        $this->game->startWithEditedBoard($board);
         self::ajaxResponse();
     }
 

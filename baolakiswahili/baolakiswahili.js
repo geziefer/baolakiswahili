@@ -80,14 +80,14 @@ define([
                 this.clientStateArgs = {};
                 this.clientStateArgs.variant = gamedatas.variant;
 
-                // create emtpy board for editor
-                this.clientStateArgs.board = [[]];
-                this.clientStateArgs.board[Object.keys(gamedatas.players)[0]] = [];
-                this.clientStateArgs.board[Object.keys(gamedatas.players)[1]] = [];
-                for(var i = 0; i <= 16; i++)
+                // create emtpy board for editor (board resembles data structure which usually comes from server)
+                this.clientStateArgs.board = [];
+                for(var j = 0; j <= 1; j++)
                 {
-                    this.clientStateArgs.board[Object.keys(gamedatas.players)[0]][i] = 0;
-                    this.clientStateArgs.board[Object.keys(gamedatas.players)[1]][i] = 0;
+                    for(var i = 0; i <= 16; i++)
+                    {
+                        this.clientStateArgs.board[i + j * 17] = {"player" : Object.keys(gamedatas.players)[j], "no" : i, "count" : 0};
+                    }
                 }
 
                 // hide preference box if HUS variant
@@ -210,16 +210,18 @@ define([
                             var player = this.getActivePlayerId();
                             dojo.addClass('circle_' + player + '_' + field, 'blk_capturedBowl');
                             break;
-                        case 'gameEditor':
+                        case 'gameEdit':
                             // add button for leaving game editor and activate clear
                             this.addActionButton('button_clearEditing', _('Clear mode'), 'onClearEditing');
-                            this.addActionButton('button_finishEditing', _('Quit editor'), 'onFinishEditing');
+                            this.addActionButton('button_switchEditPlayer', _('Switch player'), 'onSwitchEditPlayer');
+                            this.addActionButton('button_finishEditing', _('Start game'), 'onFinishEditing');
                             this.updateEditBowls();
                             break;
-                        case 'client_gameEditorClear':
+                        case 'client_gameEditClear':
                             // add button for leaving game editor and activate edit
                             this.addActionButton('button_Editing', _('Edit mode'), 'onEditing');
-                            this.addActionButton('button_finishEditing', _('Quit editor'), 'onFinishEditing');
+                            this.addActionButton('button_switchEditPlayer', _('Switch player'), 'onSwitchEditPlayer');
+                            this.addActionButton('button_finishEditing', _('Start game'), 'onFinishEditing');
                             this.updateClearBowls();
                             break;
                     }
@@ -443,14 +445,25 @@ define([
                 // first: check for one of the special editor options
                 if (dojo.hasClass('circle_' + player + '_' + field, 'blk_editBowl')) {
                     this.addStoneOnBoard(player, field, 1);
-                    this.clientStateArgs.board[player][field]++;
+                    var board = this.clientStateArgs.board;
+                    for (var i = 0; i < board.length; i++) {
+                        if (board[i].player == player && board[i].no == field) {
+                            board[i].count++;
+                            break;
+                        }
+                    }
 
                     return;
                 }
                 if (dojo.hasClass('circle_' + player + '_' + field, 'blk_clearBowl')) {
                     dojo.query('#circle_' + player + '_' + field + ' > .blk_stone').forEach(dojo.destroy);
-                    
-                    this.clientStateArgs.board[player][field] = 0;
+                    var board = this.clientStateArgs.board;
+                    for (var i = 0; i <= board.length; i++) {
+                        if (board[i].player == player && board[i].no == field) {
+                            board[i].count = 0;
+                            break;
+                        }
+                    }
 
                     return;
                 }
@@ -584,6 +597,28 @@ define([
                 }, this, function (result) { });
             },
 
+            onSwitchEditPlayer: function (evt) {
+			    console.log("Enter onSwitchPlayer");
+
+                // Check that this action is possible at this moment
+                if (!this.checkAction('edit')) {
+                    return;
+                }
+
+                // Stop event propagation
+                dojo.stopEvent(evt);
+
+                 // restore all bowls and possibly seed areas
+                 dojo.query('.blk_circle').removeClass('blk_editBowl');
+                 dojo.query('.blk_seed_area').removeClass('blk_editBowl');
+                 
+                 // call server to start selected game mode
+                 this.ajaxcall("/baolakiswahili/baolakiswahili/switchEditPlayer.html", {
+                     lock: true,
+                     board: this.clientStateArgs.board
+                    }, this, function (result) { });
+            },
+
             onClearEditing: function (evt) {
 			    console.log("Enter onClearEditing");
 
@@ -595,7 +630,7 @@ define([
                 // Stop event propagation
                 dojo.stopEvent(evt);
 
-                this.setClientState('client_gameEditorClear');
+                this.setClientState('client_gameEditClear');
             },
 
             onEditing: function (evt) {
@@ -629,9 +664,10 @@ define([
                 dojo.query('.blk_seed_area').removeClass('blk_editBowl');
                 
                 // call server to start selected game mode
-                // TODO: set data after editing
+console.log('board', this.clientStateArgs.board);
                 this.ajaxcall("/baolakiswahili/baolakiswahili/startWithEditedBoard.html", {
                     lock: true,
+                    board: this.clientStateArgs.board
                 }, this, function (result) { });
             },
 
