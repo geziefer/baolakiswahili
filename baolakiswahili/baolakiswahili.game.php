@@ -704,6 +704,32 @@ class BaoLaKiswahili extends Table
         }
     }
 
+    function saveBoard($board) {
+        $player1 = self::getActivePlayerId();
+        $player2 = self::getPlayerAfter($player1);
+        // assert that full board is present
+        if (count($board) != 34) {
+            throw new feException("Player data is corrupt, board has not the right size of 34: " . count($board));
+        }
+        for ($i = 0; $i < 34; $i++) {
+            $player = $board[$i]["player"];
+            $field = $board[$i]["no"];
+            $count = $board[$i]["count"];
+
+            // assert that player data fits players on server
+            if ($player != $player1 && $player != $player2) {
+                throw new feException("Player data is corrupt, contains player which is not part of the game: " . $player);
+            }
+            // limit maximum stones per bowl to prevent possible problems later on in the browser
+            if ($count > 20) {
+                throw new feException("Player data is corrupt, contains more than 20 seeds per pit: " . $count . " in " . $i);
+            }
+
+            $sql = "UPDATE board SET stones = $count WHERE player = $player and field = $field";
+            self::DbQuery($sql);
+        }   
+    }
+
     //////////////////////////////////////////////////////////////////////////////
     //////////// Player actions
     //////////// 
@@ -1211,11 +1237,29 @@ class BaoLaKiswahili extends Table
 
     function switchEditPlayer($board)
     {
+        $this->saveBoard($board);
+
+        // notify other player about board edit to refresh (current player will ignore it)
+        $message = clienttranslate('${player_name} edited board and switched players.');
+        self::notifyAllPlayers("placeStones", $message, array(
+            'player' => self::getActivePlayerId(),
+            'player_name' => self::getActivePlayerName()
+        ));
+
         $this->gamestate->nextState('switchPlayer');
     }
 
     function startWithEditedBoard($board)
     {
+        $this->saveBoard($board);
+
+        // notify other player about board edit to refresh (current player will ignore it)
+        $message = clienttranslate('${player_name} edited board and switched players.');
+        self::notifyAllPlayers("placeStones", $message, array(
+            'player' => self::getActivePlayerId(),
+            'player_name' => self::getActivePlayerName()
+        ));
+
         // Go to the next state and stop editing
         $GLOBALS["editDone"] = true;
         $this->gamestate->nextState('stopEditing');

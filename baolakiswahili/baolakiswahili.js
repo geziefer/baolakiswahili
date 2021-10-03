@@ -76,19 +76,10 @@ define([
                 // Setup game notifications to handle (see "setupNotifications" method below)
                 this.setupNotifications();
 
-                // create empty client args and store game variant
+                // create empty client args and store game variant and board
                 this.clientStateArgs = {};
                 this.clientStateArgs.variant = gamedatas.variant;
-
-                // create emtpy board for editor (board resembles data structure which usually comes from server)
-                this.clientStateArgs.board = [];
-                for(var j = 0; j <= 1; j++)
-                {
-                    for(var i = 0; i <= 16; i++)
-                    {
-                        this.clientStateArgs.board[i + j * 17] = {"player" : Object.keys(gamedatas.players)[j], "no" : i, "count" : 0};
-                    }
-                }
+                this.clientStateArgs.board = gamedatas.board;
 
                 // hide preference box if HUS variant
                 if (gamedatas.variant == VARIANT_HUS) {
@@ -597,6 +588,7 @@ define([
                 }, this, function (result) { });
             },
 
+            // click on swith player button in editor
             onSwitchEditPlayer: function (evt) {
 			    console.log("Enter onSwitchPlayer");
 
@@ -608,17 +600,20 @@ define([
                 // Stop event propagation
                 dojo.stopEvent(evt);
 
-                 // restore all bowls and possibly seed areas
-                 dojo.query('.blk_circle').removeClass('blk_editBowl');
-                 dojo.query('.blk_seed_area').removeClass('blk_editBowl');
-                 
-                 // call server to start selected game mode
-                 this.ajaxcall("/baolakiswahili/baolakiswahili/switchEditPlayer.html", {
-                     lock: true,
-                     board: this.clientStateArgs.board
-                    }, this, function (result) { });
+                // restore all bowls and possibly seed areas
+                dojo.query('.blk_circle').removeClass('blk_editBowl');
+                dojo.query('.blk_seed_area').removeClass('blk_editBowl');
+                dojo.query('.blk_circle').removeClass('blk_clearBowl');
+                dojo.query('.blk_seed_area').removeClass('blk_clearBowl');
+                      
+                // call server to start selected game mode
+                this.ajaxcall("/baolakiswahili/baolakiswahili/switchEditPlayer.html", {
+                    lock: true,
+                    board: JSON.stringify(this.clientStateArgs.board)
+                }, this, function (result) { });
             },
 
+            // click on toggle to clear in editor
             onClearEditing: function (evt) {
 			    console.log("Enter onClearEditing");
 
@@ -633,6 +628,7 @@ define([
                 this.setClientState('client_gameEditClear');
             },
 
+            // click on toggle to edit in editor
             onEditing: function (evt) {
 			    console.log("Enter onEditing");
 
@@ -648,6 +644,7 @@ define([
                  this.restoreServerGameState();
             },
 
+            // click on start game and close editor
             onFinishEditing: function (evt) {
 			    console.log("Enter onFinishEditing");
 
@@ -662,12 +659,13 @@ define([
                 // restore all bowls and possibly seed areas
                 dojo.query('.blk_circle').removeClass('blk_editBowl');
                 dojo.query('.blk_seed_area').removeClass('blk_editBowl');
+                dojo.query('.blk_circle').removeClass('blk_clearBowl');
+                dojo.query('.blk_seed_area').removeClass('blk_clearBowl');
                 
                 // call server to start selected game mode
-console.log('board', this.clientStateArgs.board);
                 this.ajaxcall("/baolakiswahili/baolakiswahili/startWithEditedBoard.html", {
                     lock: true,
-                    board: this.clientStateArgs.board
+                    board: JSON.stringify(this.clientStateArgs.board)
                 }, this, function (result) { });
             },
 
@@ -684,7 +682,7 @@ console.log('board', this.clientStateArgs.board);
                  }
             },
 
-                // click on Testmode button       
+            // click on Testmode button       
             onTestmode: function (evt) {
 			    console.log("Enter onTestmode");
 
@@ -717,6 +715,7 @@ console.log('board', this.clientStateArgs.board);
                 dojo.subscribe('moveStones', this, "notif_moveStones");
                 this.notifqueue.setSynchronous('moveStones');
                 dojo.subscribe('newScores', this, "notif_newScores");
+                dojo.subscribe('placeStones', this, "notif_refresh");
             },
 
             /*
@@ -876,11 +875,32 @@ console.log('board', this.clientStateArgs.board);
                 console.log('leaving notif_moveStones');
             },
 
+            /*
+            Notification when score changes.
+            */
             notif_newScores: function (notif) {
+                console.log('enter notif_newScores');
+
                 for (var player_id in notif.args.scores) {
                     var newScore = notif.args.scores[player_id];
                     this.scoreCtrl[player_id].toValue(newScore);
                 }
             },
+
+            /*
+            Notification when stones should be placed for other players while editing.
+            This gets done by simply refreshing to keep it simple and since not being in real game yet.
+            */
+            notif_refresh: function (notif) {
+                console.log('enter notif_refresh');
+
+                var player = notif.args.player;
+                var currentPlayer = this.getCurrentPlayerId();
+
+                // active player already has the stones on the board, thus only do for other player
+                if (player != currentPlayer) {
+                    location.reload();
+                }
+            }
         });
     });
