@@ -76,10 +76,12 @@ define([
                 // Setup game notifications to handle (see "setupNotifications" method below)
                 this.setupNotifications();
 
-                // create empty client args and store game variant and board
+                // create empty client args and store game variant, board and plyer ids
                 this.clientStateArgs = {};
                 this.clientStateArgs.variant = gamedatas.variant;
                 this.clientStateArgs.board = gamedatas.board;
+                this.clientStateArgs.player1 = gamedatas.playerorder[0]
+                this.clientStateArgs.player2 = gamedatas.playerorder[1]
 
                 // hide preference box if HUS variant
                 if (gamedatas.variant == VARIANT_HUS) {
@@ -229,7 +231,7 @@ define([
             
             */
 
-            // place one stone in a bowl with a little random position within,
+            // place one stone in a bowl (1-16) of a player with a little random position within,
             // or put it in storage area if field 0
             addStoneOnBoard: function (player, field, number) {
                 // distinguish between storage area and regular bowl to place them in different divs
@@ -432,28 +434,54 @@ define([
                 var params = evt.currentTarget.id.split('_');
                 var player = params[1];
                 var field = params[2];
+                var player1 = this.clientStateArgs.player1;
+                var player2 = this.clientStateArgs.player2;
 
                 // first: check for one of the special editor options
                 if (dojo.hasClass('circle_' + player + '_' + field, 'blk_editBowl')) {
-                    this.addStoneOnBoard(player, field, 1);
-                    var board = this.clientStateArgs.board;
-                    for (var i = 0; i < board.length; i++) {
-                        if (board[i].player == player && board[i].no == field) {
-                            board[i].count++;
-                            break;
-                        }
+                    if (field == 0) {
+                        // for storage area a stone in both has to be placed to ensure equality
+                        // note: don't care about stone number, will be refreshed before game start
+                        this.addStoneOnBoard(player1, 0, 1);    
+                        this.addStoneOnBoard(player2, 0, 1); 
+                        this.clientStateArgs.board[0].count++;   
+                        this.clientStateArgs.board[17].count++;   
+
+                        // update labels to display stone count
+                        dojo.byId('label_' + player1 + '_0').innerHTML = "<p>" + this.clientStateArgs.board[0].count + "</p>";
+                        dojo.byId('label_' + player2 + '_0').innerHTML = "<p>" + this.clientStateArgs.board[0].count + "</p>";
+                    } else {
+                        // for others calculate index since player order and fields are always the same
+                        this.addStoneOnBoard(player, field, 1);
+                        var order = player == player2 ? 1 : 0;
+                        this.clientStateArgs.board[order * 17 + parseInt(field)].count++
+
+                        // update label to display stone count
+                        dojo.byId('label_' + player + '_' + field).innerHTML = "<p>" + this.clientStateArgs.board[order * 17 + parseInt(field)].count + "</p>";
                     }
 
                     return;
                 }
                 if (dojo.hasClass('circle_' + player + '_' + field, 'blk_clearBowl')) {
-                    dojo.query('#circle_' + player + '_' + field + ' > .blk_stone').forEach(dojo.destroy);
-                    var board = this.clientStateArgs.board;
-                    for (var i = 0; i <= board.length; i++) {
-                        if (board[i].player == player && board[i].no == field) {
-                            board[i].count = 0;
-                            break;
-                        }
+                    if (field == 0) {
+                        // for storage area both have to be emptied to ensure equality
+                        // note: don't care about deleted stone numbers, will be refreshed before game start
+                        dojo.query('#circle_' + player1 + '_' + field + ' > .blk_stone').forEach(dojo.destroy);
+                        dojo.query('#circle_' + player2 + '_' + field + ' > .blk_stone').forEach(dojo.destroy);
+                        this.clientStateArgs.board[0].count = 0;   
+                        this.clientStateArgs.board[17].count = 0;   
+
+                        // update labels to display stone count
+                        dojo.byId('label_' + player1 + '_0').innerHTML = "<p>0</p>";
+                        dojo.byId('label_' + player2 + '_0').innerHTML = "<p>0</p>";
+                    } else {
+                        // for others calculate index since player order and fields are always the same
+                        dojo.query('#circle_' + player + '_' + field + ' > .blk_stone').forEach(dojo.destroy);
+                        var order = player == player2 ? 1 : 0;
+                        this.clientStateArgs.board[order * 17 + parseInt(field)].count = 0;
+
+                        // update label to display stone count
+                        dojo.byId('label_' + player + '_' + field).innerHTML = "<p>0</p>";
                     }
 
                     return;
@@ -889,16 +917,17 @@ define([
 
             /*
             Notification when stones should be placed for other players while editing.
-            This gets done by simply refreshing to keep it simple and since not being in real game yet.
+            Note: This gets done by simply refreshing to keep it simple and since not being in real game yet. Besides, this orders the stone numbers correctly.
             */
             notif_refresh: function (notif) {
                 console.log('enter notif_refresh');
 
                 var player = notif.args.player;
                 var currentPlayer = this.getCurrentPlayerId();
+                var refreshAll = notif.args.refresh_all;
 
                 // active player already has the stones on the board, thus only do for other player
-                if (player != currentPlayer) {
+                if (player != currentPlayer || refreshAll) {
                     location.reload();
                 }
             }

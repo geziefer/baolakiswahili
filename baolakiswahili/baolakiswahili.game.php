@@ -1243,7 +1243,8 @@ class BaoLaKiswahili extends Table
         $message = clienttranslate('${player_name} edited board and switched players.');
         self::notifyAllPlayers("placeStones", $message, array(
             'player' => self::getActivePlayerId(),
-            'player_name' => self::getActivePlayerName()
+            'player_name' => self::getActivePlayerName(),
+            'refresh_all' => false
         ));
 
         $this->gamestate->nextState('switchPlayer');
@@ -1257,8 +1258,17 @@ class BaoLaKiswahili extends Table
         $message = clienttranslate('${player_name} edited board and switched players.');
         self::notifyAllPlayers("placeStones", $message, array(
             'player' => self::getActivePlayerId(),
-            'player_name' => self::getActivePlayerName()
+            'player_name' => self::getActivePlayerName(),
+            'refresh_all' => true
         ));
+
+        // set nyumba accordingly (might be ignored in variants)
+        $nyumbaFunctional = $board[5]["count"] < 6 ? 'false' : 'true';
+        $sql = "UPDATE kvstore SET value_boolean = $nyumbaFunctional WHERE `key` = 'nyumba5functional'";
+        self::DbQuery($sql);
+        $nyumbaFunctional = $board[21]["count"] < 6 ? 'false' : 'true';
+        $sql = "UPDATE kvstore SET value_boolean = $nyumbaFunctional WHERE `key` = 'nyumba4functional'";
+        self::DbQuery($sql);
 
         // Go to the next state and stop editing
         $GLOBALS["editDone"] = true;
@@ -1393,15 +1403,37 @@ class BaoLaKiswahili extends Table
             $this->gamestate->nextState('startEditing');
         }
         // transit to the correct phase, which is separate for the 3 possible game options
-        elseif ($this->getVariant() == VARIANT_KISWAHILI) {
-            $this->gamestate->nextState('playKiswahili');
-        } elseif ($this->getVariant() == VARIANT_KUJIFUNZA) {
-            $this->gamestate->nextState('playKujifunza');
-        } elseif ($this->getVariant() == VARIANT_HUS) {
-            $this->gamestate->nextState('playHus');
-        } else {
-            // error in options, end game
-            $this->gamestate->nextState('endGame');
+        else {
+            // first check if initialized or edited game situation causes an immediate end
+            $board = $this->getBoard();
+            $player = self::getActivePlayerId();
+            $opponent = self::getPlayerAfter($player);
+            if ($this->getScore($player, $board) == 0 || $this->getScore($opponent, $board) == 0) {
+                $this->gamestate->nextState('endGame');
+            }
+
+            // then switch to the selected game variant
+            if ($this->getVariant() == VARIANT_KISWAHILI) {
+                // set phase according to players have stone in storage area
+                if ($board[$player][0]["count"] == 0 && $board[$opponent][0]["count"] == 0) {
+                    // store new phase and switch to it
+                    $sql = "UPDATE kvstore SET value_text = '2nd' WHERE `key` = 'phase'";
+                    self::DbQuery($sql);
+
+                    // start with 2nd phase
+                    $this->gamestate->nextState('switchPhase');
+                } else {
+                    // start regularily
+                    $this->gamestate->nextState('playKiswahili');
+                }
+            } elseif ($this->getVariant() == VARIANT_KUJIFUNZA) {
+                $this->gamestate->nextState('playKujifunza');
+            } elseif ($this->getVariant() == VARIANT_HUS) {
+                $this->gamestate->nextState('playHus');
+            } else {
+                // error in options, end game
+                $this->gamestate->nextState('endGame');
+            }
         }
     }
 

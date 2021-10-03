@@ -28,7 +28,7 @@ $machinestates = array(
         "description" => "",
         "type" => "game",
         "action" => "stVariantSelect",
-        "transitions" => array("playKiswahili" => 10, "playKujifunza" => 20, "playHus" => 30, "startEditing" => 3)
+        "transitions" => array("playKiswahili" => 10, "playKujifunza" => 20, "playHus" => 30, "startEditing" => 3, "switchPhase" => 20, "endGame" => 99)
     ),
 
     // Board editor for training mode
