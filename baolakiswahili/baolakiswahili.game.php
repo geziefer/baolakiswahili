@@ -1296,6 +1296,8 @@ class BaoLaKiswahili extends Table
             'board' => $board
         ));
 
+        // 
+
         // set nyumba accordingly (might be ignored in variants)
         $nyumbaFunctional = $board[5]["count"] < 6 ? 'false' : 'true';
         $sql = "UPDATE kvstore SET value_boolean = $nyumbaFunctional WHERE `key` = 'nyumba5functional'";

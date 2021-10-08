@@ -933,6 +933,7 @@ define([
                 // place all stones on board
                 var board = notif.args.board;
                 this.fillBoard(board);
+                this.clientStateArgs.board = board;
             }
         });
     });
