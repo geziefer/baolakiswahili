@@ -53,18 +53,7 @@ define([
                 console.log("Starting game setup");
 
                 // place all stones on board
-                var number = 1;
-                for (var i in gamedatas.board) {
-                    var bowl = gamedatas.board[i];
-
-                    for (var j = 1; j <= bowl.count; j++) {
-                        this.addStoneOnBoard(bowl.player, bowl.no, number);
-                        number++;
-                    }
-
-                    // update label to display stone count
-                    dojo.byId('label_' + bowl.player + '_' + bowl.no).innerHTML = "<p>" + bowl.count + "</p>";
-                }
+                this.fillBoard(gamedatas.board);
 
                 // click handler for different click situations on bowl including editor
                 dojo.query('.blk_circle').connect('onclick', this, 'onBowl');
@@ -230,6 +219,22 @@ define([
                 script.
             
             */
+
+            // place all stones on board
+            fillBoard: function (board) {
+                var number = 1;
+                for (var i in board) {
+                    var bowl = board[i];
+
+                    for (var j = 1; j <= bowl.count; j++) {
+                        this.addStoneOnBoard(bowl.player, bowl.no, number);
+                        number++;
+                    }
+
+                    // update label to display stone count
+                    dojo.byId('label_' + bowl.player + '_' + bowl.no).innerHTML = "<p>" + bowl.count + "</p>";
+                }
+            },
 
             // place one stone in a bowl (1-16) of a player with a little random position within,
             // or put it in storage area if field 0
@@ -743,7 +748,7 @@ define([
                 dojo.subscribe('moveStones', this, "notif_moveStones");
                 this.notifqueue.setSynchronous('moveStones');
                 dojo.subscribe('newScores', this, "notif_newScores");
-                dojo.subscribe('placeStones', this, "notif_refresh");
+                dojo.subscribe('placeStones', this, "notif_placeStones");
             },
 
             /*
@@ -919,17 +924,15 @@ define([
             Notification when stones should be placed for other players while editing.
             Note: This gets done by simply refreshing to keep it simple and since not being in real game yet. Besides, this orders the stone numbers correctly.
             */
-            notif_refresh: function (notif) {
-                console.log('enter notif_refresh');
+            notif_placeStones: function (notif) {
+                console.log('enter notif_placeStones');
 
-                var player = notif.args.player;
-                var currentPlayer = this.getCurrentPlayerId();
-                var refreshAll = notif.args.refresh_all;
+                // empty board
+                dojo.query('.blk_stone').forEach(dojo.destroy);
 
-                // active player already has the stones on the board, thus only do for other player
-                if (player != currentPlayer || refreshAll) {
-                    location.reload();
-                }
+                // place all stones on board
+                var board = notif.args.board;
+                this.fillBoard(board);
             }
         });
     });

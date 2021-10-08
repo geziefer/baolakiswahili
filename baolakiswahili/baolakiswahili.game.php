@@ -704,7 +704,41 @@ class BaoLaKiswahili extends Table
         }
     }
 
+    function updateScores($board, $playerLast, $playerNext) {
+        // calculate scores and thereby if someone has lost or is zombie (score = 0)
+        $sql = "SELECT player_zombie FROM player WHERE player_id = '$playerLast'";
+        $zombie = self::getUniqueValueFromDB($sql);
+        $scoreLast = 0;
+        if (!$zombie) {
+            $scoreLast = $this->getScore($playerLast, $board);
+        }
+        $sql = "SELECT player_zombie FROM player WHERE player_id = '$playerNext'";
+        $zombie = self::getUniqueValueFromDB($sql);
+        $scoreNext = 0;
+        if (!$zombie) {
+            $scoreNext = $this->getScore($playerNext, $board);
+        }
+
+        // save scores
+        $sql = "UPDATE player SET player_score = '$scoreLast' WHERE player_id ='$playerLast'";
+        self::DbQuery($sql);
+        $sql = "UPDATE player SET player_score = '$scoreNext' WHERE player_id ='$playerNext'";
+        self::DbQuery($sql);
+
+        // notify players of new scores
+        $newScores = array($playerLast => $scoreLast, $playerNext => $scoreNext);
+        self::notifyAllPlayers("newScores", "", array(
+            "scores" => $newScores
+        ));
+
+        // check for end of game
+        if ($scoreLast == 0 || $scoreNext == 0) {
+            $this->gamestate->nextState('endGame');
+        }
+    }
+    
     function saveBoard($board) {
+        // Note: datastructure is different than when retrieving board from database
         $player1 = self::getActivePlayerId();
         $player2 = self::getPlayerAfter($player1);
         // assert that full board is present
@@ -1237,14 +1271,14 @@ class BaoLaKiswahili extends Table
 
     function switchEditPlayer($board)
     {
+        // Note: datastructure is different than when retrieving board from database
         $this->saveBoard($board);
 
-        // notify other player about board edit to refresh (current player will ignore it)
+        // notify players about board edit to refresh
         $message = clienttranslate('${player_name} edited board and switched players.');
         self::notifyAllPlayers("placeStones", $message, array(
-            'player' => self::getActivePlayerId(),
             'player_name' => self::getActivePlayerName(),
-            'refresh_all' => false
+            'board' => $board
         ));
 
         $this->gamestate->nextState('switchPlayer');
@@ -1252,14 +1286,14 @@ class BaoLaKiswahili extends Table
 
     function startWithEditedBoard($board)
     {
+        // Note: datastructure is different than when retrieving board from database
         $this->saveBoard($board);
 
-        // notify other player about board edit to refresh (current player will ignore it)
+        // notify other player about board edit to refresh
         $message = clienttranslate('${player_name} edited board and switched players.');
         self::notifyAllPlayers("placeStones", $message, array(
-            'player' => self::getActivePlayerId(),
             'player_name' => self::getActivePlayerName(),
-            'refresh_all' => true
+            'board' => $board
         ));
 
         // set nyumba accordingly (might be ignored in variants)
@@ -1269,6 +1303,14 @@ class BaoLaKiswahili extends Table
         $nyumbaFunctional = $board[21]["count"] < 6 ? 'false' : 'true';
         $sql = "UPDATE kvstore SET value_boolean = $nyumbaFunctional WHERE `key` = 'nyumba4functional'";
         self::DbQuery($sql);
+
+        // calculate scores, save them and notify players,
+        // can cause end of game if one player has a score of 0,
+        // get board again since score calculation needs datastructure from database
+        $board = $this->getBoard();
+        $playerLast = self::getActivePlayerId();
+        $playerNext = self::getPlayerAfter($playerLast);
+        $this->updateScores($board, $playerLast, $playerNext);
 
         // Go to the next state and stop editing
         $GLOBALS["editDone"] = true;
@@ -1442,74 +1484,47 @@ class BaoLaKiswahili extends Table
         self::trace('*** stNextPlayer was called');
         // get current situation
         $board = $this->getBoard();
-
-        // calculate scores and thereby if someone has lost or is zombie (score = 0)
         $playerLast = self::getActivePlayerId();
-        $sql = "SELECT player_zombie FROM player WHERE player_id = '$playerLast'";
-        $zombie = self::getUniqueValueFromDB($sql);
-        $scoreLast = 0;
-        if (!$zombie) {
-            $scoreLast = $this->getScore($playerLast, $board);
-        }
         $playerNext = self::getPlayerAfter($playerLast);
-        $sql = "SELECT player_zombie FROM player WHERE player_id = '$playerNext'";
-        $zombie = self::getUniqueValueFromDB($sql);
-        $scoreNext = 0;
-        if (!$zombie) {
-            $scoreNext = $this->getScore($playerNext, $board);
-        }
 
-        // save scores
-        $sql = "UPDATE player SET player_score = '$scoreLast' WHERE player_id ='$playerLast'";
-        self::DbQuery($sql);
-        $sql = "UPDATE player SET player_score = '$scoreNext' WHERE player_id ='$playerNext'";
-        self::DbQuery($sql);
+        // calculate scores, save them and notify players,
+        // can cause end of game if one player has a score of 0
+        $this->updateScores($board, $playerLast, $playerNext);
 
-        // notify players of new scores
-        $newScores = array($playerLast => $scoreLast, $playerNext => $scoreNext);
-        self::notifyAllPlayers("newScores", "", array(
-            "scores" => $newScores
-        ));
+        // check for saved state to use
+        $sql = "SELECT value_text FROM kvstore WHERE `key` = 'stateAfterMove'";
+        $stateAfterMove = self::getUniqueValueFromDB($sql);
 
-        // first check for end of game
-        if ($scoreLast == 0 || $scoreNext == 0) {
-            $this->gamestate->nextState('endGame');
-        } else {
-            // check for saved state to use
-            $sql = "SELECT value_text FROM kvstore WHERE `key` = 'stateAfterMove'";
-            $stateAfterMove = self::getUniqueValueFromDB($sql);
+        if ($stateAfterMove === "nextPlayer") {
+            // check for phase change in Kiswahili variant
+            if ($this->getVariant() == VARIANT_KISWAHILI && 
+                $board[$playerLast][0]["count"] == 0 && $board[$playerNext][0]["count"] == 0) {
 
-            if ($stateAfterMove === "nextPlayer") {
-                // check for phase change in Kiswahili variant
-                if ($this->getVariant() == VARIANT_KISWAHILI && 
-                    $board[$playerLast][0]["count"] == 0 && $board[$playerNext][0]["count"] == 0) {
+                // store new phase and switch to it
+                $sql = "UPDATE kvstore SET value_text = '2nd' WHERE `key` = 'phase'";
+                self::DbQuery($sql);
 
-                    // store new phase and switch to it
-                    $sql = "UPDATE kvstore SET value_text = '2nd' WHERE `key` = 'phase'";
-                    self::DbQuery($sql);
-
-                    // change state to move to 
-                    $stateAfterMove = "switchPhase";
-                }
-
-                // check if in kutakatia move for Kiswahili 2nd phase
-                if ($this->getVariant() == VARIANT_KISWAHILI_2ND) {
-                    $sql = "SELECT value_number FROM kvstore WHERE `key` = 'kutakatiaMoves'";
-                    $kutakatiaMoves = $this->getUniqueValueFromDB($sql);
-                    if ($kutakatiaMoves > 0) {
-                        // persist that one round was played in kutakatia
-                        $kutakatiaMoves -= 1;
-                        $sql = "UPDATE kvstore SET value_number = $kutakatiaMoves WHERE `key` = 'kutakatiaMoves'";
-                        self::DbQuery($sql);
-                    }
-                }
-
-                // Next player can play and gets extra time
-                self::giveExtraTime($playerNext);
-                $this->activeNextPlayer();
+                // change state to move to 
+                $stateAfterMove = "switchPhase";
             }
-            $this->gamestate->nextState($stateAfterMove);
+
+            // check if in kutakatia move for Kiswahili 2nd phase
+            if ($this->getVariant() == VARIANT_KISWAHILI_2ND) {
+                $sql = "SELECT value_number FROM kvstore WHERE `key` = 'kutakatiaMoves'";
+                $kutakatiaMoves = $this->getUniqueValueFromDB($sql);
+                if ($kutakatiaMoves > 0) {
+                    // persist that one round was played in kutakatia
+                    $kutakatiaMoves -= 1;
+                    $sql = "UPDATE kvstore SET value_number = $kutakatiaMoves WHERE `key` = 'kutakatiaMoves'";
+                    self::DbQuery($sql);
+                }
+            }
+
+            // Next player can play and gets extra time
+            self::giveExtraTime($playerNext);
+            $this->activeNextPlayer();
         }
+        $this->gamestate->nextState($stateAfterMove);
     }
 
     function stEditSwitch()
