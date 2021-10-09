@@ -800,7 +800,7 @@ class BaoLaKiswahili extends Table
         } elseif ($this->checkAction('decideSafari', false)) {
             $currentAction = 'decideSafari';
         } else {
-            throw new feException("Impossible move: action is not executeMove or selectKichwa");
+            throw new feException("Impossible action: is not executeMove or selectKichwa or decideSafari");
         }
         
         // Distinguish game mode for move check
@@ -1275,6 +1275,9 @@ class BaoLaKiswahili extends Table
 
     function switchEditPlayer($board)
     {
+        // Check that this action is possible at this moment
+        $this->checkAction('edit', true);
+
         // Note: datastructure is different than when retrieving board from database
         $this->saveBoard($board);
 
@@ -1290,6 +1293,9 @@ class BaoLaKiswahili extends Table
 
     function startWithEditedBoard($board)
     {
+        // Check that this action is possible at this moment
+        $this->checkAction('edit', true);
+
         // Note: datastructure is different than when retrieving board from database
         $this->saveBoard($board);
 
