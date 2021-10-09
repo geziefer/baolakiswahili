@@ -131,6 +131,7 @@ $gameinfos = array(
             totranslate("This game is available in 3 versions: A simple one called `Hus Bao`, which is commonly played by kids. A more complex and strategic version called `Bao la Kujifunza`. And the full version called `Bao la Kiswahili`, which comes in 2 game phases and with a complex ruleset which is alos known as the `King of Mancala Games`."),
             totranslate("It is highly recommended to thoroughly read the rules including the examples before playing the full version to understand why a move is possible or not and what the terms mean."),
             totranslate("Also, for the first games when playing the more complex versions, it is recommended to not let the Kichwa selected automatically, in order to allow for better understanding of the different parts of the move and only later set it to not have repeatedly select the only possible option."),
+            totranslate("To help practicing the game or understand special rules, there is an editor option for training mode which allows for customizing the board freely. "),
             totranslate("Since it is not easy to fully understand all the rules and special cases, don't hesitate to contact the author and ask, he will happily assist with questions."),
             totranslate("For those interested in the game development, have a look at https://github.com/geziefer/baolakiswahili.")
     ),
