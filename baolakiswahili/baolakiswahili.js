@@ -69,8 +69,8 @@ define([
                 this.clientStateArgs = {};
                 this.clientStateArgs.variant = gamedatas.variant;
                 this.clientStateArgs.board = gamedatas.board;
-                this.clientStateArgs.player1 = gamedatas.playerorder[0]
-                this.clientStateArgs.player2 = gamedatas.playerorder[1]
+                this.clientStateArgs.player1 = Object.keys(gamedatas.players)[0];
+                this.clientStateArgs.player2 = Object.keys(gamedatas.players)[1];
 
                 // hide preference box if HUS variant
                 if (gamedatas.variant == VARIANT_HUS) {
@@ -459,7 +459,7 @@ define([
 
                             // update labels to display stone count
                             dojo.byId('label_' + player1 + '_0').innerHTML = "<p>" + this.clientStateArgs.board[0].count + "</p>";
-                            dojo.byId('label_' + player2 + '_0').innerHTML = "<p>" + this.clientStateArgs.board[0].count + "</p>";
+                            dojo.byId('label_' + player2 + '_0').innerHTML = "<p>" + this.clientStateArgs.board[17].count + "</p>";
                         } else {
                             // for others calculate index since player order and fields are always the same
                             this.addStoneOnBoard(player, field, 1);
