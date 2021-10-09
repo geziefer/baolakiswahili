@@ -444,25 +444,30 @@ define([
 
                 // first: check for one of the special editor options
                 if (dojo.hasClass('circle_' + player + '_' + field, 'blk_editBowl')) {
-                    if (field == 0) {
-                        // for storage area a stone in both has to be placed to ensure equality
-                        // note: don't care about stone number, will be refreshed before game start
-                        this.addStoneOnBoard(player1, 0, 1);    
-                        this.addStoneOnBoard(player2, 0, 1); 
-                        this.clientStateArgs.board[0].count++;   
-                        this.clientStateArgs.board[17].count++;   
+                    // translate from gui order to board order
+                    var order = player == player2 ? 1 : 0;
+                    var index = order * 17 + parseInt(field);
+                    // do not allow more than 20 stones to prevent gui overload, just do nothing then
+                    if (this.clientStateArgs.board[index].count < 20) {
+                        if (field == 0) {
+                            // for storage area a stone in both has to be placed to ensure equality
+                            // note: don't care about stone number, will be refreshed before game start
+                            this.addStoneOnBoard(player1, 0, 1);    
+                            this.addStoneOnBoard(player2, 0, 1); 
+                            this.clientStateArgs.board[0].count++;   
+                            this.clientStateArgs.board[17].count++;   
 
-                        // update labels to display stone count
-                        dojo.byId('label_' + player1 + '_0').innerHTML = "<p>" + this.clientStateArgs.board[0].count + "</p>";
-                        dojo.byId('label_' + player2 + '_0').innerHTML = "<p>" + this.clientStateArgs.board[0].count + "</p>";
-                    } else {
-                        // for others calculate index since player order and fields are always the same
-                        this.addStoneOnBoard(player, field, 1);
-                        var order = player == player2 ? 1 : 0;
-                        this.clientStateArgs.board[order * 17 + parseInt(field)].count++
+                            // update labels to display stone count
+                            dojo.byId('label_' + player1 + '_0').innerHTML = "<p>" + this.clientStateArgs.board[0].count + "</p>";
+                            dojo.byId('label_' + player2 + '_0').innerHTML = "<p>" + this.clientStateArgs.board[0].count + "</p>";
+                        } else {
+                            // for others calculate index since player order and fields are always the same
+                            this.addStoneOnBoard(player, field, 1);
+                            this.clientStateArgs.board[index].count++
 
-                        // update label to display stone count
-                        dojo.byId('label_' + player + '_' + field).innerHTML = "<p>" + this.clientStateArgs.board[order * 17 + parseInt(field)].count + "</p>";
+                            // update label to display stone count
+                            dojo.byId('label_' + player + '_' + field).innerHTML = "<p>" + this.clientStateArgs.board[order * 17 + parseInt(field)].count + "</p>";
+                        }
                     }
 
                     return;
