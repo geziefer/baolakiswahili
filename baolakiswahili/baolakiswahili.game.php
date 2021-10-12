@@ -1300,7 +1300,7 @@ class BaoLaKiswahili extends Table
         $this->saveBoard($board);
 
         // notify other player about board edit to refresh
-        $message = clienttranslate('${player_name} edited board and switched players.');
+        $message = clienttranslate('${player_name} edited board and started game.');
         self::notifyAllPlayers("placeStones", $message, array(
             'player_name' => self::getActivePlayerName(),
             'board' => $board
