@@ -165,7 +165,9 @@ define([
                         case 'kunamuaCaptureSelection':
                         case 'mtajiCaptureSelection':
                             var count = Object.keys(args.possibleMoves).length;
-                            if (count == 1 && this.prefs[PREF_KICHWA_MODE].value == PREF_KICHWA_MODE_AUTOMATIC) {
+                            // check for automatic selection, do not use it in replay mode
+                            if (count == 1 && this.prefs[PREF_KICHWA_MODE].value == PREF_KICHWA_MODE_AUTOMATIC
+                                && typeof g_replayFrom === 'undefined' && !g_archive_mode) {
                                 // automatically select the kichwa field and direction
                                 var field = Object.keys(args.possibleMoves)[0];
                                 var direction = Object.values(args.possibleMoves)[0][0];
