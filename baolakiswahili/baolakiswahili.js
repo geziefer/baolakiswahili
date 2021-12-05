@@ -529,7 +529,7 @@ define([
                     } else {
                         // set new client state
                         this.setClientState('client_directionSelection', {
-                            descriptionmyturn: _('${you} must select direction for ${type} move'),
+                            descriptionmyturn: _('${you} must select direction for ${type_translated} move'),
                         });
                     }
 
