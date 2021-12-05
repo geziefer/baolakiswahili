@@ -1138,6 +1138,15 @@ class BaoLaKiswahili extends Table
 
                 // if move ends in a non-empty bowl, move continues
                 if ($count > 1) {
+                    // check if move has another capture
+                    if ($sourceField <= 8 && $board[$opponent][$sourceField]["count"] > 0) {
+                        // prepare for next part of move in different state, since player has to select kichwa
+                        $stateAfterMove = 'continueCapture';
+                        $captureField = $sourceField;
+                        // leave loop to stop move
+                        break;
+                    }
+
                     // for Kiswahili kunamua phase check if a functional nyumba would be emptied now
                     if ($this->getVariant() == VARIANT_KISWAHILI) {
                         $nyumba = $this->getNyumba($player);
@@ -1150,19 +1159,10 @@ class BaoLaKiswahili extends Table
                         }
                     }
 
-                    // check if move has another capture
-                    if ($sourceField <= 8 && $board[$opponent][$sourceField]["count"] > 0) {
-                        // prepare for next part of move in different state, since player has to select kichwa
-                        $stateAfterMove = 'continueCapture';
-                        $captureField = $sourceField;
-                        // leave loop to stop move
-                        break;
-                    } else {
-                        // empty own bowl for next move
-                        $board[$player][$sourceField]["count"] = 0;
-                        array_push($moves, "emptyActive_" . $sourceField);
-                        $overallMoved += $count;
-                    }
+                    // if neither caputre nor safari decision, empty own bowl for next move
+                    $board[$player][$sourceField]["count"] = 0;
+                    array_push($moves, "emptyActive_" . $sourceField);
+                    $overallMoved += $count;
                 }
             } while ($count > 1);
         } elseif ($this->getVariant() == VARIANT_HUS) {
