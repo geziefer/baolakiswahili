@@ -744,7 +744,9 @@ class BaoLaKiswahili extends Table
     function saveBoard($board) {
         // Note: datastructure is different than when retrieving board from database
         $player1 = self::getActivePlayerId();
+        $player1Nyumba = $this->getNyumba($player1);
         $player2 = self::getPlayerAfter($player1);
+        $player2Nyumba = $this->getNyumba($player2);
         // assert that full board is present
         if (count($board) != 34) {
             throw new feException("Player data is corrupt, board has not the right size of 34: " . count($board));
@@ -765,6 +767,19 @@ class BaoLaKiswahili extends Table
 
             $sql = "UPDATE board SET stones = $count WHERE player = $player and field = $field";
             self::DbQuery($sql);
+
+            // also store Nyumba state, will be only used in Kiswahili variant
+            if ($player == $player1 && $field == $player1Nyumba) {
+                $nyumbaFunctional = $count < 6 ? 'false' : 'true';
+                $key = 'nyumba'.$field.'functional';
+                $sql = "UPDATE kvstore SET value_boolean = $nyumbaFunctional WHERE `key` = '$key'";
+                self::DbQuery($sql);
+            } else if ($player == $player2 && $field == $player2Nyumba) {
+                $nyumbaFunctional = $count < 6 ? 'false' : 'true';
+                $key = 'nyumba'.$field.'functional';
+                $sql = "UPDATE kvstore SET value_boolean = $nyumbaFunctional WHERE `key` = '$key'";
+                self::DbQuery($sql);
+            }
         }   
     }
 
@@ -1305,14 +1320,6 @@ class BaoLaKiswahili extends Table
             'player_name' => self::getActivePlayerName(),
             'board' => $board
         ));
-
-        // set nyumba accordingly (might be ignored in variants)
-        $nyumbaFunctional = $board[5]["count"] < 6 ? 'false' : 'true';
-        $sql = "UPDATE kvstore SET value_boolean = $nyumbaFunctional WHERE `key` = 'nyumba5functional'";
-        self::DbQuery($sql);
-        $nyumbaFunctional = $board[21]["count"] < 6 ? 'false' : 'true';
-        $sql = "UPDATE kvstore SET value_boolean = $nyumbaFunctional WHERE `key` = 'nyumba4functional'";
-        self::DbQuery($sql);
 
         // mark end of editing
         $GLOBALS["editDone"] = true;
