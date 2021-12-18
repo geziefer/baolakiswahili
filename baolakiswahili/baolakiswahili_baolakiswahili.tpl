@@ -18,14 +18,12 @@
 <div id="phase_label" class="blk_phase_label">
     <p>{LBL_PHASE}</p>
 </div>
-<div id="board">
+<div id="board" class="board-nyumba">
     <div id="circle_{PLAYER2}_0" class="blk_seed_area" style="top: -75px">
         <div id="label_{PLAYER2}_0" class="blk_label" style="margin-left:5px;">
             <p>2</p>
         </div>
     </div>
-    <div id="nyumba_opponent" class="blk_nyumba" style="left: 379px; top: 119px;"></div>
-    <div id="nyumba_player" class="blk_nyumba" style="left: 482px; top: 237px;"></div>
     <!-- BEGIN circle -->
     <div id="circle_{PLAYER}_{FIELD}" class="blk_circle" style="left: {LEFT}px; top: {TOP}px;">
         <div id="label_{PLAYER}_{FIELD}" class="blk_label" style="margin-left: {MLEFT}px; margin-top: {MTOP}px;">

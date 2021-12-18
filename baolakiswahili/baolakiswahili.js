@@ -20,6 +20,10 @@ const VARIANT_HUS = 3;
 // 2nd phase of Kiswahili variant
 const VARIANT_KISWAHILI_2ND = 4;
 
+// seed selection
+const SEEDS_MODERN = 1;
+const SEEDS_TRADITIONAL = 2;
+
 // preference values
 const PREF_KICHWA_MODE = 100;
 const PREF_KICHWA_MODE_MANUAL = 1;
@@ -81,12 +85,17 @@ define([
                     this.setupPreference();
                 }
 
-                // hide seed area and nyumbas and phase label if not KISWAHILI variant and don't waste space
+                // hide seed area and and phase label and change board if not KISWAHILI variant and don't waste space
                 if  (gamedatas.variant == VARIANT_KUJIFUNZA || gamedatas.variant == VARIANT_HUS) {
                     dojo.query('.blk_seed_area').style('display', 'none');
-                    dojo.query('.blk_nyumba').style('display', 'none');
+                    dojo.query('#board').removeClass('board-nyumba').addClass('board');
                     dojo.query('#phase_label').style('display', 'none');
                     dojo.query('#board').style('margin', '0px');
+                }
+
+                // change seeds if not default
+                if (gamedatas.seed_selection == SEEDS_TRADITIONAL) {
+                    dojo.query('.blk_stone').addClass('blk_stone_seed');
                 }
 
                 console.log("Ending game setup");

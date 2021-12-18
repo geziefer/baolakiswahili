@@ -40,6 +40,10 @@ define( "VARIANT_KISWAHILI_2ND", 4 );
 define( "OPTION_EDITOR", 101 );
 define( "EDITOR_OFF", 1 );
 define( "EDITOR_ON", 2 );
+// Local constants for seed selection
+define( "OPTION_SEEDS", 101 );
+define( "SEEDS_MODERN", 1 );
+define( "SEEDS_TRADITIONAL", 2 );
 
 class BaoLaKiswahili extends Table
 {
@@ -47,7 +51,8 @@ class BaoLaKiswahili extends Table
     {
         self::initGameStateLabels(array(
             "game_variant" => 100,
-            "editor" => 101
+            "editor" => 101,
+            "seed_selection" => 102
         ));
     }
 
@@ -216,6 +221,8 @@ class BaoLaKiswahili extends Table
         $result['board'] = self::getObjectListFromDB($sql);
 
         $result['variant'] = $this->getVariant();
+
+        $result['seed_selection'] = $this->getGameStateValue('seed_selection');
 
         return $result;
     }

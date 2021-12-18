@@ -8,10 +8,19 @@
  * -----
  */
 
- #board {
+ .board {
     width: 960px;
     height: 493px;
     background-image: url('img/board.png');
+    position: relative;
+    margin-top: 90px;
+    margin-bottom: 90px;
+ }
+
+.board-nyumba {
+    width: 960px;
+    height: 493px;
+    background-image: url('img/board-nyumba.png');
     position: relative;
     margin-top: 90px;
     margin-bottom: 90px;
@@ -56,6 +65,13 @@
     height: 32px;
     position: absolute;
     background-image: url('img/stone.png'); 
+}
+
+.blk_stone_seed { 
+    width: 41px;
+    height: 37px;
+    position: absolute;
+    background-image: url('img/seed.png'); 
 }
 
 .blk_stone_opponent { 

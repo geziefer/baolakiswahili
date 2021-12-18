@@ -56,6 +56,24 @@ $game_options = array(
                 'value' => 1 // 1 if OFF
            )
         ),
+        'default' => 1
+    ),
+    102 => array(
+        'name' => totranslate('Seed selection'),
+        'values' => array(
+            // Shiny green stones
+            1 => array(
+                'name' => totranslate('Modern semiprecious stone'),
+                'description' => totranslate('Play with shiny green stones as shown in the rule book')
+            ),
+
+            // Traditional mkomwe seeds
+            2 => array(
+                'name' => totranslate('Traditional mkomwe seed'),
+                'description' => totranslate('Play with dark green traditional mkomwe seeds (caesalpinia bonduc)')
+            )
+        ),
+        'default' => 1
     )
 );
 
