@@ -564,6 +564,8 @@ class BaoLaKiswahili extends Table
         $sql = "SELECT value_boolean FROM kvstore WHERE `key` = '$key'";
         $hasNyumba = self::getUniqueValueFromDB($sql);
         
+        // database only says that it is not yet destroyed, so check also for enough seeds
+        // (which can be less than six even for exisitng nyumba when being temporarily non-functional)
         return $hasNyumba && $board[$player_id][$nyumba]["count"] >= 6;
     }
 
@@ -955,6 +957,10 @@ class BaoLaKiswahili extends Table
 
         // Distinguish game mode for move execution
         if ($this->getVariant() == VARIANT_KISWAHILI && $currentAction == 'executeMove') {
+            // 1st preserve nyumba state before putting seed
+            $nyumba = $this->getNyumba($player);
+            $wasNyumbaFunctional = $this->checkForFunctionalNyumba($nyumba, $player, $board);
+
             // take bowl out of storage area and put in bowl 
             $board[$player][0]["count"] -= 1;
             $board[$player][$sourceField]["count"] += 1;
@@ -978,9 +984,8 @@ class BaoLaKiswahili extends Table
     /// Kiswahili variant - non-capture move
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 // distinguish between taxing nyumba and regular move
-                $nyumba = $this->getNyumba($player);
-                if ($sourceField == $nyumba) {
-                    // nyumba is not emptied, but has to be taxed which means extracting only 2 seeds
+                if ($sourceField == $nyumba && $wasNyumbaFunctional) {
+                    // functional nyumba is not emptied, but has to be taxed which means extracting only 2 seeds
                     $count = 2;
                     $board[$player][$sourceField]["count"] -= $count;
                     array_push($moves, "taxActive_" . $sourceField);
