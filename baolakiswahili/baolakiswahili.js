@@ -59,6 +59,16 @@ define([
                 // place all stones on board
                 this.fillBoard(gamedatas.board);
 
+                // add container for nyumba text (only used in KISWAHILI variant)
+                for(var player_id in gamedatas.players) {
+                    var player_board_div = 'player_board_'+player_id;
+                    dojo.place(this.format_block('jstpl_nyumba_message', {
+                        player_id: player_id
+                    }), player_board_div);
+                    var message = gamedatas['nyumba_' + player_id] ? _('Nyumba is functional') : _('Nyumba is not functional');
+                    dojo.byId('nyumba_message_'+player_id).innerHTML = message;
+                }
+    
                 // click handler for different click situations on bowl including editor
                 dojo.query('.blk_circle').connect('onclick', this, 'onBowl');
                 dojo.query('.blk_seed_area').connect('onclick', this, 'onBowl');
@@ -85,11 +95,12 @@ define([
                     this.setupPreference();
                 }
 
-                // hide seed area and and phase label and change board if not KISWAHILI variant and don't waste space
+                // hide seed area and and phase/nyumba label and change board if not KISWAHILI variant and don't waste space
                 if  (gamedatas.variant == VARIANT_KUJIFUNZA || gamedatas.variant == VARIANT_HUS) {
                     dojo.query('.blk_seed_area').style('display', 'none');
                     dojo.query('#board').removeClass('board-nyumba').addClass('board');
                     dojo.query('#phase_label').style('display', 'none');
+                    dojo.query('.blk_nyumba_message').style('display', 'none');
                     dojo.query('#board').style('margin', '0px');
                 }
 
@@ -930,11 +941,15 @@ define([
             notif_newScores: function (notif) {
                 console.log('enter notif_newScores');
 
+                // update scores and nyumba text (onyly used in KISWAHILI variant)
                 for (var player_id in notif.args.scores) {
                     var newScore = notif.args.scores[player_id];
                     this.scoreCtrl[player_id].toValue(newScore);
+
+                    var message = notif.args['nyumba_' + player_id] ? _('Nyumba is functional') : _('Nyumba is not functional');
+                    dojo.byId('nyumba_message_'+player_id).innerHTML = message;
                 }
-            },
+        },
 
             /*
             Notification when stones should be placed for other players while editing.

@@ -220,6 +220,10 @@ class BaoLaKiswahili extends Table
         $sql = "SELECT player player, field no, stones count FROM board";
         $result['board'] = self::getObjectListFromDB($sql);
 
+        $result['nyumba_'.$current_player_id] = $this->checkForFunctionalNyumbaSimple($current_player_id);
+        $opponent_id = self::getPlayerAfter($current_player_id);
+        $result['nyumba_'.$opponent_id] = $this->checkForFunctionalNyumbaSimple($opponent_id);
+
         $result['variant'] = $this->getVariant();
 
         $result['seed_selection'] = $this->getGameStateValue('seed_selection');
@@ -563,6 +567,15 @@ class BaoLaKiswahili extends Table
         return $hasNyumba && $board[$player_id][$nyumba]["count"] >= 6;
     }
 
+    // Same check with less parameters
+    function checkForFunctionalNyumbaSimple($player_id)
+    {
+        $board = $this->getBoard();
+        $nyumba = $this->getNyumba($player_id);
+        return $this->checkForFunctionalNyumba($nyumba, $player_id, $board);
+
+    }
+
      // Check if a player has produced a kutakatia situation for his oponent (as long as still possessing a functional nyumba)
      // where after a move without harvest exactly one harvest would be possible for next round
      // and this is neither the opponent's functional nyumba, nor his only filled bowl or bowl with at least 2 stones in 1st row
@@ -734,10 +747,12 @@ class BaoLaKiswahili extends Table
         $sql = "UPDATE player SET player_score = '$scoreNext' WHERE player_id ='$playerNext'";
         self::DbQuery($sql);
 
-        // notify players of new scores
+        // notify players of new scores and nyumba state
         $newScores = array($playerLast => $scoreLast, $playerNext => $scoreNext);
         self::notifyAllPlayers("newScores", "", array(
-            "scores" => $newScores
+            "scores" => $newScores,
+            "nyumba_".$playerLast => $this->checkForFunctionalNyumbaSimple($playerLast),
+            "nyumba_".$playerNext => $this->checkForFunctionalNyumbaSimple($playerNext)
         ));
 
         // check for end of game

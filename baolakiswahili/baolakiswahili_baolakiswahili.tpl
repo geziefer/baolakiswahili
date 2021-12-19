@@ -13,6 +13,7 @@
 
 <script type="text/javascript">
     var jstpl_stone = '<div id="stone_${no}" class="blk_stone" style="left: ${left}px; top: ${top}px; transform: rotate(${degree}deg);"></div>';
+    var jstpl_nyumba_message = '<div id="nyumba_message_${player_id}" class="blk_nyumba_message"></div>';
 </script>
 
 <div id="phase_label" class="blk_phase_label">
