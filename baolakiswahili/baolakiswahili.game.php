@@ -662,7 +662,7 @@ class BaoLaKiswahili extends Table
         // first check if the player can still move and sum up stones
         $sum = 0;
         $canMove = false;
-        // distinguish 1st phase of Kiswahili from others to determine condtion for 1st line
+        // distinguish 1st phase of Kiswahili from others to determine condition for 1st line
         if ($this->getVariant() == VARIANT_KISWAHILI) {
             // for Kiswahili, distinguish whether player still owns nyumba
             $nyumba = $this->getNyumba($player_id);
@@ -800,6 +800,13 @@ class BaoLaKiswahili extends Table
                 $nyumbaFunctional = $count < 6 ? 'false' : 'true';
                 $key = 'nyumba'.$field.'functional';
                 $sql = "UPDATE kvstore SET value_boolean = $nyumbaFunctional WHERE `key` = '$key'";
+                self::DbQuery($sql);
+            }
+
+            // set phase according to seeds in storage area (only upper storage area is checked, since they should both be the same)
+            if ($i == 0) {
+                $phase = $count == 0 ? "2nd" : "1st";
+                $sql = "UPDATE kvstore SET value_text = '$phase' WHERE `key` = 'phase'";
                 self::DbQuery($sql);
             }
         }   
@@ -1487,18 +1494,9 @@ class BaoLaKiswahili extends Table
             } else {
                 // then switch to the selected game variant
                 if ($this->getVariant() == VARIANT_KISWAHILI) {
-                    // set phase according to players have stone in storage area
-                    if ($board[$player][0]["count"] == 0 && $board[$opponent][0]["count"] == 0) {
-                        // store new phase and switch to it
-                        $sql = "UPDATE kvstore SET value_text = '2nd' WHERE `key` = 'phase'";
-                        self::DbQuery($sql);
-
-                        // start with 2nd phase
-                        $this->gamestate->nextState('switchPhase');
-                    } else {
-                        // start regularily
-                        $this->gamestate->nextState('playKiswahili');
-                    }
+                    $this->gamestate->nextState('playKiswahili');
+                } elseif ($this->getVariant() == VARIANT_KISWAHILI_2ND) {
+                    $this->gamestate->nextState('switchPhase');
                 } elseif ($this->getVariant() == VARIANT_KUJIFUNZA) {
                     $this->gamestate->nextState('playKujifunza');
                 } elseif ($this->getVariant() == VARIANT_HUS) {
