@@ -578,55 +578,51 @@ class BaoLaKiswahili extends Table
 
     }
 
-     // Check if a player has produced a kutakatia situation for his oponent (as long as still possessing a functional nyumba)
+     // Check if a player has produced a kutakatia situation for his oponent
      // where after a move without harvest exactly one harvest would be possible for next round
-     // and this is neither the opponent's functional nyumba, nor his only filled bowl or bowl with at least 2 stones in 1st row
-     // and the opponent can only do a move without harvest, then persist blocked field as it gets used in next 2 moves
+     // and this is neither the opponent's functional nyumba, nor his only filled bowl or bowl 
+     // with at least 2 stones in 1st row and the opponent can only do a move without harvest,
+     // persist blocked field as it gets used in next 2 moves
      function checkAndMarkKutakatia($player_id, $board)
      {
         self::trace('*** checkAndMarkKutakatia was called with parameter player_id='.$player_id);
-        $nyumba = $this->getNyumba($player_id);
-        // kutakatia only possible with functional nyumba
-        if ($this->checkForFunctionalNyumba($nyumba, $player_id, $board)) {
-
-            // determine all criteria in one loop through 1st row and store in separate arrays
-            $possiblePlayerCaptures = $this->getMtajiPossibleCaptures($player_id);
-            $opponent = $this->getPlayerAfter($player_id);
-            $nyumbaOpponent = $this->getNyumba($opponent);
-            $possibleOpponentsCaptures = $this->getMtajiPossibleCaptures($opponent);
-            $bowlWithOppositeStone = array();
-            $bowlsWith1Stone = array();
-            $bowlsWith2Stones = array();
-            for ($i=1; $i < 8; $i++) { 
-                if($board[$opponent][$i]["count"] >= 1 && $board[$player_id][$i]["count"] >= 1) {
-                    array_push($bowlWithOppositeStone, $i);
-                }
-                if($board[$opponent][$i]["count"] >= 1) {
-                    array_push($bowlsWith1Stone, $i);
-                }
-                if($board[$opponent][$i]["count"] >= 2) {
-                    array_push($bowlsWith2Stones, $i);
-                }
+        // determine all criteria in one loop through 1st row and store in separate arrays
+        $possiblePlayerCaptures = $this->getMtajiPossibleCaptures($player_id);
+        $opponent = $this->getPlayerAfter($player_id);
+        $nyumbaOpponent = $this->getNyumba($opponent);
+        $possibleOpponentsCaptures = $this->getMtajiPossibleCaptures($opponent);
+        $bowlWithOppositeStone = array();
+        $bowlsWith1Stone = array();
+        $bowlsWith2Stones = array();
+        for ($i=1; $i < 8; $i++) { 
+            if($board[$opponent][$i]["count"] >= 1 && $board[$player_id][$i]["count"] >= 1) {
+                array_push($bowlWithOppositeStone, $i);
             }
+            if($board[$opponent][$i]["count"] >= 1) {
+                array_push($bowlsWith1Stone, $i);
+            }
+            if($board[$opponent][$i]["count"] >= 2) {
+                array_push($bowlsWith2Stones, $i);
+            }
+        }
 
-            // kutakatia is only possible when exactly one bowl is subject to caputure for player next move
-            // and opponent cannot capture
-            if (count($bowlWithOppositeStone) == 1 && count($possiblePlayerCaptures) >= 1 && count($possibleOpponentsCaptures) == 0) {
-                // take the only possible one
-                $field = $bowlWithOppositeStone[0];
+        // kutakatia is only possible when exactly one bowl is subject to caputure for player next move
+        // and opponent cannot capture
+        if (count($bowlWithOppositeStone) == 1 && count($possiblePlayerCaptures) >= 1 && count($possibleOpponentsCaptures) == 0) {
+            // take the only possible one
+            $field = $bowlWithOppositeStone[0];
 
-                // 3 other possible exclusions for blocking opponent's field
-                if (!($this->checkForFunctionalNyumba($nyumbaOpponent, $opponent, $board) && $field == $nyumbaOpponent)
-                    && !(count($bowlsWith1Stone) == 1 && $field == $bowlsWith1Stone[0])
-                    && !(count($bowlsWith2Stones) == 1 && $field == $bowlsWith2Stones[0])) {
-                        // persist blocked field and player and set kutakatia mode for next 3 player changes (which makes one move per player)
-                        $sql = "UPDATE kvstore SET value_number = 3 WHERE `key` = 'kutakatiaMoves'";
-                        self::DbQuery($sql);                
-                        $sql = "UPDATE kvstore SET value_number = $field WHERE `key` = 'blockedField'";
-                        self::DbQuery($sql);
-                        $sql = "UPDATE kvstore SET value_number = $opponent WHERE `key` = 'blockedPlayer'";
-                        self::DbQuery($sql);
-                }
+            // 3 other possible exclusions for blocking opponent's field
+            if (!($this->checkForFunctionalNyumba($nyumbaOpponent, $opponent, $board) && $field == $nyumbaOpponent)
+                && !(count($bowlsWith1Stone) == 1 && $field == $bowlsWith1Stone[0])
+                && !(count($bowlsWith2Stones) == 1 && $field == $bowlsWith2Stones[0])) {
+                    // persist blocked field and player and set kutakatia mode for next 3 player changes (which makes one move per player)
+                    $sql = "UPDATE kvstore SET value_number = 3 WHERE `key` = 'kutakatiaMoves'";
+                    self::DbQuery($sql);                
+                    $sql = "UPDATE kvstore SET value_number = $field WHERE `key` = 'blockedField'";
+                    self::DbQuery($sql);
+                    $sql = "UPDATE kvstore SET value_number = $opponent WHERE `key` = 'blockedPlayer'";
+                    self::DbQuery($sql);
             }
         }
      }
