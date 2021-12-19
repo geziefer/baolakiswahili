@@ -547,10 +547,16 @@ define([
                             direction: direction
                         }, this, function (result) { });
                     } else {
-                        // set new client state
-                        this.setClientState('client_directionSelection', {
-                            descriptionmyturn: _('${you} must select direction for ${type_translated} move'),
-                        });
+                        // set new client state (different for variants)
+                        if (this.clientStateArgs.variant == VARIANT_HUS) {
+                            this.setClientState('client_directionSelection', {
+                                descriptionmyturn: _('${you} must select a direction'),
+                            });
+                        } else {
+                            this.setClientState('client_directionSelection', {
+                                descriptionmyturn: _('${you} must select direction for ${type_translated} move'),
+                            });
+                        }
                     }
 
                     return;
@@ -930,7 +936,7 @@ define([
                 anim.play();
                 // synchronize duration so that game waits until finished 
                 // add a bit of time to let onEnd callback function be executed before continuing
-                this.notifqueue.setSynchronousDuration(anim.duration + 333);
+                this.notifqueue.setSynchronousDuration(anim.duration + 500);
 
                 console.log('leaving notif_moveStones');
             },
