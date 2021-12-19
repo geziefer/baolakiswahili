@@ -99,14 +99,15 @@ class BaoLaKiswahili extends Table
         list($player1, $player2) = array_keys($players);
 
         // in editor mode, board is empty
+        $editDone = true;
         if ($options[OPTION_EDITOR] == EDITOR_ON) {
             for ($i = 0; $i <= 16; $i++) {
                 $values[] = "('$player1', '$i', '0')";
                 $values[] = "('$player2', '$i', '0')";
             }
 
-            // set marker for editor, will be toggled when done
-            $GLOBALS["editDone"] = false;
+            // marker for editor, will be toggled when done
+            $editDone = false;
         }
         // in Kiswahili variant only 3 bowls per player are filled
         else if ($options[OPTION_VARIANT] == VARIANT_KISWAHILI) {
@@ -188,6 +189,9 @@ class BaoLaKiswahili extends Table
         self::DbQuery($sql);
         // nyumba4functional is a flag if player 2 still owns a functional nyumba (field 4) - will be ignored for variants other than Kiswahili
         $sql = "INSERT INTO kvstore(`key`, value_boolean) VALUES ('nyumba4functional', true)";
+        self::DbQuery($sql);
+        // editDone is a flag if the editor nees to be opened (only if option was selected)
+        $sql = "INSERT INTO kvstore(`key`, value_boolean) VALUES ('editDone', '$editDone')";
         self::DbQuery($sql);
 
         // Activate first player (which is in general a good idea :) )
@@ -1353,8 +1357,9 @@ class BaoLaKiswahili extends Table
             'board' => $board
         ));
 
-        // mark end of editing
-        $GLOBALS["editDone"] = true;
+        // save end of editing
+        $sql = "UPDATE kvstore SET value_boolean = true WHERE `key` = 'editDone'";
+        self::DbQuery($sql);                
         $this->gamestate->nextState('stopEditing');
     }
 
@@ -1482,7 +1487,9 @@ class BaoLaKiswahili extends Table
     function stVariantSelect()
     {
         // enter editor if here for the first time and option was selected
-        if ($this->getGameStateValue('editor') == EDITOR_ON && !$GLOBALS["editDone"]) {
+        $sql = "SELECT value_boolean FROM kvstore WHERE `key` = 'editDone'";
+        $editDone = self::getUniqueValueFromDB($sql);
+        if ($this->getGameStateValue('editor') == EDITOR_ON && !$editDone) {
             $this->gamestate->nextState('startEditing');
         }
         // transit to the correct phase, which is separate for the 3 possible game options
