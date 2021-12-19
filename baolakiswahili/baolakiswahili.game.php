@@ -801,8 +801,10 @@ class BaoLaKiswahili extends Table
                 self::DbQuery($sql);
             }
 
-            // set phase according to seeds in storage area (only upper storage area is checked, since they should both be the same)
-            if ($i == 0) {
+            // set phase according to seeds in storage area if in KISWAHILI variant
+            // (only upper storage area is checked, since they should both be the same)
+            if (($this->getVariant() == VARIANT_KISWAHILI || $this->getVariant() == VARIANT_KISWAHILI_2ND) 
+                && $i == 0) {
                 $phase = $count == 0 ? "2nd" : "1st";
                 $sql = "UPDATE kvstore SET value_text = '$phase' WHERE `key` = 'phase'";
                 self::DbQuery($sql);
