@@ -30,18 +30,6 @@
     position: absolute;
 }
 
- #nyumba_player {
-    width: 111px;
-    height: 105px;
-    background-image: url('img/nyumba_player.png');
- }
-
- #nyumba_opponent {
-    width: 108px;
-    height: 99px;
-    background-image: url('img/nyumba_opponent.png');
- }
-
 .blk_circle {
     width: 95px;
     height: 95px;
