@@ -506,14 +506,24 @@ class BaoLaKiswahili extends Table
         $board = $this->getBoard();
         $nyumba = $this->getNyumba($player_id);
         $nyumbaFunctional = $this->checkForFunctionalNyumba($nyumba, $player_id, $board);
-        // in case of non-functional nyumba, there have to be 2 stones in a bowl of 1st row
+        // in case of non-functional nyumba, a bowl with only 1 stone can only used if none with more exists
         if (!$nyumbaFunctional) {
-            // check all bowls in the 1st row for stones
+            // 1st assume that there are bowls with more than 1 stone and choose these
             for ($i = 1; $i <= 8; $i++) {
                 if ($board[$player_id][$i]["count"] >= 2) {
                     $left = $i == 1 ? 16 : $i - 1;
                     $right = $i + 1;
                     $result[$i] = array($left, $right);
+                }
+            }
+            // then only if none was found, allow bowls with only 1 stone
+            if (empty($result)) {
+                for ($i = 1; $i <= 8; $i++) {
+                    if ($board[$player_id][$i]["count"] >= 1) {
+                        $left = $i == 1 ? 16 : $i - 1;
+                        $right = $i + 1;
+                        $result[$i] = array($left, $right);
+                    }
                 }
             }
         // in case of a functional nyumba, only take this, if it's the only non-empty bowl
@@ -666,28 +676,12 @@ class BaoLaKiswahili extends Table
         $canMove = false;
         // distinguish 1st phase of Kiswahili from others to determine condition for 1st line
         if ($this->getVariant() == VARIANT_KISWAHILI) {
-            // for Kiswahili, distinguish whether player still owns nyumba
-            $nyumba = $this->getNyumba($player_id);
-            if ($this->checkForFunctionalNyumba($nyumba, $player_id, $board)) {
-                // with active nyumba it is sufficcient to have at least 1 bowl with at least 1 stone in 1st row
-                for ($i = 1; $i <= 8; $i++) {
-                    $count = $board[$player_id][$i]["count"];
-                    $sum += $count;
-                    if ($count >= 1) {
-                        $canMove = true;
-                    }
-                }
-            } else {
-                // with inactive or destroyed nyumba a bowl with only 1 stone in 1st row is only sufficient for capture moves, 
-                // for non-capture moves there has to be at least 1 bowl with at least 2 stones, so opponent's bowl has to be checked as well
-                $opponent = $this->getPlayerAfter($player_id);
-                for ($i = 1; $i <= 8; $i++) {
-                    $count = $board[$player_id][$i]["count"];
-                    $countOpponent = $board[$opponent][$i]["count"];
-                    $sum += $count;
-                    if ($count >= 2 || ($count >= 1 && $countOpponent >= 1)) {
-                        $canMove = true;
-                    } 
+            // for kunamua phase of Kiswahili, a bowl with 1 seed in 1st row is sufficient
+            for ($i = 1; $i <= 8; $i++) {
+                $count = $board[$player_id][$i]["count"];
+                $sum += $count;
+                if ($count >= 1) {
+                    $canMove = true;
                 }
             }
             // look at 2nd row just for the sum, does not influence, if player can move
@@ -1386,8 +1380,8 @@ class BaoLaKiswahili extends Table
 
         if (empty($result)) {
             $capture = false;
-        // if not possible it will be a non-capture move
-        $result = $this->getKunamuaPossibleNonCaptures($player);
+            // if not possible it will be a non-capture move
+            $result = $this->getKunamuaPossibleNonCaptures($player);
 
             // check if a functional nyumba is the only possible move in order to activate tax mode
             $nyumba = $this->getNyumba($player);
