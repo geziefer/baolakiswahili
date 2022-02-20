@@ -994,31 +994,43 @@ class BaoLaKiswahili extends Table
                     $overallMoved += $count;
                 }
 
-                // make moves until last field was empty before putting stone
-                while ($count > 1) {
-                    // distribute stones in the next fields in selected direction until last one
-                    while ($count > 0) {
-                        // calculate next field to move to and leave 1 stone
-                        $destinationField = $this->getNextField($sourceField, $moveDirection);
-                        $board[$player][$destinationField]["count"] += 1;
-                        array_push($moves, "moveActive_" . $destinationField);
-                        $sourceField = $destinationField;
-                        $count -= 1;
-                    }
+                // only continue if not lost yet (e.g. by emtpying last own bowl in 1st row),
+                // which can only happen when emptying a kichwa, thus check for this source
+                $score = $this->getScore($player, $board);
+                if ($score == 0 && ($sourceField == 1 || $sourceField == 8)) {
+                    // make 1 more move to show loss condition visibly
+                    $destinationField = $this->getNextField($sourceField, $moveDirection);
+                    $board[$player][$destinationField]["count"] += 1;
+                    array_push($moves, "moveActive_" . $destinationField);
+                    $sourceField = $destinationField;
 
-                    // source field now points to field of last put stone
-                    $count = $board[$player][$sourceField]["count"];
+                } else {
+                    // make moves until last field was empty before putting stone
+                    while ($count > 1) {
+                        // distribute stones in the next fields in selected direction until last one
+                        while ($count > 0) {
+                            // calculate next field to move to and leave 1 stone
+                            $destinationField = $this->getNextField($sourceField, $moveDirection);
+                            $board[$player][$destinationField]["count"] += 1;
+                            array_push($moves, "moveActive_" . $destinationField);
+                            $sourceField = $destinationField;
+                            $count -= 1;
+                        }
 
-                    // empty own bowl for next move if it ends in non-empty bowl which is not a functional nyumba
-                    if ($count > 1) {
-                        $nyumba = $this->getNyumba($player);
-                        if ($sourceField == $nyumba && $this->checkForFunctionalNyumba($nyumba, $player, $board)) {
-                            // clear count to leave loop
-                            $count = 0;
-                        } else {
-                            $board[$player][$sourceField]["count"] = 0;
-                            array_push($moves, "emptyActive_" . $sourceField);
-                            $overallMoved += $count;
+                        // source field now points to field of last put stone
+                        $count = $board[$player][$sourceField]["count"];
+
+                        // empty own bowl for next move if it ends in non-empty bowl which is not a functional nyumba
+                        if ($count > 1) {
+                            $nyumba = $this->getNyumba($player);
+                            if ($sourceField == $nyumba && $this->checkForFunctionalNyumba($nyumba, $player, $board)) {
+                                // clear count to leave loop
+                                $count = 0;
+                            } else {
+                                $board[$player][$sourceField]["count"] = 0;
+                                array_push($moves, "emptyActive_" . $sourceField);
+                                $overallMoved += $count;
+                            }
                         }
                     }
                 }
@@ -1055,44 +1067,55 @@ class BaoLaKiswahili extends Table
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// Kujifunza variant or 2nd phase Kiswahili variant - non-capture move
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                // this is a non-capture move, no further captures are allowed, move only continues in own two rows,
-                // make moves until last field was empty before putting stone
-                while ($count > 1) {
-                    // check if nyumba was emptied by move for Kiswahili variant 2nd phase
-                    if ($this->getVariant() == VARIANT_KISWAHILI_2ND) {
-                        $this->checkAndMarkDestroyedNyumba($player, $sourceField);
-                    }
-
-                    // distribute stones in the next fields in selected direction until last one
-                    while ($count > 0) {
-                        // calculate next field to move to and leave 1 stone
-                        $destinationField = $this->getNextField($sourceField, $moveDirection);
-                        $board[$player][$destinationField]["count"] += 1;
-                        array_push($moves, "moveActive_" . $destinationField);
-                        $sourceField = $destinationField;
-                        $count -= 1;
-                    }
-
-                    // source field now points to field of last put stone
-                    $count = $board[$player][$sourceField]["count"];
-
-                    // check if move stops due to kutakatiaed bowl for Kiswahili variant 2nd phase
-                    if ($this->getVariant() == VARIANT_KISWAHILI_2ND) {
-                        $sql = "SELECT value_number FROM kvstore WHERE `key` = 'blockedField'";
-                        $blockedField = $this->getUniqueValueFromDB($sql);
-                        $sql = "SELECT value_number FROM kvstore WHERE `key` = 'blockedPlayer'";
-                        $blockedPlayer = $this->getUniqueValueFromDB($sql);
-                        if ($blockedPlayer == $player && $blockedField == $sourceField) {
-                            // leave loop to stop move
-                            break;
+                // only continue if not lost yet (e.g. by emtpying last own bowl in 1st row),
+                // which can only happen when emptying a kichwa, thus check for this source
+                $score = $this->getScore($player, $board);
+                if ($score == 0 && ($sourceField == 1 || $sourceField == 8)) {
+                    // make 1 more move to show loss condition visibly
+                    $destinationField = $this->getNextField($sourceField, $moveDirection);
+                    $board[$player][$destinationField]["count"] += 1;
+                    array_push($moves, "moveActive_" . $destinationField);
+                    $sourceField = $destinationField;
+                } else {
+                    // this is a non-capture move, no further captures are allowed, move only continues in own two rows,
+                    // make moves until last field was empty before putting stone
+                    while ($count > 1) {
+                        // check if nyumba was emptied by move for Kiswahili variant 2nd phase
+                        if ($this->getVariant() == VARIANT_KISWAHILI_2ND) {
+                            $this->checkAndMarkDestroyedNyumba($player, $sourceField);
                         }
-                    }
 
-                    // empty own bowl for next move if it ends in non-empty bowl
-                    if ($count > 1) {
-                        $board[$player][$sourceField]["count"] = 0;
-                        array_push($moves, "emptyActive_" . $sourceField);
-                        $overallMoved += $count;
+                        // distribute stones in the next fields in selected direction until last one
+                        while ($count > 0) {
+                            // calculate next field to move to and leave 1 stone
+                            $destinationField = $this->getNextField($sourceField, $moveDirection);
+                            $board[$player][$destinationField]["count"] += 1;
+                            array_push($moves, "moveActive_" . $destinationField);
+                            $sourceField = $destinationField;
+                            $count -= 1;
+                        }
+
+                        // source field now points to field of last put stone
+                        $count = $board[$player][$sourceField]["count"];
+
+                        // check if move stops due to kutakatiaed bowl for Kiswahili variant 2nd phase
+                        if ($this->getVariant() == VARIANT_KISWAHILI_2ND) {
+                            $sql = "SELECT value_number FROM kvstore WHERE `key` = 'blockedField'";
+                            $blockedField = $this->getUniqueValueFromDB($sql);
+                            $sql = "SELECT value_number FROM kvstore WHERE `key` = 'blockedPlayer'";
+                            $blockedPlayer = $this->getUniqueValueFromDB($sql);
+                            if ($blockedPlayer == $player && $blockedField == $sourceField) {
+                                // leave loop to stop move
+                                break;
+                            }
+                        }
+
+                        // empty own bowl for next move if it ends in non-empty bowl
+                        if ($count > 1) {
+                            $board[$player][$sourceField]["count"] = 0;
+                            array_push($moves, "emptyActive_" . $sourceField);
+                            $overallMoved += $count;
+                        }
                     }
                 }
             }
