@@ -620,7 +620,7 @@ class BaoLaKiswahili extends Table
             }
         }
 
-        // kutakatia is only possible when exactly one bowl is subject to caputure for player next move
+        // kutakatia is only possible when exactly one bowl is subject to capture for player next move
         // and opponent cannot capture
         if (count($bowlWithOppositeStone) == 1 && count($possiblePlayerCaptures) >= 1 && count($possibleOpponentsCaptures) == 0) {
             // take the only possible one
@@ -1142,7 +1142,7 @@ class BaoLaKiswahili extends Table
                 $sourceField = $this->getNextField($sourceField, $moveDirection * (-1));
             }
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /// Kiwvahili or Kujifunza variant - move after kichwa selection
+    /// Kiswahili or Kujifunza variant - move after kichwa selection
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             // move on until next capture or empty bowl,
             // condition is checked at the end, since here it is possible to move only 1 stone from capture
@@ -1189,7 +1189,7 @@ class BaoLaKiswahili extends Table
                         }
                     }
 
-                    // if neither caputre nor safari decision, empty own bowl for next move
+                    // if neither capture nor safari decision, empty own bowl for next move
                     $board[$player][$sourceField]["count"] = 0;
                     array_push($moves, "emptyActive_" . $sourceField);
                     $overallMoved += $count;
@@ -1301,7 +1301,7 @@ class BaoLaKiswahili extends Table
         ));
 
         // check if kutakatia happened for Kiswahili 2nd phase after move without capture
-        if ($this->getVariant() == VARIANT_KISWAHILI_2ND && empty($possibleCaptures)) {
+        if ($this->getVariant() == VARIANT_KISWAHILI_2ND && $currentAction == 'executeMove' && empty($possibleCaptures)) {
             $this->checkAndMarkKutakatia($player, $board);
         }
         
