@@ -925,6 +925,7 @@ class BaoLaKiswahili extends Table
         $selectedField = $field;
         $sourceField = $field;
         $board = $this->getBoard();
+        $rounds = 0;
 
         // some game situation, such as capturing, are clear after move execution, but state will be set in stNextPlayer,
         // so set nextPlayer as default state after move, which might be overwritten by special state (e.g. continueCapture)
@@ -1006,15 +1007,29 @@ class BaoLaKiswahili extends Table
 
                 } else {
                     // make moves until last field was empty before putting stone
+                    $rounds = 0;
+                    $startField = $sourceField;
                     while ($count > 1) {
                         // distribute stones in the next fields in selected direction until last one
                         while ($count > 0) {
                             // calculate next field to move to and leave 1 stone
                             $destinationField = $this->getNextField($sourceField, $moveDirection);
+                            if ($destinationField == $startField) {
+                                // move travelled a full round
+                                $rounds += 1;
+                            }
                             $board[$player][$destinationField]["count"] += 1;
                             array_push($moves, "moveActive_" . $destinationField);
                             $sourceField = $destinationField;
                             $count -= 1;
+                        }
+
+                        // protection for infinite moves: stop move after 12 rounds
+                        // by converting the player into a zombie :-)
+                        if ($rounds >= 12) {
+                            $sql = "UPDATE player SET player_zombie = true WHERE player_id ='$player'";
+                            self::DbQuery($sql);
+                            break;
                         }
 
                         // source field now points to field of last put stone
@@ -1079,6 +1094,8 @@ class BaoLaKiswahili extends Table
                 } else {
                     // this is a non-capture move, no further captures are allowed, move only continues in own two rows,
                     // make moves until last field was empty before putting stone
+                    $rounds = 0;
+                    $startField = $sourceField;
                     while ($count > 1) {
                         // check if nyumba was emptied by move for Kiswahili variant 2nd phase
                         if ($this->getVariant() == VARIANT_KISWAHILI_2ND) {
@@ -1089,10 +1106,22 @@ class BaoLaKiswahili extends Table
                         while ($count > 0) {
                             // calculate next field to move to and leave 1 stone
                             $destinationField = $this->getNextField($sourceField, $moveDirection);
+                            if ($destinationField == $startField) {
+                                // move travelled a full round
+                                $rounds += 1;
+                            }
                             $board[$player][$destinationField]["count"] += 1;
                             array_push($moves, "moveActive_" . $destinationField);
                             $sourceField = $destinationField;
                             $count -= 1;
+                        }
+
+                        // protection for infinite moves: stop move after 12 rounds
+                        // by converting the player into a zombie :-)
+                        if ($rounds >= 12) {
+                            $sql = "UPDATE player SET player_zombie = true WHERE player_id ='$player'";
+                            self::DbQuery($sql);
+                            break;
                         }
 
                         // source field now points to field of last put stone
