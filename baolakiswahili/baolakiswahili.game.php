@@ -224,9 +224,9 @@ class BaoLaKiswahili extends Table
         $sql = "SELECT player player, field no, stones count FROM board";
         $result['board'] = self::getObjectListFromDB($sql);
 
-        $result['nyumba_'.$current_player_id] = $this->checkForFunctionalNyumbaSimple($current_player_id);
+        $result['nyumba_'.$current_player_id] = $this->checkForNyumbaState($current_player_id);
         $opponent_id = self::getPlayerAfter($current_player_id);
-        $result['nyumba_'.$opponent_id] = $this->checkForFunctionalNyumbaSimple($opponent_id);
+        $result['nyumba_'.$opponent_id] = $this->checkForNyumbaState($opponent_id);
 
         $result['variant'] = $this->getVariant();
 
@@ -505,9 +505,10 @@ class BaoLaKiswahili extends Table
 
         $board = $this->getBoard();
         $nyumba = $this->getNyumba($player_id);
+        $nyumbaPossesssion = $this->checkForNyumbaPossession($nyumba, $player_id, $board);
         $nyumbaFunctional = $this->checkForFunctionalNyumba($nyumba, $player_id, $board);
-        // in case of non-functional nyumba, a bowl with only 1 stone can only used if none with more exists
-        if (!$nyumbaFunctional) {
+        // in case of not posessing nyumba, a bowl with only 1 stone can only used if none with more exists
+        if (!$nyumbaPossesssion) {
             // 1st assume that there are bowls with more than 1 stone and choose these
             for ($i = 1; $i <= 8; $i++) {
                 if ($board[$player_id][$i]["count"] >= 2) {
@@ -527,7 +528,7 @@ class BaoLaKiswahili extends Table
                 }
             }
         // in case of a functional nyumba, only take this, if it's the only non-empty bowl
-        } else {
+        } else if ($nyumbaFunctional) {
             // check all bowls in the 1st row for stones
             for ($i = 1; $i <= 8; $i++) {
                 // skip functional nyumba for now
@@ -542,6 +543,16 @@ class BaoLaKiswahili extends Table
                 $left = $nyumba - 1;
                 $right = $nyumba + 1;
                 $result[$nyumba] = array($left, $right);
+            }
+        // in case of non-functional nyumba, take all non-empty bowls
+        } else {
+            // check all bowls in the 1st row for stones
+            for ($i = 1; $i <= 8; $i++) {
+                if ($board[$player_id][$i]["count"] >= 1) {
+                    $left = $i == 1 ? 16 : $i - 1;
+                    $right = $i + 1;
+                    $result[$i] = array($left, $right);
+                }
             }
         }
 
@@ -570,26 +581,42 @@ class BaoLaKiswahili extends Table
         return $destinationField;
     }
 
-    // Check if a player still owns a functional nyumba
-    function checkForFunctionalNyumba($nyumba, $player_id, $board)
+    // Check if a player still owns the nyumba
+    // in possession means, having not destroyed it, even if less than 6 seeds
+    function checkForNyumbaPossession($nyumba, $player_id)
     {
-        self::trace('*** checkForFunctionalNyumba was called with parameter nyumba='.$nyumba.',player_id='.$player_id);
+        self::trace('*** checkForNyumbaPossession was called with parameter nyumba='.$nyumba.',player_id='.$player_id);
         $key = "nyumba".$nyumba."functional";
         $sql = "SELECT value_boolean FROM kvstore WHERE `key` = '$key'";
         $hasNyumba = self::getUniqueValueFromDB($sql);
+        
+        return $hasNyumba;
+    }
+
+    // Check if a player still owns a functional nyumba
+    // functional means, having not destroyed it and 6 or more seeds
+    function checkForFunctionalNyumba($nyumba, $player_id, $board)
+    {
+        self::trace('*** checkForFunctionalNyumba was called with parameter nyumba='.$nyumba.',player_id='.$player_id);
+        $hasNyumba = $this->checkForNyumbaPossession($nyumba, $player_id);
         
         // database only says that it is not yet destroyed, so check also for enough seeds
         // (which can be less than six even for exisitng nyumba when being temporarily non-functional)
         return $hasNyumba && $board[$player_id][$nyumba]["count"] >= 6;
     }
 
-    // Same check with less parameters
-    function checkForFunctionalNyumbaSimple($player_id)
+    // Check for nyumba state for displaying in player info
+    // 0: functional (never emptied and >= 6 seeds)
+    // 1: non-functional (never emptied and < 6 seeds)
+    // 2: destroyed (emptied)
+    function checkForNyumbaState($player_id)
     {
+        self::trace('*** checkForNyumbaState was called with parameter player_id='.$player_id);
         $board = $this->getBoard();
         $nyumba = $this->getNyumba($player_id);
-        return $this->checkForFunctionalNyumba($nyumba, $player_id, $board);
-
+        $nyumbaState = !$this->checkForNyumbaPossession($nyumba, $player_id) ? 2 : 
+            (!$this->checkForFunctionalNyumba($nyumba, $player_id, $board) ? 1 : 0);
+        return $nyumbaState;
     }
 
      // Check if a player has produced a kutakatia situation for his oponent
@@ -747,8 +774,8 @@ class BaoLaKiswahili extends Table
         $newScores = array($playerLast => $scoreLast, $playerNext => $scoreNext);
         self::notifyAllPlayers("newScores", "", array(
             "scores" => $newScores,
-            "nyumba_".$playerLast => $this->checkForFunctionalNyumbaSimple($playerLast),
-            "nyumba_".$playerNext => $this->checkForFunctionalNyumbaSimple($playerNext)
+            "nyumba_".$playerLast => $this->checkForNyumbaState($playerLast),
+            "nyumba_".$playerNext => $this->checkForNyumbaState($playerNext)
         ));
 
         // check for end of game
@@ -1717,16 +1744,16 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 15");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 14");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 13");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 12");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player2' AND field = 12");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 11");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 10");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 9");
 
-        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player2' AND field = 1");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player2' AND field = 1");
         self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player2' AND field = 2");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 3");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 4");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player2' AND field = 5");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 5");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 6");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 7");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 8");
@@ -1736,17 +1763,17 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 2");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 3");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 4");
-        self::DbQuery("UPDATE board SET stones = 6 WHERE player = '$player1' AND field = 5");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 6");
+        self::DbQuery("UPDATE board SET stones = 5 WHERE player = '$player1' AND field = 5");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player1' AND field = 6");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 7");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 8");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player1' AND field = 8");
 
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 16");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 15");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 14");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 13");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 12");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 11");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player1' AND field = 11");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 10");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 9");
 
@@ -1770,6 +1797,8 @@ class BaoLaKiswahili extends Table
         $sql = "UPDATE kvstore SET value_boolean = true WHERE `key` = 'nyumba5functional'";
         self::DbQuery($sql);
         $sql = "UPDATE kvstore SET value_boolean = false WHERE `key` = 'nyumba4functional'";
+        self::DbQuery($sql);
+        $sql = "UPDATE kvstore SET value_boolean = false WHERE `key` = 'editDone'";
         self::DbQuery($sql);
 
         // reset state in database

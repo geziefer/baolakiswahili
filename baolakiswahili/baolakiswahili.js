@@ -65,7 +65,13 @@ define([
                     dojo.place(this.format_block('jstpl_nyumba_message', {
                         player_id: player_id
                     }), player_board_div);
-                    var message = gamedatas['nyumba_' + player_id] ? _('Nyumba is functional') : _('Nyumba is not functional');
+                    // assume destroyed nyumba, set otherwise if so
+                    var message = _('Nyumba is destroyed');
+                    if (gamedatas['nyumba_' + player_id] == 0) {
+                        message = _('Nyumba is functional');
+                    } else if (gamedatas['nyumba_' + player_id] == 1) {
+                        message = _('Nyumba is not functional');
+                    }
                     dojo.byId('nyumba_message_'+player_id).innerHTML = message;
                 }
     
