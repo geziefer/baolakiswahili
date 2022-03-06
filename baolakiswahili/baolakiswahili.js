@@ -958,7 +958,13 @@ define([
                     var newScore = notif.args.scores[player_id];
                     this.scoreCtrl[player_id].toValue(newScore);
 
-                    var message = notif.args['nyumba_' + player_id] ? _('Nyumba is functional') : _('Nyumba is not functional');
+                    // assume destroyed nyumba, set otherwise if so
+                    var message = _('Nyumba is destroyed');
+                    if (notif.args['nyumba_' + player_id] == 0) {
+                        message = _('Nyumba is functional');
+                    } else if (notif.args['nyumba_' + player_id] == 1) {
+                        message = _('Nyumba is not functional');
+                    }
                     dojo.byId('nyumba_message_'+player_id).innerHTML = message;
                 }
         },
