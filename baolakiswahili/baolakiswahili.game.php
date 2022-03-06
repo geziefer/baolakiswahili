@@ -1062,10 +1062,10 @@ class BaoLaKiswahili extends Table
                         // source field now points to field of last put stone
                         $count = $board[$player][$sourceField]["count"];
 
-                        // empty own bowl for next move if it ends in non-empty bowl which is not a functional nyumba
+                        // empty own bowl for next move if it ends in non-empty bowl which was not a functional nyumba at move start
                         if ($count > 1) {
                             $nyumba = $this->getNyumba($player);
-                            if ($sourceField == $nyumba && $this->checkForFunctionalNyumba($nyumba, $player, $board)) {
+                            if ($sourceField == $nyumba && $wasNyumbaFunctional) {
                                 // clear count to leave loop
                                 $count = 0;
                             } else {
@@ -1154,8 +1154,16 @@ class BaoLaKiswahili extends Table
                         // source field now points to field of last put stone
                         $count = $board[$player][$sourceField]["count"];
 
-                        // check if move stops due to kutakatiaed bowl for Kiswahili variant 2nd phase
+                        // check if move stops for some reason for Kiswahili variant 2nd phase
                         if ($this->getVariant() == VARIANT_KISWAHILI_2ND) {
+                            // check if move stops due to still possessing nyumba
+                            $nyumba = $this->getNyumba($player);
+                            $nyumbaPossession = $this->checkForNyumbaPossession($nyumba, $player, $board);
+                            if ($sourceField == $nyumba && $nyumbaPossession) {                                                                // leave loop to stop move
+                                break;
+                            }
+
+                            // check if move stops due to kutakatiaed bowl
                             $sql = "SELECT value_number FROM kvstore WHERE `key` = 'blockedField'";
                             $blockedField = $this->getUniqueValueFromDB($sql);
                             $sql = "SELECT value_number FROM kvstore WHERE `key` = 'blockedPlayer'";
@@ -1738,7 +1746,7 @@ class BaoLaKiswahili extends Table
         $player2 = self::getUniqueValueFromDB($sql);
 
         // save test stones for player 2
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player2' AND field = 0");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 0");
 
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 16");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 15");
@@ -1763,10 +1771,10 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 2");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 3");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 4");
-        self::DbQuery("UPDATE board SET stones = 5 WHERE player = '$player1' AND field = 5");
-        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player1' AND field = 6");
+        self::DbQuery("UPDATE board SET stones = 6 WHERE player = '$player1' AND field = 5");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 6");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 7");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player1' AND field = 8");
+        self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$player1' AND field = 8");
 
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 16");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 15");
@@ -1777,10 +1785,10 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 10");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 9");
 
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player1' AND field = 0");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 0");
 
         // reset key value store
-        $sql = "UPDATE kvstore SET value_text = '1st' WHERE `key` = 'phase'";
+        $sql = "UPDATE kvstore SET value_text = '2nd' WHERE `key` = 'phase'";
         self::DbQuery($sql);
         $sql = "UPDATE kvstore SET value_text = 'nextPlayer' WHERE `key` = 'stateAfterMove'";
         self::DbQuery($sql);
@@ -1794,7 +1802,7 @@ class BaoLaKiswahili extends Table
         self::DbQuery($sql);
         $sql = "UPDATE kvstore SET value_number = 0 WHERE `key` = 'blockedPlayer'";
         self::DbQuery($sql);
-        $sql = "UPDATE kvstore SET value_boolean = true WHERE `key` = 'nyumba5functional'";
+        $sql = "UPDATE kvstore SET value_boolean = false WHERE `key` = 'nyumba5functional'";
         self::DbQuery($sql);
         $sql = "UPDATE kvstore SET value_boolean = false WHERE `key` = 'nyumba4functional'";
         self::DbQuery($sql);
@@ -1802,7 +1810,7 @@ class BaoLaKiswahili extends Table
         self::DbQuery($sql);
 
         // reset state in database
-        $sql = "UPDATE global SET global_value = 10 WHERE global_id = 1";
+        $sql = "UPDATE global SET global_value = 20 WHERE global_id = 1";
         self::DbQuery($sql);
     }
 }
