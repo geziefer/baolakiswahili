@@ -632,31 +632,45 @@ class BaoLaKiswahili extends Table
         $opponent = $this->getPlayerAfter($player_id);
         $nyumbaOpponent = $this->getNyumba($opponent);
         $possibleOpponentsCaptures = $this->getMtajiPossibleCaptures($opponent);
-        $bowlWithOppositeStone = array();
-        $bowlsWith1Stone = array();
-        $bowlsWith2Stones = array();
-        for ($i=1; $i < 8; $i++) { 
-            if($board[$opponent][$i]["count"] >= 1 && $board[$player_id][$i]["count"] >= 1) {
-                array_push($bowlWithOppositeStone, $i);
-            }
+        $bowlsOpponentWith1Stone = array();
+        $bowlsOpponentWith2Stones = array();
+        for ($i=1; $i <= 8; $i++) { 
             if($board[$opponent][$i]["count"] >= 1) {
-                array_push($bowlsWith1Stone, $i);
+                array_push($bowlsOpponentWith1Stone, $i);
             }
             if($board[$opponent][$i]["count"] >= 2) {
-                array_push($bowlsWith2Stones, $i);
+                array_push($bowlsOpponentWith2Stones, $i);
             }
         }
 
+        // check possible captures if only 1 bowl can be captures, even from different bowls
+        $possibleCapturedFields = array();
+        foreach ($possiblePlayerCaptures as $captureStart => $captureMove) {
+            $captureDirection = reset($captureMove) - $captureStart;
+            $captureStartStones = $board[$player_id][$captureStart]["count"];
+            $currentField = $captureStart;
+            for ($i=1; $i<= $captureStartStones; $i++) {
+                $captureField = $this->getNextField($currentField, $captureDirection);
+                $currentField = $captureField;
+            }
+            array_push($possibleCapturedFields, $captureField);
+        }
+        // clear duplicates, array then holds destination fields of capture which has to be only 1 for kutakatia
+        $possibleCapturedFields = array_unique($possibleCapturedFields);
+
         // kutakatia is only possible when exactly one bowl is subject to capture for player next move
         // and opponent cannot capture
-        if (count($bowlWithOppositeStone) == 1 && count($possiblePlayerCaptures) >= 1 && count($possibleOpponentsCaptures) == 0) {
+        if (count($possibleCapturedFields) == 1 && count($possibleOpponentsCaptures) == 0) {
             // take the only possible one
-            $field = $bowlWithOppositeStone[0];
+            $field = $possibleCapturedFields[0];
 
-            // 3 other possible exclusions for blocking opponent's field
+            // 3 other possible exclusions for blocking opponent's field:
+            // - not the functional nyumba
+            // - not the only non-empty bowl in 1st row
+            // - not the only bowl with at least 2 stones in 1st row
             if (!($this->checkForFunctionalNyumba($nyumbaOpponent, $opponent, $board) && $field == $nyumbaOpponent)
-                && !(count($bowlsWith1Stone) == 1 && $field == $bowlsWith1Stone[0])
-                && !(count($bowlsWith2Stones) == 1 && $field == $bowlsWith2Stones[0])) {
+                && !(count($bowlsOpponentWith1Stone) == 1 && $field == $bowlsOpponentWith1Stone[0])
+                && !(count($bowlsOpponentWith2Stones) == 1 && $field == $bowlsOpponentWith2Stones[0])) {
                     // persist blocked field and player and set kutakatia mode for next 3 player changes (which makes one move per player)
                     $sql = "UPDATE kvstore SET value_number = 3 WHERE `key` = 'kutakatiaMoves'";
                     self::DbQuery($sql);                
@@ -1364,9 +1378,9 @@ class BaoLaKiswahili extends Table
         self::incStat($overallStolen, "overallStolen", $player);
 
         // notify players of all moves
-        if ($moveDirection < 0) {
+        if ($moveDirection > 0) {
             $messageDirection = clienttranslate("clockwise");
-        } elseif ($moveDirection > 0) {
+        } elseif ($moveDirection < 0) {
             $messageDirection = clienttranslate("counterclockwise");
         } else {
             $messageDirection = clienttranslate("without direction");
@@ -1757,24 +1771,24 @@ class BaoLaKiswahili extends Table
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 10");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 9");
 
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player2' AND field = 1");
-        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player2' AND field = 2");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 1");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 2");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 3");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 4");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player2' AND field = 4");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 5");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 6");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 7");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 8");
 
         // save test stones for player 1
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 1");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 2");
+        self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$player1' AND field = 1");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player1' AND field = 2");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 3");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 4");
-        self::DbQuery("UPDATE board SET stones = 6 WHERE player = '$player1' AND field = 5");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 5");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 6");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 7");
-        self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$player1' AND field = 8");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 8");
 
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 16");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 15");
