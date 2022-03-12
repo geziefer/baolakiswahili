@@ -140,3 +140,20 @@
     color: black;
     position: absolute;
 }
+
+.blk_gamelog_box {
+    display: block;
+    margin: 10px 10px 10px 0;
+    background-color: #9F7249;
+    color: #fff;
+    font-weight: 400;
+    font-size: 1em;
+    padding: 10px;
+    float: left;
+}
+
+#gamelog_content {
+    background-color: transparent;
+    border: none;
+    color: #fff;
+}

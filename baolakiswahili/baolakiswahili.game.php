@@ -193,6 +193,12 @@ class BaoLaKiswahili extends Table
         // editDone is a flag if the editor nees to be opened (only if option was selected)
         $sql = "INSERT INTO kvstore(`key`, value_boolean) VALUES ('editDone', '$editDone')";
         self::DbQuery($sql);
+        // gamelog text, empty at start
+        $sql = "INSERT INTO kvstore(`key`, value_text) VALUES ('gamelog', '')";
+        self::DbQuery($sql);
+        // move number for gamelog
+        $sql = "INSERT INTO kvstore(`key`, value_number) VALUES ('moveNo', 1)";
+        self::DbQuery($sql);
 
         // Activate first player (which is in general a good idea :) )
         $this->activeNextPlayer();
@@ -231,6 +237,9 @@ class BaoLaKiswahili extends Table
         $result['variant'] = $this->getVariant();
 
         $result['seed_selection'] = $this->getGameStateValue('seed_selection');
+
+        $sql = "SELECT value_text from kvstore where `key` = 'gamelog'";
+        $result['gamelog'] = $this->getUniqueValueFromDB($sql);
 
         return $result;
     }
@@ -707,6 +716,21 @@ class BaoLaKiswahili extends Table
         return $sum;
     }
 
+    // Add and save game log entry and move number
+    function addToGamelog($text) {
+        $sql = "SELECT value_text from kvstore where `key` = 'moveNo'";
+        $moveNo = $this->getUniqueValueFromDB($sql);
+        $sql = "SELECT value_text from kvstore where `key` = 'gamelog'";
+        $moveText = $this->getUniqueValueFromDB($sql);
+
+        $moveNo++;
+        $moveText = $moveText . ' ' . $moveNo . ': ' . $text . ';';
+        $sql = "UPDATE kvstore SET value_number = 1 WHERE `key` = 'moveNo'";
+        self::DbQuery($sql);
+        $sql = "UPDATE kvstore SET value_text = '$moveText' WHERE `key` = 'gamelog'";
+        self::DbQuery($sql);
+    }
+
     // Calculate player's score, which is 0 if lost or sum of fields if not,
     // so this function also checks for end of game
     function getScore($player_id, $board)
@@ -784,12 +808,17 @@ class BaoLaKiswahili extends Table
         $sql = "UPDATE player SET player_score = '$scoreNext' WHERE player_id ='$playerNext'";
         self::DbQuery($sql);
 
-        // notify players of new scores and nyumba state
+        // get game log
+        $sql = "SELECT value_text from kvstore where `key` = 'gamelog'";
+        $gamelogText = $this->getUniqueValueFromDB($sql);
+
+        // notify players of new scores and nyumba state and game log
         $newScores = array($playerLast => $scoreLast, $playerNext => $scoreNext);
         self::notifyAllPlayers("newScores", "", array(
             "scores" => $newScores,
             "nyumba_".$playerLast => $this->checkForNyumbaState($playerLast),
-            "nyumba_".$playerNext => $this->checkForNyumbaState($playerNext)
+            "nyumba_".$playerNext => $this->checkForNyumbaState($playerNext),
+            "gamelog" => $gamelogText
         ));
 
         // check for end of game
@@ -1406,6 +1435,8 @@ class BaoLaKiswahili extends Table
             $this->checkAndMarkKutakatia($player, $board);
         }
         
+$this->addToGamelog("hallo!!");
+
         // persist planned state after move and possible capture field in database for using in stNextPlayer
         $sql = "UPDATE kvstore SET value_text = '$stateAfterMove' WHERE `key` = 'stateAfterMove'";
         self::DbQuery($sql);
@@ -1821,6 +1852,10 @@ class BaoLaKiswahili extends Table
         $sql = "UPDATE kvstore SET value_boolean = false WHERE `key` = 'nyumba4functional'";
         self::DbQuery($sql);
         $sql = "UPDATE kvstore SET value_boolean = false WHERE `key` = 'editDone'";
+        self::DbQuery($sql);
+        $sql = "UPDATE kvstore SET value_text = '' WHERE `key` = 'gamelog'";
+        self::DbQuery($sql);
+        $sql = "UPDATE kvstore SET value_number = 1 WHERE `key` = 'moveNo'";
         self::DbQuery($sql);
 
         // reset state in database

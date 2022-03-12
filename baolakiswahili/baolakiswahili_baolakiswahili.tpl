@@ -46,4 +46,12 @@
     </div>
 </div>
 
+<div id="gamelog">
+    <div class="blk_gamelog_box">
+        <h3><span>{LBL_GAMELOG_TITLE}</span></h3>
+        <textarea id="gamelog_content" rows="10" cols="90" readonly="true">
+        </textarea>
+    </div>
+</div>
+
 {OVERALL_GAME_FOOTER}
