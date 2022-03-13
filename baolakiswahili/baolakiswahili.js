@@ -844,6 +844,15 @@ define([
                 // list of stones to move
                 var movingStones = [];
 
+                // regular timings per animation and at end of animation
+                var animDelay = 333;
+                var endDelay = 500;
+                // if in fast mode in game archive replay switch off 
+                if (this.instantaneousMode) {
+                    animDelay = 0;
+                    endDelay = 0;
+                }
+
                 for (var move in notif.args.moves) {
                     // extract command and field of a move
                     var params = notif.args.moves[move].split('_');
@@ -873,7 +882,7 @@ define([
                             for (var id = 0; id < movingStones.length; id++) {
                                 var stone = movingStones[id];
                                 // change constructed animation to have positional offset
-                                var currentAnimation = this.slideToObject(stone, 'circle_' + player + '_' + field, 333);
+                                var currentAnimation = this.slideToObject(stone, 'circle_' + player + '_' + field, animDelay);
                                 currentAnimation.properties.left += Math.floor((Math.random() * 11) - 5) * 2;
                                 currentAnimation.properties.top += Math.floor((Math.random() * 11) - 5) * 2;
                                 combinedAnimation.push(currentAnimation);
@@ -892,7 +901,7 @@ define([
                             for (var id = 0; id < movingStones.length; id++) {
                                 var stone = movingStones[id];
                                 // change constructed animation to have positional offset
-                                var currentAnimation = this.slideToObject(stone, 'circle_' + player + '_' + field, 333);
+                                var currentAnimation = this.slideToObject(stone, 'circle_' + player + '_' + field, animDelay);
                                 currentAnimation.properties.left += Math.floor((Math.random() * 11) - 5) * 2;
                                 currentAnimation.properties.top += Math.floor((Math.random() * 11) - 5) * 2;
                                 combinedAnimation.push(currentAnimation);
@@ -910,7 +919,7 @@ define([
                             var nodes = dojo.query('#' + id + ' > .blk_stone');
                             var stone = nodes[0].id;
                             // change constructed animation to have positional offset
-                            var currentAnimation = this.slideToObject(stone, 'circle_' + player + '_' + field, 333);
+                            var currentAnimation = this.slideToObject(stone, 'circle_' + player + '_' + field, animDelay);
                             currentAnimation.properties.left += Math.floor((Math.random() * 11) - 5) * 2;
                             currentAnimation.properties.top += Math.floor((Math.random() * 11) - 5) * 2;
                             animations.push(currentAnimation);
@@ -956,7 +965,7 @@ define([
                 anim.play();
                 // synchronize duration so that game waits until finished 
                 // add a bit of time to let onEnd callback function be executed before continuing
-                this.notifqueue.setSynchronousDuration(anim.duration + 500);
+                this.notifqueue.setSynchronousDuration(anim.duration + endDelay);
 
                 console.log('leaving notif_moveStones');
             },
