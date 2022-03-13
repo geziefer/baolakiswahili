@@ -285,15 +285,15 @@ define([
                 if (field == 0) {
                     dojo.place(this.format_block('jstpl_stone', {
                         no: number,
-                        left: Math.floor(((Math.random() * 45) - 2) * 5) + 40,
-                        top: Math.floor(((Math.random() * 5) - 1) * 5) + 15,
+                        left: Math.floor(Math.random() * 38) * 6 + 25,
+                        top: Math.floor(Math.random() * 6) * 6 + 5,
                         degree: Math.floor((Math.random() * 73) * 5)
                     }), 'circle_' + player + '_0');
                 } else {
                     dojo.place(this.format_block('jstpl_stone', {
                         no: number,
-                        left: Math.floor(((Math.random() * 5) - 2) * 5) + 20,
-                        top: Math.floor(((Math.random() * 5) - 1) * 5) + 25,
+                        left: Math.floor(Math.random() * 6) * 6 + 15,
+                        top: Math.floor(Math.random() * 6) * 6 + 15,
                         degree: Math.floor((Math.random() * 73) * 5)
                     }), 'circle_' + player + '_' + field);
                 }
