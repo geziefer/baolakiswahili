@@ -59,6 +59,16 @@ define([
                 // place all stones on board
                 this.fillBoard(gamedatas.board);
 
+                // add container for player side
+                for(var player_id in gamedatas.players) {
+                    var player_board_div = 'player_board_'+player_id;
+                    dojo.place(this.format_block('jstpl_player_side', {
+                        player_id: player_id
+                    }), player_board_div);
+                    var message = (gamedatas.players[player_id].no == 1 ? _('Player is South') : _('Player is North'));
+                    dojo.byId('player_side_'+player_id).innerHTML = message;
+                }
+    
                 // add container for nyumba text (only used in KISWAHILI variant)
                 for(var player_id in gamedatas.players) {
                     var player_board_div = 'player_board_'+player_id;
@@ -74,6 +84,9 @@ define([
                     }
                     dojo.byId('nyumba_message_'+player_id).innerHTML = message;
                 }
+
+                // show gamelog
+                dojo.byId('gamelog_content').innerHTML = gamedatas.gamelog;
     
                 // click handler for different click situations on bowl including editor
                 dojo.query('.blk_circle').connect('onclick', this, 'onBowl');

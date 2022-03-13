@@ -13,6 +13,7 @@
 
 <script type="text/javascript">
     var jstpl_stone = '<div id="stone_${no}" class="blk_stone" style="left: ${left}px; top: ${top}px; transform: rotate(${degree}deg);"></div>';
+    var jstpl_player_side = '<div id="player_side_${player_id}" class="blk_player_side"></div>';
     var jstpl_nyumba_message = '<div id="nyumba_message_${player_id}" class="blk_nyumba_message"></div>';
 </script>
 
@@ -51,6 +52,7 @@
         <h3><span>{LBL_GAMELOG_TITLE}</span></h3>
         <textarea id="gamelog_content" rows="10" cols="90" readonly="true">
         </textarea>
+        <p><span id="gamelog_key">{LBL_GAMELOG_KEY}</span></p>
     </div>
 </div>
 

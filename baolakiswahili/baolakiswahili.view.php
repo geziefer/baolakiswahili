@@ -59,7 +59,8 @@ class view_baolakiswahili_baolakiswahili extends game_view
 
     // translate labels
     $this->tpl['LBL_PREF_TITLE'] = self::_("Automatic actions");
-    $this->tpl['LBL_GAMELOG_TITLE'] = self::_("Game log");
+    $this->tpl['LBL_GAMELOG_TITLE'] = self::_("Game log*");
+    $this->tpl['LBL_GAMELOG_KEY'] = self::_("* <b>A</b>/<b>B</b>: south's inner/outer row, <b>a</b>/<b>b</b>: north's inner/outer row, <b>1</b>..<b>8</b> pits left to right from player's view,<br><b><</b>/<b>></b> move left/right from player's view or chose left/right kichwa, <b>+</b> safari nyumba, <b>*</b> kutakata, <b>**</b> kutakatia");
     $this->tpl['LBL_PREF_AUTO_KICHWA'] = self::_("Automatic Kichwa selection");
     $this->tpl['LBL_PHASE'] = self::_("Kunamua phase");
 

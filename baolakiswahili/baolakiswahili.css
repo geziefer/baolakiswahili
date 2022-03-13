@@ -156,4 +156,10 @@
     background-color: transparent;
     border: none;
     color: #fff;
+    resize: none;
+}
+
+#gamelog_key {
+    color: black;
+    font-size: small;
 }

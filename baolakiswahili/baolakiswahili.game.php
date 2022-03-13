@@ -18,7 +18,7 @@
  * self::debug('##################### message');
  */
 
-// board layout from perspective of start player
+// board layout from perspective of start player (South)
 // (for 2nd player field is turned 180°, so that 1st field is on the right)
 // 16 15 14 13 12 11 10 09 (opponent's 2nd row)
 // 01 02 03 04 05 06 07 08 (opponent's 1st row)
@@ -92,8 +92,7 @@ class BaoLaKiswahili extends Table
 
         /************ Start the game initialization *****/
 
-        // note: in real Kiswahili, always player South starts and there is an official notion for the bowls,
-        // here BGA determines the start player, this will be player1 (see board layout above)
+        // note: BGA determines start player, player1 is South (see board layout above)
         $sql = "INSERT INTO board (player, field, stones) VALUES ";
         $values = array();
         list($player1, $player2) = array_keys($players);
@@ -193,13 +192,16 @@ class BaoLaKiswahili extends Table
         // editDone is a flag if the editor nees to be opened (only if option was selected)
         $sql = "INSERT INTO kvstore(`key`, value_boolean) VALUES ('editDone', '$editDone')";
         self::DbQuery($sql);
-        // gamelog text, empty at start
+        // gamelog is full official game log text, empty at start
         $sql = "INSERT INTO kvstore(`key`, value_text) VALUES ('gamelog', '')";
         self::DbQuery($sql);
-        // move number for gamelog
-        $sql = "INSERT INTO kvstore(`key`, value_number) VALUES ('moveNo', 1)";
+        // moveNo is number for gamelog
+        $sql = "INSERT INTO kvstore(`key`, value_number) VALUES ('moveNo', 0)";
         self::DbQuery($sql);
-
+        // lastLogPlayer is player id of player who logged last to see if a move was already logged
+        $sql = "INSERT INTO kvstore(`key`, value_number) VALUES ('lastLogPlayer', 0)";
+        self::DbQuery($sql);
+        
         // Activate first player (which is in general a good idea :) )
         $this->activeNextPlayer();
 
@@ -224,7 +226,7 @@ class BaoLaKiswahili extends Table
 
         // Get information about players
         // Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
-        $sql = "SELECT player_id id, player_score score FROM player";
+        $sql = "SELECT player_id id, player_score score, player_no no FROM player";
         $result['players'] = self::getCollectionFromDb($sql);
 
         $sql = "SELECT player player, field no, stones count FROM board";
@@ -717,18 +719,79 @@ class BaoLaKiswahili extends Table
     }
 
     // Add and save game log entry and move number
-    function addToGamelog($text) {
-        $sql = "SELECT value_text from kvstore where `key` = 'moveNo'";
+    function addToGamelog($player_id, $text, $isSafari) {
+        $sql = "SELECT value_number from kvstore where `key` = 'moveNo'";
         $moveNo = $this->getUniqueValueFromDB($sql);
         $sql = "SELECT value_text from kvstore where `key` = 'gamelog'";
         $moveText = $this->getUniqueValueFromDB($sql);
 
-        $moveNo++;
-        $moveText = $moveText . ' ' . $moveNo . ': ' . $text . ';';
-        $sql = "UPDATE kvstore SET value_number = 1 WHERE `key` = 'moveNo'";
-        self::DbQuery($sql);
+        $sql = "SELECT player_no from player where player_id = $player_id";
+        $playerNo = $this->getUniqueValueFromDB($sql);
+        if ($playerNo == 1) {
+            // safari for 1st player just adds +
+            if ($isSafari) {
+                $moveText = $moveText . '+';
+            } else {
+                // 1st player starts new round for regular move
+                $moveNo = $moveNo + 1;
+                $sql = "UPDATE kvstore SET value_number = $moveNo WHERE `key` = 'moveNo'";
+                self::DbQuery($sql);
+                $moveText = $moveText . ' ' . $moveNo . ': ' . $text;
+            }
+        } else {
+            // safari for 2nd player has to insert + before last ;
+            if ($isSafari) {
+                $moveText = rtrim($moveText, ';') . '+;';
+            } else {
+                $moveText = $moveText . ' ' . $text . ';';
+            }
+        }
+        // final log message for move
         $sql = "UPDATE kvstore SET value_text = '$moveText' WHERE `key` = 'gamelog'";
         self::DbQuery($sql);
+        // persist player id to see that log has been done this round
+        $sql = "UPDATE kvstore SET value_number = $player_id WHERE `key` = 'lastLogPlayer'";
+        self::DbQuery($sql);
+    }
+
+    // Map internal notation 1..16 for each player_id to official notation AB/ab 1..8;
+    // direction is always from player perspective left/right (not clockwise/counterclockwise) or the kichwa selected;
+    // flags for special move notations, for kichwa + means right, - means left independent of side;
+    function mapNotation($player_id, $field, $moveDirection, $isKichwa, $isKutakata, $isKutakatia) {
+        $sql = "SELECT player_no from player where player_id = $player_id";
+        $playerNo = $this->getUniqueValueFromDB($sql);
+        if ($playerNo == 1) {
+            // bowl 1..8 is A, 9..16 is B, 1st row stays 1..8, 2nd row has to be inverted and reduced to 1..8
+            $mappedNotation = ($field <= 8 ? 'A' . $field : 'B' . abs($field - 17));
+            // direction is different in 1st and 2nd row, if kichwa is selected, direction is set
+            if ($isKichwa) {
+                $direction = ($moveDirection < 0 ? '<' : '>');
+            } elseif ($field <= 8) {
+                $direction = ($moveDirection < 0 ? '<' : '>');
+            } else {
+                $direction = ($moveDirection < 0 ? '>' : '<');
+            }
+        } else {
+            // bowl 1..8 is a, 9..16 is b, 1st row has to be inverted, 2nd row reduced to 1..8
+            $mappedNotation = ($field <= 8 ? 'a' . abs($field - 9) : 'b' . ($field - 8));
+            // direction is different in 1st and 2nd row, if kichwa is selected, direction is set
+            if ($isKichwa) {
+                $direction = ($moveDirection < 0 ? '<' : '>');
+            } else if ($field <= 8) {
+                $direction = ($moveDirection < 0 ? '>' : '<');
+            } else {
+                $direction = ($moveDirection < 0 ? '<' : '>');
+            }
+        }
+        $mappedNotation = $mappedNotation . $direction;
+
+        // optionally special cases, winning move is not regarded since game can end with giving up, zombie, tie, opponent move
+        if ($isKutakata) {
+            $mappedNotation = $mappedNotation . '*';
+        } elseif ($isKutakatia) {
+            $mappedNotation = $mappedNotation . '**';
+        }
+        return $mappedNotation;
     }
 
     // Calculate player's score, which is 0 if lost or sum of fields if not,
@@ -893,10 +956,9 @@ class BaoLaKiswahili extends Table
     // player has selected a move (start field and direction field)
     // game modes are distinguished here to exeute it
     // note: to keep logic free from complicated checks of rare edge cases, some official rules are deliberately ignored:
-    // 1) no check for infinite or very long moves
-    // 2) no prevention of a move which causes loss of the player
-    // 3) no check if a move from kichwa to the outer row is the only filled bowl and contains 16 or more stones
-    // 4) no check if kutakatiaed bowl could be reached in later part of a harvest move by the player having done the blocking, must be harvested directly
+    // 1) no prevention of a move which causes loss of the player
+    // 2) no check if a move from kichwa to the outer row is the only filled bowl and contains 16 or more stones
+    // 3) no check if kutakatiaed bowl could be reached in later part of a harvest move by the player having done the blocking, must be harvested directly
     function executeMove($player, $field, $direction)
     {
         self::trace('*** executeMove was called with parameters player='.$player.', field='.$field.', direction='.$direction);
@@ -1046,6 +1108,8 @@ class BaoLaKiswahili extends Table
                 // do nothing more than to prepare for next part of move in different state, since player has to select kichwa
                 $stateAfterMove = 'continueCapture';
                 $captureField = $sourceField;
+
+                // gamelog is not possible yet, since direction is not set, will be done with kichwa selection
             } else {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// Kiswahili variant - non-capture move
@@ -1064,6 +1128,9 @@ class BaoLaKiswahili extends Table
                     array_push($moves, "emptyActive_" . $sourceField);
                     $overallMoved += $count;
                 }
+
+                // log move in official notation
+                $this->addToGamelog($player, $this->mapNotation($player, $field, $moveDirection, false, true, false, false), false);
 
                 // only continue if not lost yet (e.g. by emtpying last own bowl in 1st row),
                 // which can only happen when emptying a kichwa, thus check for this source
@@ -1135,6 +1202,9 @@ class BaoLaKiswahili extends Table
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// Kujifunza variant or 2nd phase Kiswahili variant - capture move
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // log move in official notation
+                $this->addToGamelog($player, $this->mapNotation($player, $field, $moveDirection, false, false, false), false);
+
                 // this is a capture move, further captures are allowed and captured stones require player action,
                 // distribute stones in the next fields in selected direction until last one which has to be a capture
                 while ($count > 0) {
@@ -1225,19 +1295,34 @@ class BaoLaKiswahili extends Table
                         }
                     }
                 }
+
+                // check if kutakatia happened for Kiswahili 2nd phase after move without capture;
+                // log different depending on it
+                if ($this->getVariant() == VARIANT_KISWAHILI_2ND) {
+                    $this->checkAndMarkKutakatia($player, $board);
+
+                    // log move in official notation
+                    $this->addToGamelog($player, $this->mapNotation($player, $field, $moveDirection, false, false, true), false);
+                } else {
+                    // log move in official notation
+                    $this->addToGamelog($player, $this->mapNotation($player, $field, $moveDirection, false, true, false), false);
+                }
             }
         } elseif (($this->getVariant() == VARIANT_KISWAHILI || $this->getVariant() == VARIANT_KUJIFUNZA || $this->getVariant() == VARIANT_KISWAHILI_2ND) 
             && ($currentAction == 'selectKichwa' || $currentAction == 'decideSafari')) {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /// Kiswahili or Kujifunza variant - kichwa selection
+    /// Kiswahili or Kujifunza variant - kichwa selection or safari
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            // distinguish between initial kichwa selection and continuing after safari
+            // distinguish between continuing after safari and initial kichwa selection
             if ($currentAction == 'decideSafari') {
                 // correct fields to select nyumba and previous direction,
                 $sourceField = $this->getNyumba($player);
                 $count = $board[$player][$sourceField]["count"];
                 $sql = "SELECT value_number FROM kvstore WHERE `key` = 'moveDirection'";
                 $moveDirection = $this->getUniqueValueFromDB($sql);
+
+                // log move in official notation
+                $this->addToGamelog($player, '', true);
 
                 // empty own bowl for next move
                 $board[$player][$sourceField]["count"] = 0;
@@ -1254,6 +1339,24 @@ class BaoLaKiswahili extends Table
                 $sql = "SELECT value_number FROM kvstore WHERE `key` = 'captureField'";
                 $captureField = $this->getUniqueValueFromDB($sql);
                 $captureCount = $board[$opponent][$captureField]["count"];
+
+                // log move in official notation, but only for 1st phase, since in 2nd phase it has already a direction and was logged
+                if ($this->getVariant() == VARIANT_KISWAHILI) {
+                    // only log if player did not already log this round
+                    $sql = "SELECT value_number from kvstore where `key` = 'lastLogPlayer'";
+                    $lastLogPlayer = $this->getUniqueValueFromDB($sql);
+                    if ($lastLogPlayer != $player) {
+                        // dependent on player number, kichwa ids differ, set left (-) or right (+) for direction in log
+                        $sql = "SELECT player_no from player where player_id = $player";
+                        $playerNo = $this->getUniqueValueFromDB($sql);
+                        if ($playerNo == 1) {
+                            $logDirection = ($sourceField == 1 ? -1 : 1);
+                        } else {
+                            $logDirection = ($sourceField == 1 ? 1 : -1);
+                        }
+                        $this->addToGamelog($player, $this->mapNotation($player, $captureField, $logDirection, false, false, false), false);
+                    }
+                }
 
                 // start with emptying opponent's bowl
                 array_push($moves, "emptyopponent_" . $captureField);
@@ -1429,13 +1532,6 @@ class BaoLaKiswahili extends Table
             'moves' => $moves,
             'board' => $board
         ));
-
-        // check if kutakatia happened for Kiswahili 2nd phase after move without capture
-        if ($this->getVariant() == VARIANT_KISWAHILI_2ND && $currentAction == 'executeMove' && empty($possibleCaptures)) {
-            $this->checkAndMarkKutakatia($player, $board);
-        }
-        
-$this->addToGamelog("hallo!!");
 
         // persist planned state after move and possible capture field in database for using in stNextPlayer
         $sql = "UPDATE kvstore SET value_text = '$stateAfterMove' WHERE `key` = 'stateAfterMove'";
@@ -1765,14 +1861,28 @@ $this->addToGamelog("hallo!!");
         // For example, if the game was running with a release of your game named "140430-1345",
         // $from_version is equal to 1404301345
 
-        if ( $from_version <= '2103132223') {
+        if ($from_version <= '2103132223') {
             // move was split in 2 states and selected field was selected, does not longer exist
             $sql = "ALTER TABLE `player` DROP COLUMN `selected_field`";
-            self::applyDbUpgradeToAllDB( $sql );
+            self::applyDbUpgradeToAllDB($sql);
 
             // new table for storing arbitrary key value pairs
             $sql = "CREATE TABLE IF NOT EXISTS `kvstore` (`key` VARCHAR(20) NOT NULL, `value_text` VARCHAR(100), `value_number` INT, PRIMARY KEY (`key`)) ENGINE = InnoDB";
-            self::applyDbUpgradeToAllDB( $sql );
+            self::applyDbUpgradeToAllDB($sql);
+        } else if ($from_version <= '2112191857') {
+            // value_text column of kvstore was increased in size
+            $sql = "ALTER TABLE `kvstore` DROP COLUMN `value_text`";
+            self::applyDbUpgradeToAllDB($sql);
+            $sql = "ALTER TABLE `kvstore` ADD COLUMN `value_text` VARCHAR(10000) DEFAULT ''";
+            self::applyDbUpgradeToAllDB($sql);
+            $sql = "INSERT INTO kvstore(`key`, value_number) VALUES ('lastLogPlayer', 0)";
+            self::DbQuery($sql);
+
+            // initialize new kvstore values (will give incomplete, but functional gamelog for already running games)
+            $sql = "INSERT INTO kvstore(`key`, value_text) VALUES ('gamelog', '')";
+            self::DbQuery($sql);
+            $sql = "INSERT INTO kvstore(`key`, value_number) VALUES ('moveNo', 0)";
+            self::DbQuery($sql);
         }
     }
 
@@ -1855,7 +1965,9 @@ $this->addToGamelog("hallo!!");
         self::DbQuery($sql);
         $sql = "UPDATE kvstore SET value_text = '' WHERE `key` = 'gamelog'";
         self::DbQuery($sql);
-        $sql = "UPDATE kvstore SET value_number = 1 WHERE `key` = 'moveNo'";
+        $sql = "UPDATE kvstore SET value_number = 0 WHERE `key` = 'moveNo'";
+        self::DbQuery($sql);
+        $sql = "UPDATE kvstore SET value_number = 0 WHERE `key` = 'lastLogPlayer'";
         self::DbQuery($sql);
 
         // reset state in database
