@@ -671,6 +671,7 @@ class BaoLaKiswahili extends Table
 
         // kutakatia is only possible when exactly one bowl is subject to capture for player next move
         // and opponent cannot capture
+        $kutkatia = false;
         if (count($possibleCapturedFields) == 1 && count($possibleOpponentsCaptures) == 0) {
             // take the only possible one
             $field = $possibleCapturedFields[0];
@@ -689,8 +690,11 @@ class BaoLaKiswahili extends Table
                     self::DbQuery($sql);
                     $sql = "UPDATE kvstore SET value_number = $opponent WHERE `key` = 'blockedPlayer'";
                     self::DbQuery($sql);
+                    $kutkatia = true;
             }
         }
+
+        return $kutkatia;
      }
  
      // check if nyumba was captured and thereby has to be marked as destroyed
@@ -1130,7 +1134,7 @@ class BaoLaKiswahili extends Table
                 }
 
                 // log move in official notation
-                $this->addToGamelog($player, $this->mapNotation($player, $field, $moveDirection, false, true, false, false), false);
+                $this->addToGamelog($player, $this->mapNotation($player, $field, $moveDirection, false, true, false), false);
 
                 // only continue if not lost yet (e.g. by emtpying last own bowl in 1st row),
                 // which can only happen when emptying a kichwa, thus check for this source
@@ -1299,13 +1303,14 @@ class BaoLaKiswahili extends Table
                 // check if kutakatia happened for Kiswahili 2nd phase after move without capture;
                 // log different depending on it
                 if ($this->getVariant() == VARIANT_KISWAHILI_2ND) {
-                    $this->checkAndMarkKutakatia($player, $board);
+                    $isKutakatia = $this->checkAndMarkKutakatia($player, $board);
 
-                    // log move in official notation
-                    $this->addToGamelog($player, $this->mapNotation($player, $field, $moveDirection, false, false, true), false);
-                } else {
-                    // log move in official notation
-                    $this->addToGamelog($player, $this->mapNotation($player, $field, $moveDirection, false, true, false), false);
+                    // log move in official notation depending on kutakatia
+                    if ($isKutakatia) {
+                        $this->addToGamelog($player, $this->mapNotation($player, $field, $moveDirection, false, false, true), false);
+                    } else {
+                        $this->addToGamelog($player, $this->mapNotation($player, $field, $moveDirection, false, true, false), false);
+                    }
                 }
             }
         } elseif (($this->getVariant() == VARIANT_KISWAHILI || $this->getVariant() == VARIANT_KUJIFUNZA || $this->getVariant() == VARIANT_KISWAHILI_2ND) 
@@ -1354,7 +1359,7 @@ class BaoLaKiswahili extends Table
                         } else {
                             $logDirection = ($sourceField == 1 ? 1 : -1);
                         }
-                        $this->addToGamelog($player, $this->mapNotation($player, $captureField, $logDirection, false, false, false), false);
+                        $this->addToGamelog($player, $this->mapNotation($player, $captureField, $logDirection, true, false, false), false);
                     }
                 }
 
