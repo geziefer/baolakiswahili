@@ -671,7 +671,7 @@ class BaoLaKiswahili extends Table
 
         // kutakatia is only possible when exactly one bowl is subject to capture for player next move
         // and opponent cannot capture
-        $kutkatia = false;
+        $kutakatia = false;
         if (count($possibleCapturedFields) == 1 && count($possibleOpponentsCaptures) == 0) {
             // take the only possible one
             $field = $possibleCapturedFields[0];
@@ -690,11 +690,11 @@ class BaoLaKiswahili extends Table
                     self::DbQuery($sql);
                     $sql = "UPDATE kvstore SET value_number = $opponent WHERE `key` = 'blockedPlayer'";
                     self::DbQuery($sql);
-                    $kutkatia = true;
+                    $kutakatia = true;
             }
         }
 
-        return $kutkatia;
+        return $kutakatia;
      }
  
      // check if nyumba was captured and thereby has to be marked as destroyed
@@ -722,8 +722,9 @@ class BaoLaKiswahili extends Table
         return $sum;
     }
 
-    // Add and save game log entry and move number
-    function addToGamelog($player_id, $text, $isSafari) {
+    // Add and save game log entry and move number;
+    // special cases for safari and kutakatia, since this adds a character to the log
+    function addToGamelog($player_id, $text, $isSafari, $isKutakatia) {
         $sql = "SELECT value_number from kvstore where `key` = 'moveNo'";
         $moveNo = $this->getUniqueValueFromDB($sql);
         $sql = "SELECT value_text from kvstore where `key` = 'gamelog'";
@@ -732,9 +733,11 @@ class BaoLaKiswahili extends Table
         $sql = "SELECT player_no from player where player_id = $player_id";
         $playerNo = $this->getUniqueValueFromDB($sql);
         if ($playerNo == 1) {
-            // safari for 1st player just adds +
+            // safari/kutakatia for 1st player just adds +/*
             if ($isSafari) {
                 $moveText = $moveText . '+';
+            } elseif ($isKutakatia) {
+                $moveText = $moveText . '*';
             } else {
                 // 1st player starts new round for regular move
                 $moveNo = $moveNo + 1;
@@ -743,9 +746,11 @@ class BaoLaKiswahili extends Table
                 $moveText = $moveText . ' ' . $moveNo . ': ' . $text;
             }
         } else {
-            // safari for 2nd player has to insert + before last ;
+            // safari/kutakatia for 2nd player has to insert +/* before last ;
             if ($isSafari) {
                 $moveText = rtrim($moveText, ';') . '+;';
+            } elseif ($isKutakatia) {
+                $moveText = rtrim($moveText, ';') . '*;';
             } else {
                 $moveText = $moveText . ' ' . $text . ';';
             }
@@ -761,7 +766,7 @@ class BaoLaKiswahili extends Table
     // Map internal notation 1..16 for each player_id to official notation AB/ab 1..8;
     // direction is always from player perspective left/right (not clockwise/counterclockwise) or the kichwa selected;
     // flags for special move notations, for kichwa + means right, - means left independent of side;
-    function mapNotation($player_id, $field, $moveDirection, $isKichwa, $isKutakata, $isKutakatia) {
+    function mapNotation($player_id, $field, $moveDirection, $isKichwa, $isKutakata) {
         $sql = "SELECT player_no from player where player_id = $player_id";
         $playerNo = $this->getUniqueValueFromDB($sql);
         if ($playerNo == 1) {
@@ -789,12 +794,11 @@ class BaoLaKiswahili extends Table
         }
         $mappedNotation = $mappedNotation . $direction;
 
-        // optionally special cases, winning move is not regarded since game can end with giving up, zombie, tie, opponent move
+        // optionally special case
+        // note: winning move is not regarded since game can end with giving up, zombie, tie, opponent move
         if ($isKutakata) {
             $mappedNotation = $mappedNotation . '*';
-        } elseif ($isKutakatia) {
-            $mappedNotation = $mappedNotation . '**';
-        }
+        } 
         return $mappedNotation;
     }
 
@@ -1134,7 +1138,7 @@ class BaoLaKiswahili extends Table
                 }
 
                 // log move in official notation
-                $this->addToGamelog($player, $this->mapNotation($player, $field, $moveDirection, false, true, false), false);
+                $this->addToGamelog($player, $this->mapNotation($player, $field, $moveDirection, false, true), false, false);
 
                 // only continue if not lost yet (e.g. by emtpying last own bowl in 1st row),
                 // which can only happen when emptying a kichwa, thus check for this source
@@ -1207,7 +1211,7 @@ class BaoLaKiswahili extends Table
     /// Kujifunza variant or 2nd phase Kiswahili variant - capture move
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 // log move in official notation
-                $this->addToGamelog($player, $this->mapNotation($player, $field, $moveDirection, false, false, false), false);
+                $this->addToGamelog($player, $this->mapNotation($player, $field, $moveDirection, false, false), false, false);
 
                 // this is a capture move, further captures are allowed and captured stones require player action,
                 // distribute stones in the next fields in selected direction until last one which has to be a capture
@@ -1300,18 +1304,8 @@ class BaoLaKiswahili extends Table
                     }
                 }
 
-                // check if kutakatia happened for Kiswahili 2nd phase after move without capture;
-                // log different depending on it
-                if ($this->getVariant() == VARIANT_KISWAHILI_2ND) {
-                    $isKutakatia = $this->checkAndMarkKutakatia($player, $board);
-
-                    // log move in official notation depending on kutakatia
-                    if ($isKutakatia) {
-                        $this->addToGamelog($player, $this->mapNotation($player, $field, $moveDirection, false, false, true), false);
-                    } else {
-                        $this->addToGamelog($player, $this->mapNotation($player, $field, $moveDirection, false, true, false), false);
-                    }
-                }
+                // log move in official notation
+                $this->addToGamelog($player, $this->mapNotation($player, $field, $moveDirection, false, true), false, false);
             }
         } elseif (($this->getVariant() == VARIANT_KISWAHILI || $this->getVariant() == VARIANT_KUJIFUNZA || $this->getVariant() == VARIANT_KISWAHILI_2ND) 
             && ($currentAction == 'selectKichwa' || $currentAction == 'decideSafari')) {
@@ -1326,8 +1320,8 @@ class BaoLaKiswahili extends Table
                 $sql = "SELECT value_number FROM kvstore WHERE `key` = 'moveDirection'";
                 $moveDirection = $this->getUniqueValueFromDB($sql);
 
-                // log move in official notation
-                $this->addToGamelog($player, '', true);
+                // add to log in official notation
+                $this->addToGamelog($player, '', true, false);
 
                 // empty own bowl for next move
                 $board[$player][$sourceField]["count"] = 0;
@@ -1359,7 +1353,7 @@ class BaoLaKiswahili extends Table
                         } else {
                             $logDirection = ($sourceField == 1 ? 1 : -1);
                         }
-                        $this->addToGamelog($player, $this->mapNotation($player, $captureField, $logDirection, true, false, false), false);
+                        $this->addToGamelog($player, $this->mapNotation($player, $captureField, $logDirection, true, false), false, false);
                     }
                 }
 
@@ -1538,6 +1532,14 @@ class BaoLaKiswahili extends Table
             'board' => $board
         ));
 
+        // check if kutakatia happened for Kiswahili 2nd phase after move without capture
+        if ($this->getVariant() == VARIANT_KISWAHILI_2ND && $currentAction == 'executeMove' && empty($possibleCaptures)) {
+            if ($this->checkAndMarkKutakatia($player, $board)) {
+                // add to log in official notation
+                $this->addToGamelog($player, '', false, true);
+            }
+        }
+            
         // persist planned state after move and possible capture field in database for using in stNextPlayer
         $sql = "UPDATE kvstore SET value_text = '$stateAfterMove' WHERE `key` = 'stateAfterMove'";
         self::DbQuery($sql);
@@ -1908,41 +1910,41 @@ class BaoLaKiswahili extends Table
         // save test stones for player 2
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 0");
 
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 16");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 15");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player2' AND field = 16");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player2' AND field = 15");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 14");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 13");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player2' AND field = 12");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 12");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 11");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 10");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 9");
+        self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$player2' AND field = 10");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player2' AND field = 9");
 
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 1");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 2");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 3");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player2' AND field = 3");
         self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player2' AND field = 4");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 5");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 6");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player2' AND field = 6");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 7");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player2' AND field = 8");
 
         // save test stones for player 1
-        self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$player1' AND field = 1");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player1' AND field = 2");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player1' AND field = 1");
+        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 2");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 3");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 4");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 5");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player1' AND field = 5");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 6");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 7");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player1' AND field = 7");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 8");
 
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 16");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 15");
+        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player1' AND field = 16");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player1' AND field = 15");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 14");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 13");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 12");
-        self::DbQuery("UPDATE board SET stones = 2 WHERE player = '$player1' AND field = 11");
-        self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 10");
+        self::DbQuery("UPDATE board SET stones = 3 WHERE player = '$player1' AND field = 11");
+        self::DbQuery("UPDATE board SET stones = 1 WHERE player = '$player1' AND field = 10");
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 9");
 
         self::DbQuery("UPDATE board SET stones = 0 WHERE player = '$player1' AND field = 0");
