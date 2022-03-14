@@ -1882,13 +1882,13 @@ class BaoLaKiswahili extends Table
             self::applyDbUpgradeToAllDB($sql);
             $sql = "ALTER TABLE `kvstore` ADD COLUMN `value_text` VARCHAR(10000) DEFAULT ''";
             self::applyDbUpgradeToAllDB($sql);
-            $sql = "INSERT INTO kvstore(`key`, value_number) VALUES ('lastLogPlayer', 0)";
-            self::DbQuery($sql);
 
             // initialize new kvstore values (will give incomplete, but functional gamelog for already running games)
             $sql = "INSERT INTO kvstore(`key`, value_text) VALUES ('gamelog', '')";
             self::DbQuery($sql);
             $sql = "INSERT INTO kvstore(`key`, value_number) VALUES ('moveNo', 0)";
+            self::DbQuery($sql);
+            $sql = "INSERT INTO kvstore(`key`, value_number) VALUES ('lastLogPlayer', 0)";
             self::DbQuery($sql);
         }
     }
