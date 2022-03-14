@@ -1876,19 +1876,17 @@ class BaoLaKiswahili extends Table
             // new table for storing arbitrary key value pairs
             $sql = "CREATE TABLE IF NOT EXISTS `kvstore` (`key` VARCHAR(20) NOT NULL, `value_text` VARCHAR(100), `value_number` INT, PRIMARY KEY (`key`)) ENGINE = InnoDB";
             self::applyDbUpgradeToAllDB($sql);
-        } else if ($from_version <= '2112191857') {
+        } else if ($from_version <= ' 2203141850') {
             // value_text column of kvstore was increased in size
-            $sql = "ALTER TABLE `kvstore` DROP COLUMN `value_text`";
-            self::applyDbUpgradeToAllDB($sql);
-            $sql = "ALTER TABLE `kvstore` ADD COLUMN `value_text` VARCHAR(10000) DEFAULT ''";
+            $sql = "ALTER TABLE `kvstore` MODIFY `value_text` VARCHAR(10000) DEFAULT ''";
             self::applyDbUpgradeToAllDB($sql);
 
-            // initialize new kvstore values (will give incomplete, but functional gamelog for already running games)
-            $sql = "INSERT INTO kvstore(`key`, value_text) VALUES ('gamelog', '')";
+            // initialize new kvstore values if necessarry (will give incomplete, but functional gamelog for already running games)
+            $sql = "INSERT IGNORE INTO kvstore(`key`, value_text) VALUES ('gamelog', '')";
             self::DbQuery($sql);
-            $sql = "INSERT INTO kvstore(`key`, value_number) VALUES ('moveNo', 0)";
+            $sql = "INSERT IGNORE INTO kvstore(`key`, value_number) VALUES ('moveNo', 0)";
             self::DbQuery($sql);
-            $sql = "INSERT INTO kvstore(`key`, value_number) VALUES ('lastLogPlayer', 0)";
+            $sql = "INSERT IGNORE INTO kvstore(`key`, value_number) VALUES ('lastLogPlayer', 0)";
             self::DbQuery($sql);
         }
     }
