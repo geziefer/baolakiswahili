@@ -1679,10 +1679,16 @@ class BaoLaKiswahili extends Table
         // check for blocked bowl by kutakatia
         $sql = "SELECT value_number FROM kvstore WHERE `key` = 'kutakatiaMoves'";
         $kutakatiaMoves = $this->getUniqueValueFromDB($sql);
+        $sql = "SELECT value_number FROM kvstore WHERE `key` = 'blockedField'";
+        $blockedField = $this->getUniqueValueFromDB($sql);
+        $sql = "SELECT value_number FROM kvstore WHERE `key` = 'blockedPlayer'";
+        $blockedPlayer = $this->getUniqueValueFromDB($sql);
 
         return array(
             'i18n' => array('type_translated'),
             'possibleMoves' => $result,
+            'blockedField' => $blockedField,
+            'blockedPlayer' => $blockedPlayer,
             'type' => $kutakatiaMoves != 0 ? "kutakatia" : ($capture ? "capture" : "non-capture"),
             'type_translated' => $kutakatiaMoves != 0 ? clienttranslate("kutakatia") : ($capture ? clienttranslate("capture") : clienttranslate("non-capture")),
             'variant' => $this->getVariant()
@@ -1798,6 +1804,13 @@ class BaoLaKiswahili extends Table
                         $kutakatiaMoves -= 1;
                         $sql = "UPDATE kvstore SET value_number = $kutakatiaMoves WHERE `key` = 'kutakatiaMoves'";
                         self::DbQuery($sql);
+                        // reset blocked information if kutakatia ends
+                        if ($kutakatiaMoves == 0) {
+                            $sql = "UPDATE kvstore SET value_number = 0 WHERE `key` = 'blockedField'";
+                            self::DbQuery($sql);
+                            $sql = "UPDATE kvstore SET value_number = 0 WHERE `key` = 'blockedPlayer'";
+                            self::DbQuery($sql);
+                        }
                     }
                 }
 

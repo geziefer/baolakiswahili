@@ -187,6 +187,9 @@ define([
                     this.addActionButton('button_testmode', 'TESTMODE', 'onTestmode');
                 }
 
+                // generally remove possible blocked pit, will be set if applicable
+                dojo.query('.blk_circle').removeClass('blk_blockedBowl');
+
                 if (this.isCurrentPlayerActive()) {
                     switch (stateName) {
                         // independent of game mode, it always causes the bowls to be styled according to possible moves
@@ -198,6 +201,13 @@ define([
                             dojo.query('.blk_seed_area').removeClass('blk_editBowl');
                             dojo.query('.blk_circle').removeClass('blk_clearBowl');
                             dojo.query('.blk_seed_area').removeClass('blk_clearBowl');
+
+                            // mark blocked pit if applicable
+                            if (args.type == "kutakatia") {
+                                var blockedField = args.blockedField;
+                                var blockedPlayer = args.blockedPlayer;
+                                dojo.addClass('circle_' + blockedPlayer + '_' + blockedField, 'blk_blockedBowl');
+                            }
 
                             this.updateBowlSelection(args.possibleMoves);
                             break;
