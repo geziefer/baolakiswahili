@@ -193,6 +193,12 @@ define([
                         case 'kunamuaMoveSelection':
                         case 'mtajiMoveSelection':
                         case 'husMoveSelection':
+                            // restore all bowls and possibly seed areas 
+                            dojo.query('.blk_circle').removeClass('blk_editBowl');
+                            dojo.query('.blk_seed_area').removeClass('blk_editBowl');
+                            dojo.query('.blk_circle').removeClass('blk_clearBowl');
+                            dojo.query('.blk_seed_area').removeClass('blk_clearBowl');
+
                             this.updateBowlSelection(args.possibleMoves);
                             break;
                         case 'client_directionSelection':
@@ -742,12 +748,6 @@ define([
                 // Stop event propagation
                 dojo.stopEvent(evt);
 
-                // restore all bowls and possibly seed areas
-                dojo.query('.blk_circle').removeClass('blk_editBowl');
-                dojo.query('.blk_seed_area').removeClass('blk_editBowl');
-                dojo.query('.blk_circle').removeClass('blk_clearBowl');
-                dojo.query('.blk_seed_area').removeClass('blk_clearBowl');
-                
                 // call server to start selected game mode
                 this.ajaxcall("/baolakiswahili/baolakiswahili/startWithEditedBoard.html", {
                     lock: true,
@@ -997,7 +997,6 @@ define([
 
             /*
             Notification when stones should be placed for other players while editing.
-            Note: This gets done by simply refreshing to keep it simple and since not being in real game yet. Besides, this orders the stone numbers correctly.
             */
             notif_placeStones: function (notif) {
                 console.log('enter notif_placeStones');
