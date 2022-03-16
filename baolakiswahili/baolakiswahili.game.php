@@ -654,10 +654,12 @@ class BaoLaKiswahili extends Table
             }
         }
 
-        // check possible captures if only 1 bowl can be captures, even from different bowls
+        // check possible captures if only 1 bowl can be captured, even from different bowls
         $possibleCapturedFields = array();
         foreach ($possiblePlayerCaptures as $captureStart => $captureMove) {
             $captureDirection = reset($captureMove) - $captureStart;
+            // correct direction if overflown
+            $captureDirection = (abs($captureDirection) > 1) ? $captureDirection / -15 : $captureDirection;
             $captureStartStones = $board[$player_id][$captureStart]["count"];
             $currentField = $captureStart;
             for ($i=1; $i<= $captureStartStones; $i++) {
