@@ -1137,6 +1137,8 @@ class BaoLaKiswahili extends Table
                     $board[$player][$sourceField]["count"] = 0;
                     array_push($moves, "emptyActive_" . $sourceField);
                     $overallMoved += $count;
+                    // check if emptying destroyed nyumba
+                    $this->checkAndMarkDestroyedNyumba($player, $sourceField);
                 }
 
                 // log move in official notation
