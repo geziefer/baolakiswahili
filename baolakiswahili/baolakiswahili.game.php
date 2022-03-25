@@ -14,8 +14,8 @@
  * Code notes:
  * 
  * how to log variable / a message:
- * self::dump('##################### $variable', $variable);
- * self::debug('##################### message');
+ * self::dump('############################### $variable', $variable);
+ * self::debug('############################### message');
  */
 
 // board layout from perspective of start player (South)
@@ -219,7 +219,7 @@ class BaoLaKiswahili extends Table
     */
     protected function getAllDatas()
     {
-        self::trace('*** getAllDatas was called');
+        self::trace('*** getAllDatas was called ***');
         $result = array();
 
         $current_player_id = self::getCurrentPlayerId();    // !! We must only return informations visible by this player !!
@@ -319,7 +319,7 @@ class BaoLaKiswahili extends Table
     // Hus variant: Possible bowls and their direction of a player's bowls with at least 2 stones
     function getHusPossibleMoves($player_id)
     {
-        self::trace('*** getHusPossibleMoves was called with parameter player_id='.$player_id);
+        self::trace('*** getHusPossibleMoves was called with parameter player_id='.$player_id.' ***');
         $result = array();
 
         $board = $this->getBoard();
@@ -338,7 +338,7 @@ class BaoLaKiswahili extends Table
     // mtaji phase step #1: if possible, a capture move has to be played
     function getMtajiPossibleCaptures($player_id)
     {
-        self::trace('*** getMtajiPossibleCaptures was called with parameter player_id='.$player_id);
+        self::trace('*** getMtajiPossibleCaptures was called with parameter player_id='.$player_id.' ***');
         $result = array();
 
         $board = $this->getBoard();
@@ -400,7 +400,7 @@ class BaoLaKiswahili extends Table
     // assumes that before the caputure step was checked
     function getMtajiPossibleNonCaptures($player_id)
     {
-        self::trace('*** getMtajiPossibleNonCaptures was called with parameter player_id='.$player_id);
+        self::trace('*** getMtajiPossibleNonCaptures was called with parameter player_id='.$player_id.' ***');
         $result = array();
 
         $board = $this->getBoard();
@@ -445,7 +445,7 @@ class BaoLaKiswahili extends Table
     // move from kichwa after capture in Kiswahili or Kujifunza variant
     function getPossibleKichwas($player_id)
     {
-        self::trace('*** getPossibleKichwas was called with parameter player_id='.$player_id);
+        self::trace('*** getPossibleKichwas was called with parameter player_id='.$player_id.' ***');
         $result = array();
 
         $opponent = $this->getPlayerAfter($player_id);
@@ -487,7 +487,7 @@ class BaoLaKiswahili extends Table
     // kunamua phase step #1: if possible, a capture move has to be played
     function getKunamuaPossibleCaptures($player_id)
     {
-        self::trace('*** getKunamuaPossibleCaptures was called with parameter player_id='.$player_id);
+        self::trace('*** getKunamuaPossibleCaptures was called with parameter player_id='.$player_id.' ***');
         $result = array();
 
         $board = $this->getBoard();
@@ -511,7 +511,7 @@ class BaoLaKiswahili extends Table
     // assumes that before the caputure step was checked, so that there is no capture possible
     function getKunamuaPossibleNonCaptures($player_id)
     {
-        self::trace('*** getKunamuaPossibleNonCaptures was called with parameter player_id='.$player_id);
+        self::trace('*** getKunamuaPossibleNonCaptures was called with parameter player_id='.$player_id.' ***');
         $result = array();
 
         $board = $this->getBoard();
@@ -596,7 +596,7 @@ class BaoLaKiswahili extends Table
     // in possession means, having not destroyed it, even if less than 6 seeds
     function checkForNyumbaPossession($nyumba, $player_id)
     {
-        self::trace('*** checkForNyumbaPossession was called with parameter nyumba='.$nyumba.',player_id='.$player_id);
+        self::trace('*** checkForNyumbaPossession was called with parameter nyumba='.$nyumba.',player_id='.$player_id.' ***');
         $key = "nyumba".$nyumba."functional";
         $sql = "SELECT value_boolean FROM kvstore WHERE `key` = '$key'";
         $hasNyumba = self::getUniqueValueFromDB($sql);
@@ -608,7 +608,7 @@ class BaoLaKiswahili extends Table
     // functional means, having not destroyed it and 6 or more seeds
     function checkForFunctionalNyumba($nyumba, $player_id, $board)
     {
-        self::trace('*** checkForFunctionalNyumba was called with parameter nyumba='.$nyumba.',player_id='.$player_id);
+        self::trace('*** checkForFunctionalNyumba was called with parameter nyumba='.$nyumba.',player_id='.$player_id.' ***');
         $hasNyumba = $this->checkForNyumbaPossession($nyumba, $player_id);
         
         // database only says that it is not yet destroyed, so check also for enough seeds
@@ -622,7 +622,7 @@ class BaoLaKiswahili extends Table
     // 2: destroyed (emptied)
     function checkForNyumbaState($player_id)
     {
-        self::trace('*** checkForNyumbaState was called with parameter player_id='.$player_id);
+        self::trace('*** checkForNyumbaState was called with parameter player_id='.$player_id.' ***');
         $board = $this->getBoard();
         $nyumba = $this->getNyumba($player_id);
         $nyumbaState = !$this->checkForNyumbaPossession($nyumba, $player_id) ? 2 : 
@@ -637,7 +637,7 @@ class BaoLaKiswahili extends Table
      // persist blocked field as it gets used in next 2 moves
      function checkAndMarkKutakatia($player_id, $board)
      {
-        self::trace('*** checkAndMarkKutakatia was called with parameter player_id='.$player_id);
+        self::trace('*** checkAndMarkKutakatia was called with parameter player_id='.$player_id.' ***');
         // determine all criteria in one loop through 1st row and store in separate arrays
         $possiblePlayerCaptures = $this->getMtajiPossibleCaptures($player_id);
         $opponent = $this->getPlayerAfter($player_id);
@@ -702,7 +702,7 @@ class BaoLaKiswahili extends Table
      // check if nyumba was captured and thereby has to be marked as destroyed
     function checkAndMarkDestroyedNyumba($player_id, $field)
     {
-        self::trace('*** checkAndMarkDestroyedNyumba was called with parameter player_id='.$player_id.',field='.$field);
+        self::trace('*** checkAndMarkDestroyedNyumba was called with parameter player_id='.$player_id.',field='.$field.' ***');
         $nyumba = $this->getNyumba($player_id);
         if ($field == $nyumba) {
             $key = "nyumba".$nyumba."functional";
@@ -808,7 +808,7 @@ class BaoLaKiswahili extends Table
     // so this function also checks for end of game
     function getScore($player_id, $board)
     {
-        self::trace('*** getScore was called with parameter player_id='.$player_id);
+        self::trace('*** getScore was called with parameter player_id='.$player_id.' ***');
         // first check if the player can still move and sum up stones
         $sum = 0;
         $canMove = false;
@@ -971,7 +971,7 @@ class BaoLaKiswahili extends Table
     // 3) no check if kutakatiaed bowl could be reached in later part of a harvest move by the player having done the blocking, must be harvested directly
     function executeMove($player, $field, $direction)
     {
-        self::trace('*** executeMove was called with parameters player='.$player.', field='.$field.', direction='.$direction);
+        self::trace('*** executeMove was called with parameters player='.$player.', field='.$field.', direction='.$direction.' ***');
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// Action checks and move checks for all variants
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1234,13 +1234,14 @@ class BaoLaKiswahili extends Table
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// Kujifunza variant or 2nd phase Kiswahili variant - non-capture move
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                // only continue if not lost yet (e.g. by emtpying last own bowl in 1st row),
-                // which can only happen when emptying a kichwa, thus check for this source
+                // only continue if not lost yet, which happens if emtpying kichwa which is last own bowl in 1st row
+                // and moving to the outside
                 $score = $this->getScore($player, $board);
-                if ($score == 0 && ($sourceField == 1 || $sourceField == 8)) {
-                    // make 1 more move to show loss condition visibly
-                    $destinationField = $this->getNextField($sourceField, $moveDirection);
-                    $board[$player][$destinationField]["count"] += 1;
+                $destinationField = $this->getNextField($sourceField, $moveDirection);
+                if ($score == 0 && (($sourceField == 1 && $destinationField == 16)
+                    || ($sourceField == 8 && $destinationField == 9))) {
+                    // make 1 more move with all stones to show loss condition visibly
+                    $board[$player][$destinationField]["count"] += $count;
                     array_push($moves, "moveActive_" . $destinationField);
                     $sourceField = $destinationField;
                 } else {
@@ -1608,7 +1609,7 @@ class BaoLaKiswahili extends Table
 
     function argKunamuaMoveSelection()
     {
-        self::trace('*** argKunamuaMoveSelection was called');
+        self::trace('*** argKunamuaMoveSelection was called ***');
         // assume capture move 
         $capture = true;
         $player = self::getActivePlayerId();
@@ -1652,7 +1653,7 @@ class BaoLaKiswahili extends Table
 
     function argSafariDecision()
     {
-        self::trace('*** argSafariDecision was called');
+        self::trace('*** argSafariDecision was called ***');
         // no moves currently possible, but put nyumba in possible moves to allow for highlighting, 
         // button selection will be presented to decide for continuing or stopping
         $nyumba = $this->getNyumba(self::getActivePlayerId());
@@ -1665,7 +1666,7 @@ class BaoLaKiswahili extends Table
 
     function argMtajiMoveSelection()
     {
-        self::trace('*** argMtajiMoveSelection was called');
+        self::trace('*** argMtajiMoveSelection was called ***');
         // assume capture move
         $capture = true;
         $result = $this->getMtajiPossibleCaptures(self::getActivePlayerId());
@@ -1697,7 +1698,7 @@ class BaoLaKiswahili extends Table
 
     function argCaptureSelection()
     {
-        self::trace('*** argCaptureSelection was called');
+        self::trace('*** argCaptureSelection was called ***');
         return array(
             'possibleMoves' => $this->getPossibleKichwas(self::getActivePlayerId()),
             'type' => "kichwa"
@@ -1706,7 +1707,7 @@ class BaoLaKiswahili extends Table
 
     function argHusMoveSelection()
     {
-        self::trace('*** argHusMoveSelection was called');
+        self::trace('*** argHusMoveSelection was called ***');
         return array(
             'possibleMoves' => $this->getHusPossibleMoves(self::getActivePlayerId()),
             'type' => ""
@@ -1760,7 +1761,7 @@ class BaoLaKiswahili extends Table
 
     function stNextPlayer()
     {
-        self::trace('*** stNextPlayer was called');
+        self::trace('*** stNextPlayer was called ***');
         // get current situation
         $board = $this->getBoard();
         $playerLast = self::getActivePlayerId();
@@ -1847,7 +1848,7 @@ class BaoLaKiswahili extends Table
 
     function zombieTurn($state, $active_player)
     {
-        self::trace('*** zombieTurn was called with parameter state='.$state.'", active_player='.$active_player);
+        self::trace('*** zombieTurn was called with parameter state='.$state.'", active_player='.$active_player.' ***');
         $statename = $state['name'];
 
         if ($state['type'] === "activeplayer") {
@@ -1880,7 +1881,7 @@ class BaoLaKiswahili extends Table
 
     function upgradeTableDb($from_version)
     {
-        self::trace('*** zombieTurn was called with parameter from_version='.$from_version);
+        self::trace('*** zombieTurn was called with parameter from_version='.$from_version.' ***');
         // $from_version is the current version of this game database, in numerical form.
         // For example, if the game was running with a release of your game named "140430-1345",
         // $from_version is equal to 1404301345
@@ -1916,7 +1917,7 @@ class BaoLaKiswahili extends Table
     // TESTMODE only (set by JS): place stones for test purposes and changes database
     function testmode()
     {
-        self::trace('*** TESTMODE was called');
+        self::trace('*** TESTMODE was called ***');
         $sql = "SELECT player_id FROM player WHERE player_no = 1";
         $player1 = self::getUniqueValueFromDB($sql);
         $sql = "SELECT player_id FROM player WHERE player_no = 2";
