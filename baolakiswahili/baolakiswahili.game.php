@@ -1147,7 +1147,9 @@ class BaoLaKiswahili extends Table
                 // only continue if not lost yet (e.g. by emtpying last own bowl in 1st row),
                 // which can only happen when emptying a kichwa, thus check for this source
                 $score = $this->getScore($player, $board);
-                if ($score == 0 && ($sourceField == 1 || $sourceField == 8)) {
+                $destinationField = $this->getNextField($sourceField, $moveDirection);
+                if ($score == 0 && (($sourceField == 1 && $destinationField == 16)
+                    || ($sourceField == 8 && $destinationField == 9))) {
                     // make 1 more move to show loss condition visibly
                     $destinationField = $this->getNextField($sourceField, $moveDirection);
                     $board[$player][$destinationField]["count"] += 1;
