@@ -85,15 +85,19 @@ define([
                     dojo.byId('nyumba_message_'+player_id).innerHTML = message;
                 }
 
-                // show gamelog
+                // show gamelog and hide labeling
                 dojo.byId('gamelog_content').innerHTML = gamedatas.gamelog;
-    
+                dojo.query('.blk_board_labeling').style('display', 'none');
+
                 // click handler for different click situations on bowl including editor
                 dojo.query('.blk_circle').connect('onclick', this, 'onBowl');
                 dojo.query('.blk_seed_area').connect('onclick', this, 'onBowl');
 
                 // click handler for preference change by checkbox
                 dojo.query('#checkbox_kichwa_mode').connect('onclick', this, 'onPrefCheckbox');
+
+                // click handler for gamelog option checkbox
+                dojo.query('#checkbox_board_labeling').connect('onclick', this, 'onBoardLabelling');
 
                 // Setup game notifications to handle (see "setupNotifications" method below)
                 this.setupNotifications();
@@ -776,6 +780,21 @@ define([
                  if (prefId == "checkbox_kichwa_mode") {
                      this.updatePreference(PREF_KICHWA_MODE, value ? PREF_KICHWA_MODE_AUTOMATIC : PREF_KICHWA_MODE_MANUAL);
                  }
+            },
+
+            // player click on show/hide board labeling
+            onBoardLabelling: function (evt) {
+                // get current value
+                var id = evt.currentTarget.id;
+                var value = document.getElementById(id).checked;
+                console.log("Gamelog option set to " + value);
+
+                // show or hide board labelling
+                if (value) {
+                    dojo.query('.blk_board_labeling').style('display', 'block');
+                } else {
+                    dojo.query('.blk_board_labeling').style('display', 'none');
+                }
             },
 
             // click on Testmode button       

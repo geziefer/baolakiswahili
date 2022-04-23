@@ -40,18 +40,18 @@ class view_baolakiswahili_baolakiswahili extends game_view
     // create 4 rows with 8 fields, scaling and shifting them according to the board perspective,
     // and add blocks for storage areas
     if ($isFirst) {
-      $this->createLine(1, 100, 100, 85, 22, -3, -1, $player2, 16, -1);
-      $this->createLine(2, 104, 100, 70, 22, 0, -5, $player2, 1, +1);
-      $this->createLine(3, 107, 98, 58, 49, -1, -8, $player1, 1, +1);
-      $this->createLine(4, 111, 98, 45, 66, -5, -10, $player1, 16, -1);
+      $this->createLine(1, 100, 100, 85, 22, -3, -1, $player2, 16, -1, 'b', true);
+      $this->createLine(2, 104, 100, 70, 22, 0, -5, $player2, 1, +1, 'a', true);
+      $this->createLine(3, 107, 98, 58, 49, -1, -8, $player1, 1, +1, 'A', false);
+      $this->createLine(4, 111, 98, 45, 66, -5, -10, $player1, 16, -1, 'B', false);
 
       $this->tpl['PLAYER1'] = $player1;
       $this->tpl['PLAYER2'] = $player2;
     } else {
-      $this->createLine(1, 100, 100, 85, 22, -3, -1, $player1, 9, +1);
-      $this->createLine(2, 104, 100, 70, 22, 0, -5, $player1, 8, -1);
-      $this->createLine(3, 107, 98, 58, 49, -1, -8, $player2, 8, -1);
-      $this->createLine(4, 111, 98, 45, 66, -5, -10, $player2, 9, +1);
+      $this->createLine(1, 100, 100, 85, 22, -3, -1, $player1, 9, +1, 'B', true);
+      $this->createLine(2, 104, 100, 70, 22, 0, -5, $player1, 8, -1, 'A', true);
+      $this->createLine(3, 107, 98, 58, 49, -1, -8, $player2, 8, -1, 'a', false);
+      $this->createLine(4, 111, 98, 45, 66, -5, -10, $player2, 9, +1, 'b', false);
 
       $this->tpl['PLAYER1'] = $player2;
       $this->tpl['PLAYER2'] = $player1;
@@ -62,6 +62,7 @@ class view_baolakiswahili_baolakiswahili extends game_view
     $this->tpl['LBL_GAMELOG_TITLE'] = self::_("Game log*");
     $this->tpl['LBL_GAMELOG_KEY'] = self::_("* <b>A</b>/<b>B</b>: south's inner/outer row, <b>a</b>/<b>b</b>: north's inner/outer row, <b>1</b>..<b>8</b> pits left to right from player's view,<br><b><</b>/<b>></b> move left/right from player's view or chose left/right kichwa, <b>+</b> safari nyumba, <b>*</b> kutakata, <b>**</b> kutakatia");
     $this->tpl['LBL_PREF_AUTO_KICHWA'] = self::_("Automatic Kichwa selection");
+    $this->tpl['LBL_SHOW_BOARD_LABELING'] = self::_("Show board labeling");
     $this->tpl['LBL_PHASE'] = self::_("Kunamua phase");
 
     /*********** Do not change anything below this line  ************/
@@ -70,10 +71,13 @@ class view_baolakiswahili_baolakiswahili extends game_view
   /*
     Put circle in each field of a line and applies shifts and scale.
     */
-  function createLine($y, $hor_scale, $ver_scale, $hor_shift, $ver_shift, $hor_margin, $ver_margin, $player, $startField, $increment)
+  function createLine($y, $hor_scale, $ver_scale, $hor_shift, $ver_shift, $hor_margin, $ver_margin, $player, $start_field, $increment, $row_label, $inverse_numbers)
   {
-    $field = $startField;
+    $field = $start_field;
     for ($x = 1; $x <= 8; $x++) {
+      // create label
+      $number = $inverse_numbers ? 9 - $x : $x;
+      $label = $row_label . $number;
       // insert an invisible circle for later clicking with ID according to board in DB
       $this->page->insert_block("circle", array(
         'PLAYER' => $player,
@@ -81,7 +85,8 @@ class view_baolakiswahili_baolakiswahili extends game_view
         'LEFT' => round(($x - 1) * $hor_scale + $hor_shift),
         'TOP' => round(($y - 1) * $ver_scale + $ver_shift),
         'MLEFT' => $hor_margin,
-        'MTOP' => $ver_margin
+        'MTOP' => $ver_margin,
+        'LABEL' => $label,
       ));
 
       $field += $increment;

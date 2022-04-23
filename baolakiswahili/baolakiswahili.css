@@ -167,3 +167,23 @@
     color: black;
     font-size: small;
 }
+
+.blk_gamelog_title {
+    float: left;
+}
+
+.blk_gamelog_option {
+    float: right;
+}
+
+.blk_board_labeling {
+    color: #000000;
+    font-size: 20px;
+    font-weight: 900;
+    text-align: center;
+    z-index: 100;
+    position: absolute;
+    margin-left: 30px;
+    margin-top: 10px;
+    text-shadow: 1px 1px #ffffff;
+}

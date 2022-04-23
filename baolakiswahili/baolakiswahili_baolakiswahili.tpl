@@ -20,6 +20,7 @@
 <div id="phase_label" class="blk_phase_label">
     <p>{LBL_PHASE}</p>
 </div>
+
 <div id="board" class="board-nyumba">
     <div id="circle_{PLAYER2}_0" class="blk_seed_area" style="top: -75px">
         <div id="label_{PLAYER2}_0" class="blk_label" style="margin-left:5px;">
@@ -30,6 +31,9 @@
     <div id="circle_{PLAYER}_{FIELD}" class="blk_circle" style="left: {LEFT}px; top: {TOP}px;">
         <div id="label_{PLAYER}_{FIELD}" class="blk_label" style="margin-left: {MLEFT}px; margin-top: {MTOP}px;">
             <p>2</p>
+        </div>
+        <div class="blk_board_labeling">
+            {LABEL}
         </div>
     </div>
     <!-- END circle -->
@@ -49,10 +53,17 @@
 
 <div id="gamelog">
     <div class="blk_gamelog_box">
-        <h3><span>{LBL_GAMELOG_TITLE}</span></h3>
-        <textarea id="gamelog_content" rows="10" cols="90" readonly="true">
-        </textarea>
-        <p><span id="gamelog_key">{LBL_GAMELOG_KEY}</span></p>
+        <div class="blk_gamelog_title">
+            <h3><span>{LBL_GAMELOG_TITLE}</span></h3>
+        </div>
+        <div class="blk_gamelog_option">
+            <input type="checkbox" id="checkbox_board_labeling">&nbsp; <span>{LBL_SHOW_BOARD_LABELING}</span>
+        </div>
+        <div>
+            <textarea id="gamelog_content" rows="10" cols="90" readonly="true">
+            </textarea>
+            <p><span id="gamelog_key">{LBL_GAMELOG_KEY}</span></p>
+        </div>
     </div>
 </div>
 
