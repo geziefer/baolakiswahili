@@ -112,7 +112,6 @@ define([
                 // hide preference box if HUS variant
                 if (gamedatas.variant == VARIANT_HUS) {
                     dojo.query('#preferences').style('display', 'none');
-                    dojo.query('#gamelog').style('display', 'none');
                 } else {
                     // set pref checkbox from user preference and connect with change handler for other variants
                     dojo.byId('checkbox_kichwa_mode').checked = (this.prefs[PREF_KICHWA_MODE].value == PREF_KICHWA_MODE_AUTOMATIC) ? true : false;

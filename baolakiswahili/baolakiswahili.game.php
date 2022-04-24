@@ -1441,6 +1441,9 @@ class BaoLaKiswahili extends Table
             // get stones for move
             $count = $board[$player][$sourceField]["count"];
 
+            // log move in official notation
+            $this->addToGamelog($player, $this->mapNotation($player, $field, $moveDirection, false, false), false, false);
+
             // empty start field
             $board[$player][$sourceField]["count"] = 0;
             array_push($moves, "emptyActive_" . $sourceField);
