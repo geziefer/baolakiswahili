@@ -310,10 +310,7 @@ class BaoLaKiswahili extends Table
     {
         // due to the way, the board is persisted in database, the position of the nyumba is 
         // either 5 (for 1st player) or 4 (for 2nd player)
-        $sql = "SELECT player_no FROM player WHERE player_id = '$player_id'";
-        $playerNo = self::getUniqueValueFromDB($sql);
-
-        return $playerNo == 1 ? 5 : 4;
+        return $this->isSouth($player_id) ? 5 : 4;
     }
 
     // Hus variant: Possible bowls and their direction of a player's bowls with at least 2 stones
@@ -724,17 +721,27 @@ class BaoLaKiswahili extends Table
         return $sum;
     }
 
+    // checks if the given player is South, so the one with uppercase field letters,
+    // this determines, if the field numbering form left to right goes from 1-8 or 8-1
+    function isSouth($player_id) {
+        self::trace('*** isSouth was called with parameters player_id='.$player_id.' ***');
+        $sql = "SELECT player_no FROM player WHERE player_id = $player_id";
+        $playerNo = self::getUniqueValueFromDB($sql);
+
+        return $playerNo == 1;
+    }
+
     // Add and save game log entry and move number;
     // special cases for safari and kutakatia, since this adds a character to the log
     function addToGamelog($player_id, $text, $isSafari, $isKutakatia) {
+        self::trace('*** addToGamelog was called with parameters player='.$player_id.', text='.$text.', isSafari='.$isSafari.', isKutakatia='.$isKutakatia.' ***');
+
         $sql = "SELECT value_number from kvstore where `key` = 'moveNo'";
         $moveNo = $this->getUniqueValueFromDB($sql);
         $sql = "SELECT value_text from kvstore where `key` = 'gamelog'";
         $moveText = $this->getUniqueValueFromDB($sql);
 
-        $sql = "SELECT player_no from player where player_id = $player_id";
-        $playerNo = $this->getUniqueValueFromDB($sql);
-        if ($playerNo == 1) {
+        if ($this->isSouth($player_id)) {
             // safari/kutakatia for 1st player just adds +/*
             if ($isSafari) {
                 $moveText = $moveText . '+';
@@ -769,9 +776,9 @@ class BaoLaKiswahili extends Table
     // direction is always from player perspective left/right (not clockwise/counterclockwise) or the kichwa selected;
     // flags for special move notations, for kichwa + means right, - means left independent of side;
     function mapNotation($player_id, $field, $moveDirection, $isKichwa, $isKutakata) {
-        $sql = "SELECT player_no from player where player_id = $player_id";
-        $playerNo = $this->getUniqueValueFromDB($sql);
-        if ($playerNo == 1) {
+        self::trace('*** mapNotation was called with parameters player='.$player_id.', field='.$field.', moveDirection='.$moveDirection.', isKichwa='.$isKichwa.', isKutakata='.$isKutakata.' ***');
+        
+        if ($this->isSouth($player_id)) {
             // bowl 1..8 is A, 9..16 is B, 1st row stays 1..8, 2nd row has to be inverted and reduced to 1..8
             $mappedNotation = ($field <= 8 ? 'A' . $field : 'B' . abs($field - 17));
             // direction is different in 1st and 2nd row, if kichwa is selected, direction is set
@@ -804,11 +811,39 @@ class BaoLaKiswahili extends Table
         return $mappedNotation;
     }
 
+    // logs a game message after a player action for the BGA game log
+    function logMessage($message, $player, $field, $direction, $count, $isKichwa) {
+        self::trace('*** logMessage was called with parameters message='.$message.', player='.$player.', field='.$field.', direction='.$direction.', count='.$count.', isKichwa='.$isKichwa.' ***');
+
+        $mappedNotation = $this->mapNotation($player, $field, $direction, $isKichwa, false);
+        $mappedField = substr($mappedNotation, 0, 2);
+        $mappedDirection = substr($mappedNotation, 2, 1);
+
+        // depending on player left and right differs for kichwa move
+        if (!$this->isSouth($player) && $isKichwa) {
+            $mappedDirectionTranslated = $mappedDirection == '<' ? clienttranslate('to the right') : clienttranslate('to the left');
+            $mappedDirectionKichwaTranslated = $mappedDirection == '<' ? clienttranslate('the left kichwa') : clienttranslate('the right kichwa');
+        } else {
+            $mappedDirectionTranslated = $mappedDirection == '<' ? clienttranslate('to the left') : clienttranslate('to the right');
+            $mappedDirectionKichwaTranslated = $mappedDirection == '<' ? clienttranslate('the right kichwa') : clienttranslate('the left kichwa');
+        }
+
+        self::notifyAllPlayers("dummy", $message, array(
+            'i18n' => array('mapped_direction_translated', 'mapped_direction_kichwa_translated'),
+            'player_name' => self::getActivePlayerName(),
+            'field' => $mappedField,
+            'seeds' => $count,
+            'mapped_direction_translated' => $mappedDirectionTranslated,
+            'mapped_direction_kichwa_translated' => $mappedDirectionKichwaTranslated
+        ));
+    }
+
     // Calculate player's score, which is 0 if lost or sum of fields if not,
     // so this function also checks for end of game
     function getScore($player_id, $board)
     {
         self::trace('*** getScore was called with parameter player_id='.$player_id.' ***');
+
         // first check if the player can still move and sum up stones
         $sum = 0;
         $canMove = false;
@@ -861,6 +896,8 @@ class BaoLaKiswahili extends Table
     // calculates scores for both players and notifies players,
     // returns true if game ends
     function updateScores($board, $playerLast, $playerNext) {
+        self::trace('*** updateScores was called with parameters playerLast='.$playerLast.', playerNext='.$playerNext.' ***');
+
         // calculate scores and thereby if someone has lost or is zombie (score = 0)
         $sql = "SELECT player_zombie FROM player WHERE player_id = '$playerLast'";
         $zombie = self::getUniqueValueFromDB($sql);
@@ -1064,7 +1101,6 @@ class BaoLaKiswahili extends Table
         // get start situation
         $opponent = $this->getPlayerAfter($player);
         $players = array($player, $opponent);
-        $selectedField = $field;
         $sourceField = $field;
         $board = $this->getBoard();
         $rounds = 0;
@@ -1091,7 +1127,7 @@ class BaoLaKiswahili extends Table
         $overallMoved = 0;
         // for statistics - total number of stolen stones from opponent
         $overallStolen = 0;
-        // for statistics - total number of bowls emtied from opponent
+        // for statistics - total number of bowls emptied from opponent
         $overallEmptied = 0;
 
         // Distinguish game mode for move execution
@@ -1105,6 +1141,10 @@ class BaoLaKiswahili extends Table
             $board[$player][$sourceField]["count"] += 1;
             array_push($moves, "placeActive_" . $sourceField);
             $overallMoved += 1;
+
+            // game log message
+            $message = clienttranslate('${player_name} puts a new seed into <b>${field}</b>.');
+            $this->logMessage($message, $player, $sourceField, $moveDirection, 0, false);
 
             // get stones for move
             $count = $board[$player][$sourceField]["count"];
@@ -1131,12 +1171,17 @@ class BaoLaKiswahili extends Table
                     $board[$player][$sourceField]["count"] -= $count;
                     array_push($moves, "taxActive_" . $sourceField);
                     $overallMoved += $count;
+
+                    // game log message
+                    $message = clienttranslate('${player_name} taxes his nyumba.');
+                    $this->logMessage($message, $player, $sourceField, $moveDirection, 0, false);
                 } else {
                     // this is a non-capture move, no further captures are allowed, move only continues in own two rows,
                     // first empty start field
                     $board[$player][$sourceField]["count"] = 0;
                     array_push($moves, "emptyActive_" . $sourceField);
                     $overallMoved += $count;
+
                     // check if emptying destroyed nyumba
                     $this->checkAndMarkDestroyedNyumba($player, $sourceField);
                 }
@@ -1154,13 +1199,23 @@ class BaoLaKiswahili extends Table
                     $destinationField = $this->getNextField($sourceField, $moveDirection);
                     $board[$player][$destinationField]["count"] += 1;
                     array_push($moves, "moveActive_" . $destinationField);
-                    $sourceField = $destinationField;
+                    
+                    // game log message
+                    $message = clienttranslate('${player_name} moves ${seeds} seeds from <b>${field}</b> ${mapped_direction_translated}.');
+                    $this->logMessage($message, $player, $sourceField, $moveDirection, $count, false);
 
+                    $sourceField = $destinationField;
                 } else {
                     // make moves until last field was empty before putting stone
                     $rounds = 0;
                     $startField = $sourceField;
+
+                    
                     while ($count > 1) {
+                        // game log message
+                        $message = clienttranslate('${player_name} moves ${seeds} seeds from <b>${field}</b> ${mapped_direction_translated}.');
+                        $this->logMessage($message, $player, $sourceField, $moveDirection, $count, false);
+
                         // distribute stones in the next fields in selected direction until last one
                         while ($count > 0) {
                             // calculate next field to move to and leave 1 stone
@@ -1181,6 +1236,10 @@ class BaoLaKiswahili extends Table
                             $sql = "UPDATE player SET player_zombie = true WHERE player_id ='$player'";
                             self::DbQuery($sql);
                             break;
+
+                            // game log message
+                            $message = clienttranslate('${player_name} made infinite move and loses.');
+                            $this->logMessage($message, $player, $sourceField, $moveDirection, 0, false);
                         }
 
                         // source field now points to field of last put stone
@@ -1335,6 +1394,10 @@ class BaoLaKiswahili extends Table
                 array_push($moves, "emptyActive_" . $sourceField);
                 $overallMoved += $count;
 
+                // game log message
+                $message = clienttranslate('${player_name} decides to go on safari.');
+                $this->logMessage($message, $player, $sourceField, $moveDirection, 0, false);
+
                 // set nyumba destroyed
                 $this->checkAndMarkDestroyedNyumba($player, $sourceField);
             } else {
@@ -1353,9 +1416,7 @@ class BaoLaKiswahili extends Table
                     $lastLogPlayer = $this->getUniqueValueFromDB($sql);
                     if ($lastLogPlayer != $player) {
                         // dependent on player number, kichwa ids differ, set left (-) or right (+) for direction in log
-                        $sql = "SELECT player_no from player where player_id = $player";
-                        $playerNo = $this->getUniqueValueFromDB($sql);
-                        if ($playerNo == 1) {
+                        if ($this->isSouth($player)) {
                             $logDirection = ($sourceField == 1 ? -1 : 1);
                         } else {
                             $logDirection = ($sourceField == 1 ? 1 : -1);
@@ -1363,21 +1424,27 @@ class BaoLaKiswahili extends Table
                         $this->addToGamelog($player, $this->mapNotation($player, $captureField, $logDirection, true, false), false, false);
                     }
                 }
-
+                
                 // start with emptying opponent's bowl
                 array_push($moves, "emptyopponent_" . $captureField);
-                $overallMoved += $count;
-                $overallStolen += $count;
-                $overallEmptied += 1;
                 $board[$opponent][$captureField]["count"] = 0;
+                
+                // game log messages
+                $message = clienttranslate('${player_name} harvests ${seeds} seed(s) from <b>${field}</b>.');
+                $this->logMessage($message, $opponent, $captureField, $moveDirection, $captureCount, false);
+                $message = clienttranslate('${player_name} choses ${mapped_direction_kichwa_translated} and moves ${mapped_direction_translated}.');
+                $this->logMessage($message, $player, $sourceField, $moveDirection, 0, true);
 
                 // set nyumba destroyed if opponent's nyumba was captured
                 $this->checkAndMarkDestroyedNyumba($opponent, $captureField);
-
+                
                 // the move takes captured stones and starts with kichwa,
                 // as every move always goes to next field, we go back one field (inverted direction) 
                 // for start of move (sourceField) in order to have same behaviour later as for regular moves
                 $count = $captureCount;
+                $overallMoved += $count;
+                $overallStolen += $count;
+                $overallEmptied += 1;
                 $sourceField = $this->getNextField($sourceField, $moveDirection * (-1));
             }
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1386,6 +1453,7 @@ class BaoLaKiswahili extends Table
             // move on until next capture or empty bowl,
             // condition is checked at the end, since here it is possible to move only 1 stone from capture
             do {
+
                 // distribute stones in the next fields in selected direction until last one
                 while ($count > 0) {
                     // calculate next field to move to and leave 1 stone
@@ -1477,7 +1545,6 @@ class BaoLaKiswahili extends Table
                             $board[$opponent][$sourceField]["count"] = 0;
                             array_push($moves, "emptyopponent_" . $sourceField);
                             $overallMoved += $count;
-                            $overallStolen += $count;
                             array_push($moves, "moveopponent_" . $sourceField);
 
                             // check if opponent has lost and stop moves if lost
@@ -1519,25 +1586,10 @@ class BaoLaKiswahili extends Table
         self::incStat($overallStolen, "overallStolen", $player);
 
         // notify players of all moves
-        if ($moveDirection > 0) {
-            $messageDirection = clienttranslate("clockwise");
-        } elseif ($moveDirection < 0) {
-            $messageDirection = clienttranslate("counterclockwise");
-        } else {
-            $messageDirection = clienttranslate("without direction");
-        }
-        $message = clienttranslate('${player_name} moved ${message_direction_translated} from pit ${selected_field} to pit ${source_field} in total ${overall_moved} seed(s), emptying ${overall_emptied} pit(s) and having stolen ${overall_stolen} seed(s).');
-        self::notifyAllPlayers("moveStones", $message, array(
-            'i18n' => array('message_direction_translated'),
+        // Note: empty message, game log messages are done separately
+        self::notifyAllPlayers("moveStones", '', array(
             'player' => $player,
-            'player_name' => self::getActivePlayerName(),
             'opponent' => $opponent,
-            'message_direction_translated' => $messageDirection,
-            'selected_field' => $selectedField,
-            'source_field' => $sourceField,
-            'overall_moved' => $overallMoved,
-            'overall_emptied' => $overallEmptied,
-            'overall_stolen' => $overallStolen,
             'moves' => $moves,
             'board' => $board
         ));
@@ -1886,7 +1938,7 @@ class BaoLaKiswahili extends Table
 
     function upgradeTableDb($from_version)
     {
-        self::trace('*** zombieTurn was called with parameter from_version='.$from_version.' ***');
+        self::trace('*** upgradeTableDb was called with parameter from_version='.$from_version.' ***');
         // $from_version is the current version of this game database, in numerical form.
         // For example, if the game was running with a release of your game named "140430-1345",
         // $from_version is equal to 1404301345
@@ -1899,18 +1951,18 @@ class BaoLaKiswahili extends Table
             // new table for storing arbitrary key value pairs
             $sql = "CREATE TABLE IF NOT EXISTS `kvstore` (`key` VARCHAR(20) NOT NULL, `value_text` VARCHAR(100), `value_number` INT, PRIMARY KEY (`key`)) ENGINE = InnoDB";
             self::applyDbUpgradeToAllDB($sql);
-        } else if ($from_version <= ' 2203141850') {
+        } else if ($from_version <= '2203141850') {
             // value_text column of kvstore was increased in size
             $sql = "ALTER TABLE `kvstore` MODIFY `value_text` VARCHAR(10000) DEFAULT ''";
             self::applyDbUpgradeToAllDB($sql);
 
             // initialize new kvstore values if necessarry (will give incomplete, but functional gamelog for already running games)
             $sql = "INSERT IGNORE INTO kvstore(`key`, value_text) VALUES ('gamelog', '')";
-            self::DbQuery($sql);
+            self::applyDbUpgradeToAllDB($sql);
             $sql = "INSERT IGNORE INTO kvstore(`key`, value_number) VALUES ('moveNo', 0)";
-            self::DbQuery($sql);
+            self::applyDbUpgradeToAllDB($sql);
             $sql = "INSERT IGNORE INTO kvstore(`key`, value_number) VALUES ('lastLogPlayer', 0)";
-            self::DbQuery($sql);
+            self::applyDbUpgradeToAllDB($sql);
         }
     }
 
