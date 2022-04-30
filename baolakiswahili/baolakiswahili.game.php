@@ -1173,7 +1173,7 @@ class BaoLaKiswahili extends Table
                     $overallMoved += $count;
 
                     // game log message
-                    $message = clienttranslate('${player_name} taxes his nyumba.');
+                    $message = clienttranslate('${player_name} taxes the nyumba.');
                     $this->logMessage($message, $player, $sourceField, $moveDirection, 0, false);
                 } else {
                     // this is a non-capture move, no further captures are allowed, move only continues in own two rows,
@@ -1233,13 +1233,14 @@ class BaoLaKiswahili extends Table
                         // protection for infinite moves: stop move after 12 rounds
                         // by converting the player into a zombie :-)
                         if ($rounds >= 12) {
+                            // game log message
+                            $message = clienttranslate('${player_name} made an infinite move and loses.');
+                            $this->logMessage($message, $player, $sourceField, $moveDirection, 0, false);
+
                             $sql = "UPDATE player SET player_zombie = true WHERE player_id ='$player'";
                             self::DbQuery($sql);
-                            break;
 
-                            // game log message
-                            $message = clienttranslate('${player_name} made infinite move and loses.');
-                            $this->logMessage($message, $player, $sourceField, $moveDirection, 0, false);
+                            break;
                         }
 
                         // source field now points to field of last put stone
@@ -1278,6 +1279,10 @@ class BaoLaKiswahili extends Table
                 // log move in official notation
                 $this->addToGamelog($player, $this->mapNotation($player, $field, $moveDirection, false, false), false, false);
 
+                // game log message
+                $message = clienttranslate('${player_name} moves ${seeds} seeds from <b>${field}</b> ${mapped_direction_translated}.');
+                $this->logMessage($message, $player, $sourceField, $moveDirection, $count, false);
+
                 // this is a capture move, further captures are allowed and captured stones require player action,
                 // distribute stones in the next fields in selected direction until last one which has to be a capture
                 while ($count > 0) {
@@ -1285,6 +1290,7 @@ class BaoLaKiswahili extends Table
                     $destinationField = $this->getNextField($sourceField, $moveDirection);
                     $board[$player][$destinationField]["count"] += 1;
                     array_push($moves, "moveActive_" . $destinationField);
+                    
                     $sourceField = $destinationField;
                     $count -= 1;
                 }
@@ -1304,6 +1310,11 @@ class BaoLaKiswahili extends Table
                     // make 1 more move with all stones to show loss condition visibly
                     $board[$player][$destinationField]["count"] += $count;
                     array_push($moves, "moveActive_" . $destinationField);
+
+                    // game log message
+                    $message = clienttranslate('${player_name} moves ${seeds} seeds from <b>${field}</b> ${mapped_direction_translated}.');
+                    $this->logMessage($message, $player, $sourceField, $moveDirection, $count, false);
+                    
                     $sourceField = $destinationField;
                 } else {
                     // this is a non-capture move, no further captures are allowed, move only continues in own two rows,
@@ -1311,6 +1322,10 @@ class BaoLaKiswahili extends Table
                     $rounds = 0;
                     $startField = $sourceField;
                     while ($count > 1) {
+                        // game log message
+                        $message = clienttranslate('${player_name} moves ${seeds} seeds from <b>${field}</b> ${mapped_direction_translated}.');
+                        $this->logMessage($message, $player, $sourceField, $moveDirection, $count, false);
+
                         // check if nyumba was emptied by move for Kiswahili variant 2nd phase
                         if ($this->getVariant() == VARIANT_KISWAHILI_2ND) {
                             $this->checkAndMarkDestroyedNyumba($player, $sourceField);
@@ -1333,8 +1348,13 @@ class BaoLaKiswahili extends Table
                         // protection for infinite moves: stop move after 12 rounds
                         // by converting the player into a zombie :-)
                         if ($rounds >= 12) {
+                            // game log message
+                            $message = clienttranslate('${player_name} made an infinite move and loses.');
+                            $this->logMessage($message, $player, $sourceField, $moveDirection, 0, false);
+
                             $sql = "UPDATE player SET player_zombie = true WHERE player_id ='$player'";
                             self::DbQuery($sql);
+
                             break;
                         }
 
@@ -1519,6 +1539,10 @@ class BaoLaKiswahili extends Table
     
             // make moves until last field was empty before putting stone
             while ($count > 1) {
+                // game log messages
+                $message = clienttranslate('${player_name} moves ${seeds} seeds from <b>${field}</b> ${mapped_direction_translated}.');
+                $this->logMessage($message, $player, $sourceField, $moveDirection, $count, false);
+
                 // distribute stones in the next fields in selected direction until last one
                 while ($count > 0) {
                     // calculate next field to move to and leave 1 stone
@@ -1546,6 +1570,10 @@ class BaoLaKiswahili extends Table
                             array_push($moves, "emptyopponent_" . $sourceField);
                             $overallMoved += $count;
                             array_push($moves, "moveopponent_" . $sourceField);
+
+                            // game log messages
+                            $message = clienttranslate('${player_name} harvests ${seeds} seeds from <b>${field}</b>.');
+                            $this->logMessage($message, $opponent, $sourceField, $moveDirection, $countopponent, false);
 
                             // check if opponent has lost and stop moves if lost
                             $scoreopponent = $this->getScore($opponent, $board);
@@ -1623,7 +1651,7 @@ class BaoLaKiswahili extends Table
         // Note: datastructure is different than when retrieving board from database
         $this->saveBoard($board);
 
-        // notify players about board edit to refresh
+        // notify players about board edit
         $message = clienttranslate('${player_name} edited board and switched players.');
         self::notifyAllPlayers("placeStones", $message, array(
             'player_name' => self::getActivePlayerName(),
@@ -1641,7 +1669,7 @@ class BaoLaKiswahili extends Table
         // Note: datastructure is different than when retrieving board from database
         $this->saveBoard($board);
 
-        // notify other player about board edit to refresh
+        // notify other player about board edit
         $message = clienttranslate('${player_name} edited board and started game.');
         self::notifyAllPlayers("placeStones", $message, array(
             'player_name' => self::getActivePlayerName(),
@@ -1850,6 +1878,10 @@ class BaoLaKiswahili extends Table
                         $stateAfterMove = "endGame";
                     } else {
                         $stateAfterMove = "switchPhase";
+
+                        // game log message
+                        $message = clienttranslate('Game phase is switched.');
+                        $this->logMessage($message, self::getActivePlayerId(), 0, 0, 0, false);
                     }
                 }
 
