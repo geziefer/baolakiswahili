@@ -222,7 +222,8 @@ class BaoLaKiswahili extends Table
         self::trace('*** getAllDatas was called ***');
         $result = array();
 
-        $current_player_id = self::getCurrentPlayerId();    // !! We must only return informations visible by this player !!
+        $player1 = self::getActivePlayerId();
+        $player2 = self::getPlayerAfter($player1);
 
         // Get information about players
         // Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
@@ -232,9 +233,8 @@ class BaoLaKiswahili extends Table
         $sql = "SELECT player player, field no, stones count FROM board";
         $result['board'] = self::getObjectListFromDB($sql);
 
-        $result['nyumba_'.$current_player_id] = $this->checkForNyumbaState($current_player_id);
-        $opponent_id = self::getPlayerAfter($current_player_id);
-        $result['nyumba_'.$opponent_id] = $this->checkForNyumbaState($opponent_id);
+        $result['nyumba_'.$player1] = $this->checkForNyumbaState($player1);
+        $result['nyumba_'.$player2] = $this->checkForNyumbaState($player2);
 
         $result['variant'] = $this->getVariant();
 
