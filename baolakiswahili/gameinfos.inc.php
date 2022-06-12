@@ -72,7 +72,7 @@ $gameinfos = array(
     'solo_mode_ranked' => false,
 
     // Game is "beta". A game MUST set is_beta=1 when published on BGA for the first time, and must remains like this until all bugs are fixed.
-    'is_beta' => 1,
+    'is_beta' => 0,
 
     // Is this game cooperative (all players wins together or loose together)
     'is_coop' => 0,
@@ -83,7 +83,7 @@ $gameinfos = array(
     'language_dependency' => false,
 
     // Complexity of the game, from 0 (extremely simple) to 5 (extremely complex)
-    'complexity' => 5,
+    'complexity' => 3,
 
     // Luck of the game, from 0 (absolutely no luck in this game) to 5 (totally luck driven)
     'luck' => 0,
