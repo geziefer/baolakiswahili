@@ -17,19 +17,22 @@ $game_options = array(
             // Full version of the game
             1 => array(
                 'name' => totranslate('Bao La Kiswahili'),
-                'description' => totranslate('Full version of the game with sowing phase and harvesting phase.')
+                'description' => totranslate('Full version of the game with sowing phase and harvesting phase.'),
+                'tmdisplay' => totranslate('Kiswahili variant')
             ),
 
             // Faster version starting with 2nd phase
             2 => array(
                 'name' => totranslate('Bao La Kujifunza'),
-                'description' => totranslate('Easier and quicker version of the game with fixed setup and only harvesting phase.')
+                'description' => totranslate('Easier and quicker version of the game with fixed setup and only harvesting phase.'),
+                'tmdisplay' => totranslate('Kujifunza variant')
             ),
 
             // Simple rule versions
             3 => array(
                 'name' => totranslate('Hus Bao'),
-                'description' => totranslate('Simplified version of the game with fixed setup, only harvesting phase and simpler rules.')
+                'description' => totranslate('Simplified version of the game with fixed setup, only harvesting phase and simpler rules.'),
+                'tmdisplay' => totranslate('Hus variant')
             ),
         ),
         'default' => 1
@@ -48,7 +51,7 @@ $game_options = array(
                 'name' => totranslate('on'),
                 'description' => totranslate('Editor for free board setup at game start for selected game variant')
             )
-            ),
+        ),
         'displaycondition' => array( 
             // display this option only for training mode
            array( 'type' => 'otheroption', 
@@ -64,13 +67,15 @@ $game_options = array(
             // Shiny green stones
             1 => array(
                 'name' => totranslate('Modern semiprecious stone'),
-                'description' => totranslate('Play with shiny green stones as shown in the rule book')
+                'description' => totranslate('Play with shiny green stones as shown in the rule book'),
+                'tmdisplay' => totranslate('Modern seeds')
             ),
 
             // Traditional mkomwe seeds
             2 => array(
                 'name' => totranslate('Traditional mkomwe seed'),
-                'description' => totranslate('Play with dark green traditional mkomwe seeds (caesalpinia bonduc)')
+                'description' => totranslate('Play with dark green traditional mkomwe seeds (caesalpinia bonduc)'),
+                'tmdisplay' => totranslate('Traditional seeds')
             )
         ),
         'default' => 1
