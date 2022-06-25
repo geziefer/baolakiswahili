@@ -85,7 +85,7 @@ define([
                     dojo.byId('nyumba_message_'+player_id).innerHTML = message;
                 }
 
-                // show gamelog and hide labeling
+                // show gamelog and hide board labeling
                 dojo.byId('gamelog_content').innerHTML = gamedatas.gamelog;
                 dojo.query('.blk_board_labeling').style('display', 'none');
 
@@ -122,9 +122,7 @@ define([
                 if  (gamedatas.variant == VARIANT_KUJIFUNZA || gamedatas.variant == VARIANT_HUS) {
                     dojo.query('.blk_seed_area').style('display', 'none');
                     dojo.query('#board').removeClass('board-nyumba').addClass('board');
-                    dojo.query('#phase_label').style('display', 'none');
                     dojo.query('.blk_nyumba_message').style('display', 'none');
-                    dojo.query('#board').style('margin', '0px');
                 }
 
                 // change seeds if not default
@@ -152,11 +150,15 @@ define([
                 }
                 this.clientStateArgs.type = type;
 
-                // change phase label according to parameter from move - only needed in Kiswahili variant
+                // change phase label according variant or phase
                 if(!!args.args && !!args.args.variant) {
-                    if (args.args.variant == 1) {
+                    if (args.args.variant == VARIANT_KISWAHILI) {
                         dojo.byId('phase_label').innerHTML = _('Kunamua phase');
-                    } else if (args.args.variant == 4) {
+                    } else if (args.args.variant == VARIANT_KUJIFUNZA) {
+                        dojo.byId('phase_label').innerHTML = _('Kujifunza variant');
+                    } else if (args.args.variant == VARIANT_HUS) {
+                        dojo.byId('phase_label').innerHTML = _('Hus variant');
+                    } else if (args.args.variant == VARIANT_KISWAHILI_2ND) {
                         dojo.byId('phase_label').innerHTML = _('Mtaji phase');
                     }
                     this.clientStateArgs.variant = args.args.variant;

@@ -1792,7 +1792,8 @@ class BaoLaKiswahili extends Table
         self::trace('*** argCaptureSelection was called ***');
         return array(
             'possibleMoves' => $this->getPossibleKichwas(self::getActivePlayerId()),
-            'type' => "kichwa"
+            'type' => "kichwa",
+            'variant' => $this->getVariant()
         );
     }
 
@@ -1801,7 +1802,8 @@ class BaoLaKiswahili extends Table
         self::trace('*** argHusMoveSelection was called ***');
         return array(
             'possibleMoves' => $this->getHusPossibleMoves(self::getActivePlayerId()),
-            'type' => ""
+            'type' => "",
+            'variant' => $this->getVariant()
         );
     }
 
